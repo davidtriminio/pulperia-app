@@ -30,6 +30,8 @@ Cada archivo de `vectors/` es un JSON con esta forma:
   - `input`: los datos de entrada.
   - `expected`: el resultado exacto que debe producir cualquier plataforma.
 
+Excepción: `vectors/avatar-palette.json` no tiene `cases`. Es un catálogo de datos (`characters`, `skinTones` y `backgrounds`, cada uno con `id` estable y, en tonos y fondos, el color `hex`) que las plataformas leen para dibujar y validar avatares. Los ids nunca se renombran ni se reutilizan.
+
 Convenciones de los datos:
 - **Dinero**: entero en la unidad menor (centavos de lempira). L 30 se escribe `3000`. Nunca decimales ni cadenas.
 - **Cantidades**: entero en milésimas. 0.25 se escribe `250`.

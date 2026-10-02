@@ -1,0 +1,157 @@
+{
+  "description": "Paleta de avatares: un avatar es la combinación de un personaje, un tono de piel y un fondo (24 x 6 x 12 = 1728 combinaciones). Los identificadores son estables: nunca se renombran ni se reutilizan, porque se guardan en cada cliente. Los colores (hex) pueden ajustarse sin cambiar ids; las ilustraciones de los personajes viajan dentro de cada aplicación. Los tonos de piel van de claro a oscuro",
+  "rf": [
+    14,
+    72
+  ],
+  "characters": [
+    {
+      "id": "char-01"
+    },
+    {
+      "id": "char-02"
+    },
+    {
+      "id": "char-03"
+    },
+    {
+      "id": "char-04"
+    },
+    {
+      "id": "char-05"
+    },
+    {
+      "id": "char-06"
+    },
+    {
+      "id": "char-07"
+    },
+    {
+      "id": "char-08"
+    },
+    {
+      "id": "char-09"
+    },
+    {
+      "id": "char-10"
+    },
+    {
+      "id": "char-11"
+    },
+    {
+      "id": "char-12"
+    },
+    {
+      "id": "char-13"
+    },
+    {
+      "id": "char-14"
+    },
+    {
+      "id": "char-15"
+    },
+    {
+      "id": "char-16"
+    },
+    {
+      "id": "char-17"
+    },
+    {
+      "id": "char-18"
+    },
+    {
+      "id": "char-19"
+    },
+    {
+      "id": "char-20"
+    },
+    {
+      "id": "char-21"
+    },
+    {
+      "id": "char-22"
+    },
+    {
+      "id": "char-23"
+    },
+    {
+      "id": "char-24"
+    }
+  ],
+  "skinTones": [
+    {
+      "id": "skin-1",
+      "hex": "#F9DCC4"
+    },
+    {
+      "id": "skin-2",
+      "hex": "#EDBA94"
+    },
+    {
+      "id": "skin-3",
+      "hex": "#D9966B"
+    },
+    {
+      "id": "skin-4",
+      "hex": "#B26F47"
+    },
+    {
+      "id": "skin-5",
+      "hex": "#8A5230"
+    },
+    {
+      "id": "skin-6",
+      "hex": "#5C3A21"
+    }
+  ],
+  "backgrounds": [
+    {
+      "id": "bg-01",
+      "hex": "#E57373"
+    },
+    {
+      "id": "bg-02",
+      "hex": "#FFB74D"
+    },
+    {
+      "id": "bg-03",
+      "hex": "#FFF176"
+    },
+    {
+      "id": "bg-04",
+      "hex": "#AED581"
+    },
+    {
+      "id": "bg-05",
+      "hex": "#66BB6A"
+    },
+    {
+      "id": "bg-06",
+      "hex": "#4DB6AC"
+    },
+    {
+      "id": "bg-07",
+      "hex": "#4DD0E1"
+    },
+    {
+      "id": "bg-08",
+      "hex": "#64B5F6"
+    },
+    {
+      "id": "bg-09",
+      "hex": "#7986CB"
+    },
+    {
+      "id": "bg-10",
+      "hex": "#BA68C8"
+    },
+    {
+      "id": "bg-11",
+      "hex": "#F06292"
+    },
+    {
+      "id": "bg-12",
+      "hex": "#B0BEC5"
+    }
+  ]
+}
