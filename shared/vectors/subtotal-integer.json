@@ -1,0 +1,217 @@
+{
+  "description": "Subtotal de un ítem con montos enteros: cantidad (milésimas) por precio unitario (centavos de lempira), redondeado al lempira entero más cercano con la mitad hacia arriba",
+  "rf": [
+    34
+  ],
+  "cases": [
+    {
+      "name": "cantidad entera: 2 por L 15 son L 30",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 2000,
+        "unitPrice": 1500
+      },
+      "expected": {
+        "subtotal": 3000
+      }
+    },
+    {
+      "name": "una unidad por L 25 son L 25",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 1000,
+        "unitPrice": 2500
+      },
+      "expected": {
+        "subtotal": 2500
+      }
+    },
+    {
+      "name": "0.25 por L 30 son L 7.50 y el .5 sube a L 8",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 250,
+        "unitPrice": 3000
+      },
+      "expected": {
+        "subtotal": 800
+      }
+    },
+    {
+      "name": "0.5 por L 15 son L 7.50 y el .5 sube a L 8",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 500,
+        "unitPrice": 1500
+      },
+      "expected": {
+        "subtotal": 800
+      }
+    },
+    {
+      "name": "0.75 por L 10 son L 7.50 y el .5 sube a L 8",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 750,
+        "unitPrice": 1000
+      },
+      "expected": {
+        "subtotal": 800
+      }
+    },
+    {
+      "name": "2.5 por L 5 son L 12.50 y sube a L 13 (no se redondea al par)",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 2500,
+        "unitPrice": 500
+      },
+      "expected": {
+        "subtotal": 1300
+      }
+    },
+    {
+      "name": "1.25 por L 10 son L 12.50 y sube a L 13",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 1250,
+        "unitPrice": 1000
+      },
+      "expected": {
+        "subtotal": 1300
+      }
+    },
+    {
+      "name": "0.5 por L 1 son L 0.50 y sube a L 1 (no se redondea al par)",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 500,
+        "unitPrice": 100
+      },
+      "expected": {
+        "subtotal": 100
+      }
+    },
+    {
+      "name": "1.5 por L 25 son L 37.50 y sube a L 38",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 1500,
+        "unitPrice": 2500
+      },
+      "expected": {
+        "subtotal": 3800
+      }
+    },
+    {
+      "name": "0.499 por L 10 son L 4.99 y sube a L 5",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 499,
+        "unitPrice": 1000
+      },
+      "expected": {
+        "subtotal": 500
+      }
+    },
+    {
+      "name": "0.333 por L 12 son L 3.996 y sube a L 4",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 333,
+        "unitPrice": 1200
+      },
+      "expected": {
+        "subtotal": 400
+      }
+    },
+    {
+      "name": "0.44 por L 10 son L 4.40 y baja a L 4",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 440,
+        "unitPrice": 1000
+      },
+      "expected": {
+        "subtotal": 400
+      }
+    },
+    {
+      "name": "1.098 por L 5 son L 5.49 y baja a L 5 (justo debajo de la mitad)",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 1098,
+        "unitPrice": 500
+      },
+      "expected": {
+        "subtotal": 500
+      }
+    },
+    {
+      "name": "1.102 por L 5 son L 5.51 y sube a L 6 (justo encima de la mitad)",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 1102,
+        "unitPrice": 500
+      },
+      "expected": {
+        "subtotal": 600
+      }
+    },
+    {
+      "name": "0.6 por L 5 son exactamente L 3, sin redondeo",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 600,
+        "unitPrice": 500
+      },
+      "expected": {
+        "subtotal": 300
+      }
+    },
+    {
+      "name": "0.999 por L 1000 son exactamente L 999",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 999,
+        "unitPrice": 100000
+      },
+      "expected": {
+        "subtotal": 99900
+      }
+    },
+    {
+      "name": "3 por L 1 son L 3",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 3000,
+        "unitPrice": 100
+      },
+      "expected": {
+        "subtotal": 300
+      }
+    },
+    {
+      "name": "valor grande: 1000 por L 999999 son L 999999000",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 1000000,
+        "unitPrice": 99999900
+      },
+      "expected": {
+        "subtotal": 99999900000
+      }
+    },
+    {
+      "name": "valor grande con fracción: 1.5 por L 999999 son L 1499998.50 y sube a L 1499999",
+      "input": {
+        "amountMode": "integer",
+        "quantityMilli": 1500,
+        "unitPrice": 99999900
+      },
+      "expected": {
+        "subtotal": 149999900
+      }
+    }
+  ]
+}
