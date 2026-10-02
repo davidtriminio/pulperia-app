@@ -1,0 +1,535 @@
+{
+  "description": "Modos de montos (integer o two_decimals) y de cantidades (integer o fractional) de un negocio. Operaciones: change_amount_mode y change_quantity_mode (solo se permite pasar de enteros a decimales o fraccionarias, nunca al revés; pedir el mismo modo no cambia nada), validate_amount (texto ingresado a centavos de lempira) y validate_quantity (texto ingresado a milésimas). El texto usa punto decimal, sin separadores de miles. Los vectores no incluyen montos con más de 2 decimales en modo de 2 decimales, ni valores como 12.00 en modo entero, porque la spec no define esos casos",
+  "rf": [
+    8,
+    9,
+    32,
+    35,
+    36,
+    84
+  ],
+  "cases": [
+    {
+      "name": "RF-8: montos de enteros a 2 decimales se permite",
+      "input": {
+        "operation": "change_amount_mode",
+        "current": "integer",
+        "requested": "two_decimals"
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "RF-9: montos de 2 decimales a enteros se rechaza",
+      "input": {
+        "operation": "change_amount_mode",
+        "current": "two_decimals",
+        "requested": "integer"
+      },
+      "expected": {
+        "allowed": false,
+        "error": "mode_downgrade_not_allowed"
+      }
+    },
+    {
+      "name": "pedir el mismo modo de montos (enteros) no cambia nada y se permite",
+      "input": {
+        "operation": "change_amount_mode",
+        "current": "integer",
+        "requested": "integer"
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "pedir el mismo modo de montos (2 decimales) no cambia nada y se permite",
+      "input": {
+        "operation": "change_amount_mode",
+        "current": "two_decimals",
+        "requested": "two_decimals"
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "RF-8: cantidades de enteras a fraccionarias se permite",
+      "input": {
+        "operation": "change_quantity_mode",
+        "current": "integer",
+        "requested": "fractional"
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "RF-9: cantidades de fraccionarias a enteras se rechaza",
+      "input": {
+        "operation": "change_quantity_mode",
+        "current": "fractional",
+        "requested": "integer"
+      },
+      "expected": {
+        "allowed": false,
+        "error": "mode_downgrade_not_allowed"
+      }
+    },
+    {
+      "name": "pedir el mismo modo de cantidades (enteras) no cambia nada y se permite",
+      "input": {
+        "operation": "change_quantity_mode",
+        "current": "integer",
+        "requested": "integer"
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "pedir el mismo modo de cantidades (fraccionarias) no cambia nada y se permite",
+      "input": {
+        "operation": "change_quantity_mode",
+        "current": "fractional",
+        "requested": "fractional"
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "monto válido: montos enteros, se ingresa \"50\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "integer",
+        "text": "50"
+      },
+      "expected": {
+        "valid": true,
+        "value": 5000
+      }
+    },
+    {
+      "name": "monto válido: montos enteros, se ingresa \"1\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "integer",
+        "text": "1"
+      },
+      "expected": {
+        "valid": true,
+        "value": 100
+      }
+    },
+    {
+      "name": "monto válido: montos enteros, se ingresa \"999999\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "integer",
+        "text": "999999"
+      },
+      "expected": {
+        "valid": true,
+        "value": 99999900
+      }
+    },
+    {
+      "name": "RF-36: montos enteros, se ingresa \"12.50\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "integer",
+        "text": "12.50"
+      },
+      "expected": {
+        "valid": false,
+        "error": "amount_not_whole"
+      }
+    },
+    {
+      "name": "RF-36: montos enteros, se ingresa \"0.5\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "integer",
+        "text": "0.5"
+      },
+      "expected": {
+        "valid": false,
+        "error": "amount_not_whole"
+      }
+    },
+    {
+      "name": "RF-36: montos enteros, se ingresa \"10.01\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "integer",
+        "text": "10.01"
+      },
+      "expected": {
+        "valid": false,
+        "error": "amount_not_whole"
+      }
+    },
+    {
+      "name": "RF-32: montos enteros, se ingresa \"0\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "integer",
+        "text": "0"
+      },
+      "expected": {
+        "valid": false,
+        "error": "amount_not_positive"
+      }
+    },
+    {
+      "name": "RF-32: montos enteros, se ingresa \"-5\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "integer",
+        "text": "-5"
+      },
+      "expected": {
+        "valid": false,
+        "error": "amount_not_positive"
+      }
+    },
+    {
+      "name": "monto válido: montos con 2 decimales, se ingresa \"50\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "two_decimals",
+        "text": "50"
+      },
+      "expected": {
+        "valid": true,
+        "value": 5000
+      }
+    },
+    {
+      "name": "monto válido: montos con 2 decimales, se ingresa \"12.50\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "two_decimals",
+        "text": "12.50"
+      },
+      "expected": {
+        "valid": true,
+        "value": 1250
+      }
+    },
+    {
+      "name": "monto válido: montos con 2 decimales, se ingresa \"12.5\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "two_decimals",
+        "text": "12.5"
+      },
+      "expected": {
+        "valid": true,
+        "value": 1250
+      }
+    },
+    {
+      "name": "monto válido: montos con 2 decimales, se ingresa \"0.01\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "two_decimals",
+        "text": "0.01"
+      },
+      "expected": {
+        "valid": true,
+        "value": 1
+      }
+    },
+    {
+      "name": "monto válido: montos con 2 decimales, se ingresa \"999999.99\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "two_decimals",
+        "text": "999999.99"
+      },
+      "expected": {
+        "valid": true,
+        "value": 99999999
+      }
+    },
+    {
+      "name": "RF-32: montos con 2 decimales, se ingresa \"0\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "two_decimals",
+        "text": "0"
+      },
+      "expected": {
+        "valid": false,
+        "error": "amount_not_positive"
+      }
+    },
+    {
+      "name": "RF-32: montos con 2 decimales, se ingresa \"0.00\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "two_decimals",
+        "text": "0.00"
+      },
+      "expected": {
+        "valid": false,
+        "error": "amount_not_positive"
+      }
+    },
+    {
+      "name": "RF-32: montos con 2 decimales, se ingresa \"-12.50\"",
+      "input": {
+        "operation": "validate_amount",
+        "amountMode": "two_decimals",
+        "text": "-12.50"
+      },
+      "expected": {
+        "valid": false,
+        "error": "amount_not_positive"
+      }
+    },
+    {
+      "name": "cantidad válida: cantidades enteras, se ingresa \"1\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "integer",
+        "text": "1"
+      },
+      "expected": {
+        "valid": true,
+        "value": 1000
+      }
+    },
+    {
+      "name": "cantidad válida: cantidades enteras, se ingresa \"12\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "integer",
+        "text": "12"
+      },
+      "expected": {
+        "valid": true,
+        "value": 12000
+      }
+    },
+    {
+      "name": "cantidad válida: cantidades enteras, se ingresa \"1000\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "integer",
+        "text": "1000"
+      },
+      "expected": {
+        "valid": true,
+        "value": 1000000
+      }
+    },
+    {
+      "name": "RF-35: cantidades enteras, se ingresa \"2.5\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "integer",
+        "text": "2.5"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_not_whole"
+      }
+    },
+    {
+      "name": "RF-35: cantidades enteras, se ingresa \"0.5\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "integer",
+        "text": "0.5"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_not_whole"
+      }
+    },
+    {
+      "name": "RF-35: cantidades enteras, se ingresa \"1.001\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "integer",
+        "text": "1.001"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_not_whole"
+      }
+    },
+    {
+      "name": "RF-32: cantidades enteras, se ingresa \"0\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "integer",
+        "text": "0"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_not_positive"
+      }
+    },
+    {
+      "name": "RF-32: cantidades enteras, se ingresa \"-1\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "integer",
+        "text": "-1"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_not_positive"
+      }
+    },
+    {
+      "name": "cantidad válida: cantidades fraccionarias, se ingresa \"2\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "2"
+      },
+      "expected": {
+        "valid": true,
+        "value": 2000
+      }
+    },
+    {
+      "name": "cantidad válida: cantidades fraccionarias, se ingresa \"2.5\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "2.5"
+      },
+      "expected": {
+        "valid": true,
+        "value": 2500
+      }
+    },
+    {
+      "name": "cantidad válida: cantidades fraccionarias, se ingresa \"0.25\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "0.25"
+      },
+      "expected": {
+        "valid": true,
+        "value": 250
+      }
+    },
+    {
+      "name": "cantidad válida: cantidades fraccionarias, se ingresa \"0.001\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "0.001"
+      },
+      "expected": {
+        "valid": true,
+        "value": 1
+      }
+    },
+    {
+      "name": "cantidad válida: cantidades fraccionarias, se ingresa \"1.500\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "1.500"
+      },
+      "expected": {
+        "valid": true,
+        "value": 1500
+      }
+    },
+    {
+      "name": "cantidad válida: cantidades fraccionarias, se ingresa \"999.999\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "999.999"
+      },
+      "expected": {
+        "valid": true,
+        "value": 999999
+      }
+    },
+    {
+      "name": "RF-32: cantidades fraccionarias, se ingresa \"0\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "0"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_not_positive"
+      }
+    },
+    {
+      "name": "RF-32: cantidades fraccionarias, se ingresa \"0.000\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "0.000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_not_positive"
+      }
+    },
+    {
+      "name": "RF-32: cantidades fraccionarias, se ingresa \"-0.5\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "-0.5"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_not_positive"
+      }
+    },
+    {
+      "name": "RF-84: cantidades fraccionarias, se ingresa \"1.2345\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "1.2345"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_too_many_decimals"
+      }
+    },
+    {
+      "name": "RF-84: cantidades fraccionarias, se ingresa \"0.5555\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "0.5555"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_too_many_decimals"
+      }
+    },
+    {
+      "name": "RF-84: cantidades fraccionarias, se ingresa \"2.0001\"",
+      "input": {
+        "operation": "validate_quantity",
+        "quantityMode": "fractional",
+        "text": "2.0001"
+      },
+      "expected": {
+        "valid": false,
+        "error": "quantity_too_many_decimals"
+      }
+    }
+  ]
+}

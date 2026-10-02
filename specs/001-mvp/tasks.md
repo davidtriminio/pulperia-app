@@ -29,7 +29,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T010** Vectores de resumen. RF: 63, 64, 65. *Hecho cuando:* cubre saldos positivos, saldo a favor, clientes archivados excluidos y empates en el orden.
 - [x] **T011** Paleta de avatares. RF: 72. *Hecho cuando:* define exactamente 24 personajes, 6 tonos y 12 fondos con identificadores estables.
 - [x] **T012** Vectores de validación de cliente. RF: 15, 17, 74. *Hecho cuando:* cubre nombre vacío, nota de 300 y 301 caracteres, y homónimos que difieren en mayúsculas y espacios exteriores.
-- [ ] **T013** Vectores de modos de negocio. RF: 8, 9, 32, 35, 36, 84. *Hecho cuando:* cubre las transiciones permitidas y prohibidas, y montos o cantidades válidos e inválidos por modo, incluida una cantidad con 4 decimales.
+- [x] **T013** Vectores de modos de negocio. RF: 8, 9, 32, 35, 36, 84. *Hecho cuando:* cubre las transiciones permitidas y prohibidas, y montos o cantidades válidos e inválidos por modo, incluida una cantidad con 4 decimales.
 
 ## Fase 2 — Dominio del móvil (Dart, sin UI ni red)
 - [ ] **T014** Tipo de dinero en unidad menor (suma, resta, comparación). RF: —; RNF-2. *Hecho cuando:* tests en verde y ninguna aparición de `double` en el dominio de montos.
