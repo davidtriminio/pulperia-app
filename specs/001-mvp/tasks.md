@@ -15,7 +15,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - **T140**: necesita que decidas dónde se guardan las copias fuera del servidor.
 
 ## Fase 0 — Andamiaje
-- [ ] **T001** Crear la solución .NET en `api/` con proyectos Domain, Application, Infrastructure, Api y Tests. RF: —. *Hecho cuando:* `dotnet test api` ejecuta y pasa con un test de humo.
+- [x] **T001** Crear la solución .NET en `api/` con proyectos Domain, Application, Infrastructure, Api y Tests. RF: —. *Hecho cuando:* `dotnet test api` ejecuta y pasa con un test de humo.
 - [ ] **T002** Crear el proyecto Flutter en `mobile/`. RF: —. *Hecho cuando:* `flutter test` (en `mobile/`) pasa con un test de humo.
 - [ ] **T003** Crear el proyecto Angular en `web/` con Tailwind CSS. RF: —. *Hecho cuando:* `ng test` (en `web/`) pasa con un test de humo.
 - [ ] **T004** Completar la sección "Comandos" de `AGENTS.md` con los comandos reales. RF: —. Dep: T001–T003. *Hecho cuando:* cada comando listado se ejecutó con éxito.

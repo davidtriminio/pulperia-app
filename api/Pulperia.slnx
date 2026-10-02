@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Pulperia.Api/Pulperia.Api.csproj" />
+    <Project Path="src/Pulperia.Application/Pulperia.Application.csproj" />
+    <Project Path="src/Pulperia.Domain/Pulperia.Domain.csproj" />
+    <Project Path="src/Pulperia.Infrastructure/Pulperia.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Pulperia.Tests/Pulperia.Tests.csproj" />
+  </Folder>
+</Solution>
