@@ -1,0 +1,69 @@
+# shared/ — datos compartidos entre plataformas
+
+Esta carpeta no contiene código ejecutable. Contiene **datos** que los tests de las tres plataformas (API en .NET, móvil en Flutter, web en Angular) leen para comprobar que calculan lo mismo.
+
+## Por qué existe
+El mismo cálculo (por ejemplo el redondeo de un subtotal o el saldo de un cliente) lo implementan tres plataformas. Si cada una definiera sus propios casos de prueba, podrían divergir sin que nadie lo note, y el saldo de un cliente sería distinto en el móvil y en el servidor. Aquí hay una sola fuente de verdad: cada plataforma tiene que pasar los mismos casos.
+
+## Archivos previstos
+Se crean en las tareas T006 a T013 y T086 de `specs/001-mvp/tasks.md`.
+
+| Archivo | Contenido | RF |
+|---|---|---|
+| `vectors/subtotal-integer.json` | Subtotal con montos enteros | 34 |
+| `vectors/subtotal-two-decimals.json` | Subtotal con 2 decimales | 83 |
+| `vectors/balance.json` | Saldo de un cliente | 39, 40, 42, 44, 47 |
+| `vectors/phone.json` | Validación de teléfono | 77 |
+| `vectors/summary.json` | Resumen del negocio | 63, 64, 65 |
+| `vectors/avatar-palette.json` | Paleta de avatares (personajes, tonos, fondos) | 72 |
+| `vectors/client-validation.json` | Validación de cliente | 15, 17, 74 |
+| `vectors/business-modes.json` | Modos de montos y cantidades del negocio | 8, 9, 32, 35, 36, 84 |
+| `openapi.json` | Contrato de la API | — |
+
+## Formato de un archivo de vectores
+Cada archivo de `vectors/` es un JSON con esta forma:
+
+- `description`: qué comprueba el archivo.
+- `rf`: lista de números de requisito funcional que cubre.
+- `cases`: lista de casos. Cada caso tiene:
+  - `name`: nombre legible que explica por qué existe el caso.
+  - `input`: los datos de entrada.
+  - `expected`: el resultado exacto que debe producir cualquier plataforma.
+
+Convenciones de los datos:
+- **Dinero**: entero en la unidad menor (centavos de lempira). L 30 se escribe `3000`. Nunca decimales ni cadenas.
+- **Cantidades**: entero en milésimas. 0.25 se escribe `250`.
+- **Modo de montos**: `"integer"` o `"two_decimals"`.
+- **Modo de cantidades**: `"integer"` o `"fractional"`.
+- **Fechas y horas**: texto ISO 8601 en UTC, por ejemplo `"2026-10-02T15:30:00Z"`.
+- **Identificadores**: textos GUID/UUID.
+- **Errores esperados**: un código estable en texto dentro de `expected`, por ejemplo `{"error": "quantity_not_integer"}`, nunca el mensaje en español.
+
+### Ejemplo
+```json
+{
+  "description": "Subtotal de un ítem con montos enteros",
+  "rf": [34],
+  "cases": [
+    {
+      "name": "0.25 por L 30 son L 7.50 y el .5 sube a L 8",
+      "input": { "amountMode": "integer", "quantityMilli": 250, "unitPrice": 3000 },
+      "expected": { "subtotal": 800 }
+    }
+  ]
+}
+```
+
+## Cómo los lee cada plataforma
+Cada plataforma localiza esta carpeta con una ruta relativa a la raíz del repositorio y ejecuta todos los casos del archivo.
+
+- **API (.NET)**: los tests de `api/tests` suben hasta la raíz del repositorio y leen `shared/vectors/<archivo>.json`.
+- **Móvil (Flutter)**: `flutter test` se ejecuta en `mobile/`, así que los tests leen `../shared/vectors/<archivo>.json`.
+- **Web (Angular)**: se define en T122, cuando se consume el primer archivo. El formato de los archivos no depende de ello.
+
+Cada plataforma recorre `cases` y compara su resultado con `expected`; un caso que falle debe mostrar su `name`.
+
+## Reglas
+- Un vector es comportamiento acordado. **No se cambia un caso para que un test pase**: si un resultado esperado cambia, primero se actualiza la spec o el plan.
+- Añadir casos nuevos es siempre válido; cambiar o borrar uno existente requiere el paso anterior.
+- Los vectores son datos puros: sin lógica, sin referencias a código de ninguna plataforma.
