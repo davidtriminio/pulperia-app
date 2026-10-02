@@ -1,0 +1,20 @@
+# .NET
+bin/
+obj/
+.vs/
+*.user
+
+# Node / Angular
+node_modules/
+.angular/
+dist/
+
+# IDE y sistema
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Claude Code (configuración local)
+.claude/settings.local.json

@@ -1,0 +1,230 @@
+# Plan técnico 001 — MVP: administrador de deudas (fiados) para pulperías
+
+Estado: APROBADO el 2026-10-02. Cubre `spec.md` (RF-1 a RF-85, RNF-1 a RNF-8) y respeta `docs/constitution.md` (principios 1 a 11).
+Este plan no contiene código. Define módulos, modelo de datos, decisiones y estrategia de tests.
+
+## 1. Visión general
+
+```
+ Flutter (móvil)                      ASP.NET Core (API)                  Angular (web)
+ ┌──────────────────┐   push/pull    ┌────────────────────┐   mismas     ┌─────────────────┐
+ │ UI               │◄──────────────►│ Sync + Comandos    │◄────────────►│ UI              │
+ │ Casos de uso     │  lotes de ops  │ Dominio            │  operaciones │ Servicios       │
+ │ Dominio          │                │ Persistencia (EF)  │  de una en   │ Dominio (reglas │
+ │ Drift (local)    │                │ PostgreSQL         │  una         │  de lectura)    │
+ │ Cola (outbox)    │                └────────────────────┘              └─────────────────┘
+ └──────────────────┘
+```
+
+- **Una sola vía de escritura en el servidor**: todo cambio llega como una *operación* (crear cliente, registrar fiado, anular abono…). El móvil las envía en lote; la web las envía de una en una. Ambos pasan por las mismas reglas del dominio.
+- **Lecturas**: el móvil lee de su base local. La web lee del servidor mediante consultas.
+- **Nada se borra**: archivar y anular son estados. Por eso la sincronización no necesita lápidas de borrado (principio 11).
+- **Orden de construcción** (el móvil primero, por ser la prioridad): vectores de prueba compartidos → dominio y base local del móvil → dominio y API → sincronización → web.
+
+## 2. Módulos
+
+### 2.1 Compartido (`shared/`)
+Carpeta nueva en la raíz del monorepo. No es código ejecutable: son datos que las tres plataformas leen en sus tests.
+- **Vectores de prueba** (JSON): casos de redondeo, cálculo de saldo, validación de teléfono, resumen. Las tres plataformas deben dar el mismo resultado (RNF-2, RF-34, RF-40, RF-63..66, RF-77).
+- **Paleta de avatares**: 24 personajes, 6 tonos de piel y 12 fondos con sus identificadores (RF-72).
+- **Contrato de la API**: descripción OpenAPI mantenida junto al plan (ver sección 5).
+
+### 2.2 API (.NET) — `api/`
+| Módulo | Responsabilidad | RF |
+|---|---|---|
+| Identity | Cuentas por correo, sesiones, pertenencia a negocios, rol por negocio, elección de negocio | 1–6, 48, 50 |
+| Businesses | Creación del negocio con nombre, cambio de nombre, ajustes de montos y cantidades | 1, 7–9, 78–80 |
+| Admin tooling | Operación de línea de comandos del servidor para restablecer una contraseña, con registro de auditoría; sin acceso a datos de negocios | 81, 82 |
+| Backups | Copia diaria de la base, enviada fuera de la máquina, con rotación de 3 copias | RNF-8 |
+| Invitations | Invitaciones pendientes, aceptar, rechazar, cancelar; promoción a dueño; último dueño; baja de empleado | 10–13, 67–71 |
+| Clients | Alta, edición, archivado y restauración; avatar; datos de contacto; aviso de homónimo | 14–23, 72–77 |
+| Catalog | Productos: alta, cambio de precio, archivado | 24–27 |
+| Ledger | Fiados, ítems, abonos, anulación, saldo, permisos por rol, autoría | 28–47, 49 |
+| Sync | Recepción de lotes de operaciones, idempotencia, conflictos, entrega de cambios por cursor, descarga inicial | 51–58, 62 |
+| Reports | Resumen del negocio para la web | 63–65 |
+| Web hosting | Entrega los archivos estáticos de la web | 59–61 |
+
+Capas: **Domain** (reglas puras: dinero, saldo, permisos, validaciones; sin EF ni HTTP), **Application** (casos de uso y aplicación de operaciones), **Infrastructure** (EF Core, PostgreSQL), **Api** (endpoints). Principio 7.
+
+### 2.3 Móvil (Flutter) — `mobile/`
+| Módulo | Responsabilidad | RF |
+|---|---|---|
+| Domain | Dinero y cantidades, redondeo, saldo, validaciones, permisos por rol | 15, 16, 32–42, 74, 77 |
+| Local store | Base local con todas las entidades, por negocio | 51 |
+| Outbox | Cola de operaciones pendientes y su estado | 51, 56, 57 |
+| Sync | Envío de lotes, descarga por cursor, descarga inicial, reintentos, resolución según respuesta del servidor | 52–58 |
+| Session | Inicio de sesión, token persistente, negocio activo, cambio de negocio | 2–6 |
+| Clients UI / Ledger UI / Catalog UI | Pantallas de clientes (con avatar y archivados), fiados, abonos, catálogo | 14–47 |
+| Summary | Resumen calculado sobre datos locales | 63–66 |
+| Business admin | Invitaciones, equipo, ajustes (requieren conexión) | 7–13, 67–71 |
+| Avatar | Renderizado del avatar compuesto con recursos incluidos en la app | 14, 72 |
+
+### 2.4 Web (Angular) — `web/`
+| Módulo | Responsabilidad | RF |
+|---|---|---|
+| Core services | Sesión, cliente HTTP, detección de falta de conexión | 3, 59, 61 |
+| Feature: clientes / fiados / abonos / catálogo | Mismas operaciones y permisos que el móvil, cada acción va directo al servidor | 14–47, 59, 60 |
+| Feature: resumen | Consulta del resumen del servidor | 63–65 |
+| Feature: equipo y ajustes | Invitaciones, promoción, baja, ajustes del negocio | 7–13, 67–71 |
+| Avatar | Mismo renderizado con la misma paleta compartida | 14, 72 |
+
+## 3. Modelo de datos
+
+### 3.1 Servidor (PostgreSQL)
+Todo registro de negocio lleva `business_id` (principio 6). Los IDs son GUID generados en el cliente (AGENTS.md). Fechas en UTC.
+
+| Tabla | Campos principales |
+|---|---|
+| users | id, email (único sin distinguir mayúsculas), password_hash, created_at |
+| admin_audit | id, action (restablecer contraseña), target_user_id, performed_by (identificador del operador), performed_at |
+| businesses | id, name (obligatorio, editable por dueños), amount_mode (enteros / 2 decimales), quantity_mode (enteras / fraccionarias), last_seq, created_at |
+| memberships | user_id, business_id, role (dueño / empleado), status (activo / removido), removed_at, final_sync_used |
+| invitations | id, business_id, email, status (pendiente / aceptada / rechazada / cancelada), created_by, created_at |
+| clients | id, business_id, name, character_id, skin_id, background_id, phone?, address?, note?, archived, version, created_by, created_at, updated_at |
+| products | id, business_id, name, price (unidad menor), archived, version, created_by, created_at |
+| fiados | id, business_id, client_id, total (unidad menor), occurred_at, created_by, annulled_at?, annulled_by? |
+| fiado_items | id, fiado_id, product_id?, description, quantity (milésimas), unit_price (unidad menor), subtotal (unidad menor) |
+| payments | id, business_id, client_id, amount (unidad menor), occurred_at, created_by, annulled_at?, annulled_by? |
+| change_log | business_id, seq, entity_type, entity_id |
+| processed_ops | op_id (clave), business_id, result, processed_at |
+
+Reglas del modelo:
+- **Dinero**: siempre entero en la unidad menor (centavos de lempira), sin importar el modo del negocio. El modo solo restringe lo que se acepta y se muestra. Así pasar de enteros a decimales (RF-8) no migra nada.
+- **Cantidades**: entero en milésimas. El modo del negocio decide si se aceptan fracciones.
+- **Saldo**: nunca se guarda. Se calcula como suma de fiados vigentes menos suma de abonos vigentes del cliente (RF-40). Un saldo guardado sería un segundo dato que sincronizar y que podría divergir.
+- **Fiado sin detalle** (RF-29): fiado con total y sin ítems. Con ítems, `total` es la suma de subtotales, calculada al crear y nunca recalculada (principio 4).
+- **Anulación** (RF-43): campos `annulled_at` y `annulled_by` sobre el propio fiado o abono. No hay tabla de ediciones porque no hay ediciones (RF-46).
+- **Cursor de sincronización**: cada negocio tiene un contador `last_seq`. Cada cambio aplicado incrementa el contador dentro de la misma transacción y escribe una fila en `change_log`. El contador se bloquea por negocio durante el push; a esta escala no es un cuello de botella y garantiza un orden sin huecos que el cursor pueda saltarse.
+- **Idempotencia**: `processed_ops` guarda el ID de cada operación aplicada. Reenviar una operación devuelve el resultado original (RF-53).
+
+### 3.2 Móvil (SQLite vía Drift)
+- Las mismas tablas de negocio (clients, products, fiados, fiado_items, payments, businesses, memberships del usuario), todas con `business_id`, para permitir varios negocios en un dispositivo (RF-5).
+- **outbox**: op_id, business_id, type, payload, estado (pendiente / enviada / rechazada), código de error, created_at.
+- **sync_state**: business_id, cursor (último `seq` recibido).
+- **session**: usuario, negocio activo, tokens (en almacenamiento seguro, no en la base).
+- El saldo y el resumen son consultas sobre las tablas locales (RF-66).
+
+## 4. Sincronización
+
+### 4.1 Operaciones
+Tipos: crear / editar / archivar / restaurar cliente; crear / editar / archivar producto; crear fiado; crear abono; anular fiado; anular abono. Cada operación lleva: `op_id` (GUID), tipo, id de la entidad, datos, fecha de creación en el dispositivo (UTC) y, si edita, la `version` base.
+
+Las operaciones de cuenta, invitaciones, equipo y ajustes del negocio **no pasan por la cola**: son en línea y el servidor es la única autoridad (ver decisión D-3).
+
+### 4.2 Push (móvil → servidor)
+1. El móvil envía las operaciones pendientes en orden de creación.
+2. El servidor, por cada una y dentro de una transacción por lote: comprueba pertenencia al negocio y rol (RF-13, 45, 48), comprueba idempotencia, valida las reglas del dominio y la aplica.
+3. Responde por operación: **aplicada**, **duplicada** (se trata como aplicada) o **rechazada** con código y motivo.
+4. El móvil marca las aplicadas y conserva las rechazadas visibles para el usuario (RF-56, RF-57).
+
+### 4.3 Pull (servidor → móvil)
+El móvil pide los cambios con `seq` mayor que su cursor, paginados. El servidor devuelve la versión actual completa de cada entidad cambiada. La primera vez el cursor es cero y equivale a la descarga inicial (RF-58, RNF-7).
+
+### 4.4 Reglas de conflicto (RF-54, 55, 62)
+| Situación | Resultado |
+|---|---|
+| Dos dispositivos crean fiados o abonos distintos del mismo cliente | Se aplican todos; el saldo es la suma |
+| Dos dispositivos anulan el mismo movimiento | La segunda es idempotente |
+| Un dispositivo edita una entidad con `version` anterior a la del servidor | Rechazada por conflicto; el servidor gana; el móvil la recibe por pull y descarta su edición pendiente avisando al usuario |
+| Abono sobre un cliente cuyo fiado se anuló en otro dispositivo | Se aplica; el saldo puede quedar a favor (RF-47) |
+| Cambio hecho desde la web | Es una operación más; llega al móvil por pull con las mismas reglas |
+| Fiado registrado sin conexión a un cliente que otro dispositivo archivó | Se aplica; el cliente sigue archivado con el saldo actualizado (RF-85) |
+
+### 4.5 Empleado removido (RF-11, 12)
+Al quitarlo, su pertenencia pasa a *removida* y se pone `final_sync_used` en falso. En su siguiente sincronización el servidor acepta **un último lote**, sin límite de tiempo, y a continuación revoca el acceso; el móvil borra los datos locales de ese negocio. Si no sincroniza nunca, sus datos permanecen en su teléfono: es una limitación aceptada (RF-12, fuera de alcance el borrado remoto).
+
+## 5. Contrato de la API (resumen)
+No se implementa nada fuera de este contrato sin actualizar antes el plan.
+
+| Grupo | Intención |
+|---|---|
+| Auth | Registrarse, iniciar sesión, renovar sesión, cerrar sesión |
+| Negocios del usuario | Listar negocios con su rol, crear negocio nuevo, ver invitaciones pendientes, aceptarlas o rechazarlas |
+| Negocio | Leer y cambiar ajustes (solo dueño), listar el equipo, invitar, cancelar invitación, promover, quitar |
+| Sync | Enviar lote de operaciones; pedir cambios desde un cursor |
+| Operaciones individuales (web) | Enviar una operación y recibir su resultado inmediato |
+| Consultas (web) | Listar clientes con saldo, ver historial de un cliente, listar archivados, listar productos, resumen del negocio |
+
+El negocio activo se indica en cada petición y el servidor comprueba siempre que el usuario pertenece a él. Los errores devuelven un código estable y los clientes lo traducen a mensajes en español (RNF-5).
+
+## 6. Decisiones técnicas
+
+| ID | Decisión | Por qué | Alternativa descartada |
+|---|---|---|---|
+| D-1 | Dinero como entero en unidad menor en las tres plataformas | Exactitud (RNF-2, principio 5) y sin migración al pasar de enteros a decimales | `decimal` en .NET y Dart: obliga a convertir entre plataformas y a una dependencia en Dart |
+| D-2 | Redondeo "mitad hacia arriba" definido una vez (al entero con montos enteros, al centavo con 2 decimales) y verificado con vectores compartidos; cantidades con hasta 3 decimales | La misma cuenta debe dar el mismo resultado en móvil, servidor y web (RF-34, 83, 84) | Cada plataforma con su redondeo por defecto: los resultados divergen en los .5 |
+| D-3 | Cuentas, negocios, invitaciones, equipo y ajustes solo en línea, fuera de la cola (RNF-1) | Dependen de la autoridad del servidor (último dueño, ajuste que no puede restringirse) y no son operaciones de mostrador | Encolarlas: permitiría estados imposibles al sincronizar (RF-9, RF-71) |
+| D-4 | Una sola vía de escritura (operaciones) para móvil y web | Una sola implementación de reglas; menos superficie de API | Endpoints REST de escritura distintos para la web: duplica las reglas |
+| D-5 | Cursor por negocio con contador bloqueado durante el push | Orden estable sin huecos; simple (principio 3) | Marca de tiempo como cursor: pierde cambios por relojes y transacciones simultáneas |
+| D-6 | Saldo calculado, no guardado | Evita divergencias entre dispositivos | Saldo guardado y actualizado en cada movimiento: dato derivado que sincronizar |
+| D-7 | Sin lápidas de borrado | Nada se borra (principio 11) | Borrado lógico con lápidas: complejidad sin necesidad |
+| D-8 | Edición con control de versión por entidad; el servidor gana | Cumple el principio 3 sin fusionar campo a campo | Fusión por campos: complejidad no justificada para clientes y productos |
+| D-9 | Autenticación por correo y contraseña; token de acceso corto y token de renovación largo guardado de forma segura | La invitación se asocia al correo y se muestra al iniciar sesión, así que no se necesita enviar correos (RF-10, 67) | Enlace mágico o código por correo: exige un proveedor de correo y no funciona bien con conectividad pobre |
+| D-10 | Si el token de renovación caduca estando sin conexión, la app sigue funcionando y exige iniciar sesión solo para sincronizar; la cola no se pierde | RF-4 y RNF-1 | Cerrar la sesión local al caducar: perdería la cola |
+| D-11 | Estado de la app móvil con Riverpod | Menos código repetido, fácil de probar sin UI (principio 7) | BLoC: más ceremonia; `setState`/Provider: no escala a varios módulos |
+| D-12 | Dependencias móviles mínimas: Drift, Riverpod, cliente HTTP, almacenamiento seguro, detección de conectividad | Principio 9 | Frameworks de sincronización de terceros: opacos y con reglas de conflicto propias |
+| D-13 | Sincronización del móvil al abrir la app, al recuperar conexión y manualmente; no en segundo plano en el MVP | Menor consumo y menor complejidad | Servicio en segundo plano: se evalúa después |
+| D-14 | Web en Angular con Tailwind CSS, sin biblioteca de componentes | Ligera (principio 9) y coherente con el diseño actual del proyecto | Angular Material: más peso, estilo propio difícil de igualar al móvil |
+| D-15 | Avatar como tres identificadores; las imágenes viajan dentro de cada aplicación | Payload mínimo y funciona sin conexión (RNF-7) | Imágenes en el servidor: requiere descarga y almacenamiento |
+| D-16 | Despliegue con Docker Compose: API, PostgreSQL y web estática | AGENTS.md pide el backend en Docker | Plataformas administradas: decisión de costo que corresponde al usuario |
+| D-17 | Clientes HTTP escritos a mano contra un contrato OpenAPI, validado con ejemplos compartidos | Sin generadores de código ni dependencias extra | Generar clientes: añade herramientas y plantillas |
+| D-19 | El restablecimiento de contraseña es un comando del servidor, sin endpoint ni pantalla, que solo recibe el correo de la cuenta, deja la contraseña nueva y escribe en `admin_audit` | Mínima superficie de ataque; no hay rol de superadmin dentro de las apps (RF-81, 82) | Rol de superadmin en la web: otra funcionalidad con su propia spec |
+| D-20 | Copia diaria de la base con `pg_dump` en un servicio del Compose, enviada fuera de la máquina, con rotación de 3 copias | Cumple RNF-8 con herramientas estándar y sin dependencias de código | Replicación de la base: más costo y complejidad que lo que pide la spec |
+| D-18 | Historial ordenado por la fecha de creación del dispositivo, con desempate por orden de llegada al servidor | Refleja cuándo ocurrió la venta aunque se sincronice tarde | Orden por llegada al servidor: confundiría al usuario con ventas hechas sin conexión |
+
+## 7. Estrategia de tests
+Principio 8: tests primero y todo en verde antes de avanzar.
+
+| Nivel | Qué cubre | Herramientas |
+|---|---|---|
+| Dominio (unitarios, sin UI ni red) | Dinero y redondeo, saldo, validaciones (nombre, teléfono, nota, montos, cantidades), permisos por rol, reglas de ajustes | xUnit; `flutter test`; `ng test` |
+| Vectores compartidos | `shared/` ejecutado por las tres plataformas: redondeo, saldo, teléfono, resumen | Los mismos JSON en los tres proyectos |
+| Persistencia local | Consultas de saldo, archivado, anulación sobre base en memoria | Drift con base en memoria |
+| Integración API | Aplicación de operaciones contra PostgreSQL real: idempotencia, conflictos, aislamiento entre negocios, rol, cursor, empleado removido | xUnit + contenedor PostgreSQL de pruebas |
+| Sincronización de extremo a extremo | Dos "dispositivos" simulados: fiados concurrentes, edición en conflicto, corte a medio lote, descarga inicial | Pruebas de integración con el dominio real de móvil y API |
+| Web | Servicios y reglas de lectura; comportamiento sin conexión | `ng test` |
+| Administración | Comando de restablecimiento: cambia la contraseña, escribe la auditoría y no expone datos de negocios | xUnit sobre la capa de aplicación |
+| Respaldo | La copia se genera, rota a 3 y se restaura en una base vacía | Script de verificación en el despliegue |
+| Manuales | Los 9 demos de "Criterios de finalización" de la spec | Lista de comprobación |
+
+## 8. Cobertura de RF por módulo
+| RF | Dónde se cubre |
+|---|---|
+| 1–6, 78–80 | Identity y Businesses (API), Session y Business admin (móvil), Core services y equipo y ajustes (web) |
+| 7–9 | Businesses (API), Business admin (móvil), equipo y ajustes (web) |
+| 10–13, 67–71 | Invitations (API), Business admin (móvil), equipo y ajustes (web), §4.5 |
+| 81–82 | Admin tooling, D-19 |
+| RNF-8 | Backups, D-20 |
+| 14–23, 72–77, 85 | Clients, Avatar, vectores de teléfono, §4.4 |
+| 24–27 | Catalog |
+| 28–39, 83–84 | Ledger, Domain (dinero y redondeo) |
+| 40–42 | Domain (saldo), Local store |
+| 43–47 | Ledger, §4.4 |
+| 48–50 | Permisos en Domain y comprobación en servidor, aislamiento por `business_id` |
+| 51–58 | Local store, Outbox, Sync (móvil y API), §4 |
+| 59–62 | Web hosting y Feature modules de web, §4.4 |
+| 63–66 | Reports (API), Summary (móvil), vectores compartidos |
+
+## 9. Brechas detectadas en la spec (todas resueltas)
+Se detectaron al planificar y se resolvieron con el usuario el 2026-10-02. La spec se actualizó con su aprobación.
+
+| ID | Brecha | Resolución | Dónde quedó |
+|---|---|---|---|
+| G-1 | No había recuperación de contraseña | Fuera del MVP para el usuario; el administrador del servidor la restablece con una operación manual, con auditoría y sin acceso a datos de negocios | RF-81, RF-82, D-19, fuera de alcance |
+| G-2 | El negocio no tenía nombre | Nombre obligatorio al crear y editable por los dueños; se añadió crear un negocio adicional | RF-1, RF-78 a RF-80 |
+| G-3 | Faltaba el redondeo con montos decimales y el máximo de decimales de la cantidad | Redondeo al centavo (.5 sube); cantidad con hasta 3 decimales | RF-83, RF-84, D-2 |
+| G-4 | Fiado sin conexión a un cliente archivado por otro dispositivo | Se acepta; el cliente sigue archivado con el saldo actualizado | RF-76, RF-85 |
+| G-5 | Redacción de RF-47 incoherente con abonos generales | Reescrita | RF-47 |
+| G-6 | RNF-1 decía "toda" la funcionalidad sin conexión | Acotado: cuentas, negocios, invitaciones, equipo y ajustes requieren conexión | RNF-1, D-3 |
+| G-7 | Empleado removido sin sincronizar | Su último lote se acepta sin caducidad; el borrado remoto queda fuera de alcance | RF-12, §4.5 |
+| G-8 | Respaldo del propio servidor | Copia diaria fuera de la máquina, con rotación de 3 | RNF-8, D-20 |
+
+Pendiente de definir al desplegar: el destino concreto de las copias [NECESITA ACLARACIÓN: ¿dónde se guardan las copias fuera del servidor?].
+
+## 10. Riesgos
+- **Reloj del dispositivo**: el orden del historial depende de él. Un reloj mal ajustado altera el orden, no los saldos.
+- **Rechazos tras trabajar sin conexión**: si cambian los permisos de un usuario mientras está desconectado, sus operaciones pueden rechazarse al sincronizar. Se muestran en la app para que el usuario las revise.
+- **Rendimiento del resumen en móviles modestos**: es una consulta agregada sobre la base local; se mide en la validación con un volumen de prueba [NECESITA ACLARACIÓN: ¿cuántos clientes y movimientos debe soportar cómodamente un negocio típico?].
+
+## 11. Fuera de este plan
+Las tareas (<30 min, con RF y "Hecho cuando"), la planificación por fases del despliegue y cualquier código. Siguiente fase: tareas, una vez aprobado este plan.
