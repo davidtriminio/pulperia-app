@@ -15,7 +15,7 @@ Monorepo:
 
 ## Estilo y convenciones
 - Código e identificadores en inglés; mensajes al usuario y documentación en español.
-- Dinero: siempre `decimal` en .NET y enteros en la unidad menor (o decimal exacto) en Flutter/Angular. Nunca `double`/`float`.
+- Dinero: siempre enteros en la unidad menor (centavos de lempira) en .NET, Flutter y Angular, según el plan (D-1). Nunca `double`/`float`.
 - IDs generados en el cliente (GUID/UUID) para poder crear registros offline.
 - Fechas en UTC en almacenamiento y API.
 
@@ -25,6 +25,12 @@ Monorepo:
 - Un commit por tarea de `specs/*/tasks.md`, al terminarla con la suite en verde; tests e implementación van juntos.
 - El mensaje no lleva el ID de la tarea: es Conventional Commits puro (ej. `feat(api): crear solución .NET por capas`).
 - Nunca añadir a Claude como coautor ni atribución a Claude en commits o PRs.
+
+## Ramas
+- Flujo `main` ← `develop` ← ramas de trabajo. Nunca se commitea directo en `main` ni en `develop`.
+- Cada rama de trabajo se crea desde `develop` y se llama `<tipo>/<scope>-<descripción-corta>` (ej. `feat/api-solucion-por-capas`), con tipo y scope de Conventional Commits.
+- Las ramas de trabajo entran en `develop` mediante PR; `develop` entra en `main` mediante PR cuando hay un estado estable con las suites en verde.
+- Al terminar una rama, se para en el paso del PR.
 
 ## Reglas
 - Lee `docs/constitution.md` y la spec activa en `specs/` antes de tocar código.
