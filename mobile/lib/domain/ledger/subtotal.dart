@@ -23,3 +23,18 @@ Money wholeLempiraSubtotal({
 
   return Money(wholeLempiras * minorUnitsPerLempira);
 }
+
+/// Subtotal de un ítem en un negocio con montos de 2 decimales: cantidad por
+/// precio unitario, redondeado al centavo más cercano con la mitad hacia
+/// arriba (RF-83). Todo con aritmética de enteros.
+Money centavoSubtotal({required Quantity quantity, required Money unitPrice}) {
+  assert(quantity.milli > 0, 'la cantidad debe ser positiva');
+  assert(unitPrice.isPositive, 'el precio unitario debe ser positivo');
+
+  const milliPerUnit = 1000;
+
+  // quantity.milli * unitPrice.minorUnits son milésimas de centavo.
+  final exactMilliCents = quantity.milli * unitPrice.minorUnits;
+
+  return Money((exactMilliCents + milliPerUnit ~/ 2) ~/ milliPerUnit);
+}
