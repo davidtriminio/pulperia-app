@@ -23,7 +23,7 @@ Monorepo:
 - Conventional Commits con scope: `tipo(scope): descripción` (ej. `feat(mobile): registrar abono general`).
 - Scopes permitidos: `api`, `mobile`, `web`, `specs`, `docs`, `repo` (configuración transversal).
 - Un commit por tarea de `specs/*/tasks.md`, al terminarla con la suite en verde; tests e implementación van juntos.
-- El ID de la tarea va al final de la descripción entre paréntesis (ej. `feat(api): crear solución por capas (T001)`); el mensaje sigue siendo Conventional Commits, sin prefijo de ID.
+- El mensaje no lleva el ID de la tarea: es Conventional Commits puro (ej. `feat(api): crear solución .NET por capas`).
 - Nunca añadir a Claude como coautor ni atribución a Claude en commits o PRs.
 
 ## Reglas
