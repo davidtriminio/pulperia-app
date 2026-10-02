@@ -1,0 +1,613 @@
+{
+  "description": "Resumen del negocio sobre clientes no archivados: deuda total (suma de saldos positivos), saldo a favor total (suma del valor absoluto de los saldos negativos, aparte y sin restar de la deuda) y lista completa de clientes con deuda ordenada de mayor a menor saldo. Los empates se desempatan por id ascendente (comparación ordinal del texto). Los saldos están en centavos de lempira; positivo es deuda y negativo es saldo a favor. Cuántos mostrar de la lista es decisión de la interfaz",
+  "rf": [
+    63,
+    64,
+    65
+  ],
+  "cases": [
+    {
+      "name": "negocio sin clientes: todo en cero y lista vacía",
+      "input": {
+        "clients": []
+      },
+      "expected": {
+        "debtTotal": 0,
+        "creditTotal": 0,
+        "topDebtorIds": []
+      }
+    },
+    {
+      "name": "un cliente con deuda de L 50",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 5000,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 5000,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000001"
+        ]
+      }
+    },
+    {
+      "name": "varios con deuda: se suman y se ordenan de mayor a menor",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 3000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": 9000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000003",
+            "name": "Carla",
+            "balance": 6000,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 18000,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000002",
+          "00000000-0000-0000-0000-000000000003",
+          "00000000-0000-0000-0000-000000000001"
+        ]
+      }
+    },
+    {
+      "name": "RF-64: el saldo a favor no resta de la deuda total, se muestra aparte",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 5000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": -2000,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 5000,
+        "creditTotal": 2000,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000001"
+        ]
+      }
+    },
+    {
+      "name": "varios con saldo a favor se suman aparte",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": -1000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": -2500,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000003",
+            "name": "Carla",
+            "balance": 4000,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 4000,
+        "creditTotal": 3500,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000003"
+        ]
+      }
+    },
+    {
+      "name": "los saldados (saldo cero) no suman ni aparecen en la lista",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 0,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": 700,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000003",
+            "name": "Carla",
+            "balance": 0,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 700,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000002"
+        ]
+      }
+    },
+    {
+      "name": "solo clientes saldados",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 0,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": 0,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 0,
+        "creditTotal": 0,
+        "topDebtorIds": []
+      }
+    },
+    {
+      "name": "solo clientes con saldo a favor: deuda cero y lista vacía",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": -500,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": -1500,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 0,
+        "creditTotal": 2000,
+        "topDebtorIds": []
+      }
+    },
+    {
+      "name": "un archivado con deuda grande no cuenta ni aparece",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 4000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": 90000,
+            "archived": true
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 4000,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000001"
+        ]
+      }
+    },
+    {
+      "name": "un archivado con saldo a favor no cuenta en el saldo a favor total",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 4000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": -8000,
+            "archived": true
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 4000,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000001"
+        ]
+      }
+    },
+    {
+      "name": "solo archivados: todo en cero y lista vacía",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 1000,
+            "archived": true
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": -1000,
+            "archived": true
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 0,
+        "creditTotal": 0,
+        "topDebtorIds": []
+      }
+    },
+    {
+      "name": "empate de saldos: se desempata por id ascendente",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000003",
+            "name": "Carla",
+            "balance": 5000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 5000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": 5000,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 15000,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000001",
+          "00000000-0000-0000-0000-000000000002",
+          "00000000-0000-0000-0000-000000000003"
+        ]
+      }
+    },
+    {
+      "name": "empate parcial: primero el mayor, luego los empatados por id",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000004",
+            "name": "Dani",
+            "balance": 2000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": 7000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000003",
+            "name": "Carla",
+            "balance": 2000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 7000,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 18000,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000001",
+          "00000000-0000-0000-0000-000000000002",
+          "00000000-0000-0000-0000-000000000003",
+          "00000000-0000-0000-0000-000000000004"
+        ]
+      }
+    },
+    {
+      "name": "el desempate por id ignora el orden en que llegan los clientes",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": 5000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000003",
+            "name": "Carla",
+            "balance": 5000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 5000,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 15000,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000001",
+          "00000000-0000-0000-0000-000000000002",
+          "00000000-0000-0000-0000-000000000003"
+        ]
+      }
+    },
+    {
+      "name": "mezcla completa: deuda, saldo a favor, saldados y archivados",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 12000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": -3000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000003",
+            "name": "Carla",
+            "balance": 0,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000004",
+            "name": "Dani",
+            "balance": 8000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000005",
+            "name": "Eli",
+            "balance": 50000,
+            "archived": true
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000006",
+            "name": "Fer",
+            "balance": -700,
+            "archived": true
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000007",
+            "name": "Gus",
+            "balance": 8000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000008",
+            "name": "Hana",
+            "balance": -250,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 28000,
+        "creditTotal": 3250,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000001",
+          "00000000-0000-0000-0000-000000000004",
+          "00000000-0000-0000-0000-000000000007"
+        ]
+      }
+    },
+    {
+      "name": "la lista es completa, sin límite: 12 clientes con deuda",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Cliente 1",
+            "balance": 100,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Cliente 2",
+            "balance": 200,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000003",
+            "name": "Cliente 3",
+            "balance": 300,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000004",
+            "name": "Cliente 4",
+            "balance": 400,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000005",
+            "name": "Cliente 5",
+            "balance": 500,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000006",
+            "name": "Cliente 6",
+            "balance": 600,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000007",
+            "name": "Cliente 7",
+            "balance": 700,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000008",
+            "name": "Cliente 8",
+            "balance": 800,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000009",
+            "name": "Cliente 9",
+            "balance": 900,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000010",
+            "name": "Cliente 10",
+            "balance": 1000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000011",
+            "name": "Cliente 11",
+            "balance": 1100,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000012",
+            "name": "Cliente 12",
+            "balance": 1200,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 7800,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000012",
+          "00000000-0000-0000-0000-000000000011",
+          "00000000-0000-0000-0000-000000000010",
+          "00000000-0000-0000-0000-000000000009",
+          "00000000-0000-0000-0000-000000000008",
+          "00000000-0000-0000-0000-000000000007",
+          "00000000-0000-0000-0000-000000000006",
+          "00000000-0000-0000-0000-000000000005",
+          "00000000-0000-0000-0000-000000000004",
+          "00000000-0000-0000-0000-000000000003",
+          "00000000-0000-0000-0000-000000000002",
+          "00000000-0000-0000-0000-000000000001"
+        ]
+      }
+    },
+    {
+      "name": "un centavo de deuda cuenta",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 1,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 1,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000001"
+        ]
+      }
+    },
+    {
+      "name": "valores grandes: tres deudas de casi L 1000 millones",
+      "input": {
+        "clients": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "Ana",
+            "balance": 99999999000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "Beto",
+            "balance": 99999999000,
+            "archived": false
+          },
+          {
+            "id": "00000000-0000-0000-0000-000000000003",
+            "name": "Carla",
+            "balance": 99999999001,
+            "archived": false
+          }
+        ]
+      },
+      "expected": {
+        "debtTotal": 299999997001,
+        "creditTotal": 0,
+        "topDebtorIds": [
+          "00000000-0000-0000-0000-000000000003",
+          "00000000-0000-0000-0000-000000000001",
+          "00000000-0000-0000-0000-000000000002"
+        ]
+      }
+    }
+  ]
+}

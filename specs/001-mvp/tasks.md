@@ -26,7 +26,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T007** Vectores de subtotal con 2 decimales. RF: 83. *Hecho cuando:* incluye al menos 10 casos, entre ellos 0.333×12.50 y .5 de centavo.
 - [x] **T008** Vectores de saldo. RF: 39, 40, 42, 44, 47. *Hecho cuando:* cubre solo fiados, fiados con abonos, abono mayor que la deuda, movimientos anulados y fiado anulado con abonos.
 - [x] **T009** Vectores de teléfono. RF: 77. *Hecho cuando:* los válidos incluyen 90000000, 80000000, 30000000 y 20000000, y los inválidos cubren 7 y 9 dígitos, prefijos 1/4/5/6/7, letras y espacios.
-- [ ] **T010** Vectores de resumen. RF: 63, 64, 65. *Hecho cuando:* cubre saldos positivos, saldo a favor, clientes archivados excluidos y empates en el orden.
+- [x] **T010** Vectores de resumen. RF: 63, 64, 65. *Hecho cuando:* cubre saldos positivos, saldo a favor, clientes archivados excluidos y empates en el orden.
 - [ ] **T011** Paleta de avatares. RF: 72. *Hecho cuando:* define exactamente 24 personajes, 6 tonos y 12 fondos con identificadores estables.
 - [ ] **T012** Vectores de validación de cliente. RF: 15, 17, 74. *Hecho cuando:* cubre nombre vacío, nota de 300 y 301 caracteres, y homónimos que difieren en mayúsculas y espacios exteriores.
 - [ ] **T013** Vectores de modos de negocio. RF: 8, 9, 32, 35, 36, 84. *Hecho cuando:* cubre las transiciones permitidas y prohibidas, y montos o cantidades válidos e inválidos por modo, incluida una cantidad con 4 decimales.
