@@ -36,7 +36,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T015** Tipo de cantidad en milésimas y su lectura. RF: 84. Dep: T013. *Hecho cuando:* pasan los vectores de cantidad.
 - [x] **T016** Subtotal con montos enteros. RF: 34. Dep: T006, T014, T015. *Hecho cuando:* pasan todos los vectores de T006.
 - [x] **T017** Subtotal con 2 decimales. RF: 83. Dep: T007. *Hecho cuando:* pasan todos los vectores de T007.
-- [ ] **T018** Validación de montos y cantidades según los modos del negocio. RF: 32, 35, 36. Dep: T013. *Hecho cuando:* pasan los vectores de modos.
+- [x] **T018** Validación de montos y cantidades según los modos del negocio. RF: 32, 35, 36. Dep: T013. *Hecho cuando:* pasan los vectores de modos.
 - [ ] **T019** Reglas de cambio de ajustes del negocio. RF: 8, 9. Dep: T013. *Hecho cuando:* enteros→decimales se acepta y decimales→enteros se rechaza, en montos y en cantidades.
 - [ ] **T020** Validación de fiado (con ítems, solo total, vacío, valores en cero o negativos). RF: 28, 29, 32, 33. Dep: T016–T018. *Hecho cuando:* cada caso devuelve el error esperado, y un fiado con ítems conserva cantidad y precio de cada uno.
 - [ ] **T021** Validación de abono. RF: 37, 38. Dep: T014. *Hecho cuando:* un abono de cero o negativo se rechaza.
