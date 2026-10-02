@@ -1,0 +1,391 @@
+{
+  "description": "Validación al crear o editar un cliente. Entrada: name, note (opcional) y existingNames (nombres de los demás clientes del negocio). Salida: errors (códigos estables, primero los del nombre y luego los de la nota) y duplicate (true si el nombre coincide con otro ignorando mayúsculas y espacios exteriores; es un aviso, no un error, y solo se evalúa si el nombre no está vacío). Un nombre solo de espacios cuenta como vacío. La nota admite hasta 300 caracteres. Los vectores usan solo caracteres del plano básico de Unicode: no definen cómo se cuentan los emojis",
+  "rf": [
+    15,
+    17,
+    74
+  ],
+  "cases": [
+    {
+      "name": "nombre válido sin nota ni otros clientes",
+      "input": {
+        "name": "Ana López",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-15: nombre vacío",
+      "input": {
+        "name": "",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [
+          "name_required"
+        ],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-15: nombre solo de espacios",
+      "input": {
+        "name": "   ",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [
+          "name_required"
+        ],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-15: nombre solo de tabulaciones y saltos de línea",
+      "input": {
+        "name": "\t\n",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [
+          "name_required"
+        ],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-74: nota ausente es válida",
+      "input": {
+        "name": "Ana",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-74: nota vacía es válida",
+      "input": {
+        "name": "Ana",
+        "note": "",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-74: nota corta es válida",
+      "input": {
+        "name": "Ana",
+        "note": "Paga los viernes",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-74: nota de exactamente 300 caracteres es válida",
+      "input": {
+        "name": "Ana",
+        "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-74: nota de 301 caracteres se rechaza",
+      "input": {
+        "name": "Ana",
+        "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [
+          "note_too_long"
+        ],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-74: nota de 300 caracteres con tildes y eñes es válida",
+      "input": {
+        "name": "Ana",
+        "note": "ññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññ",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-74: nota de 301 caracteres con tildes y eñes se rechaza",
+      "input": {
+        "name": "Ana",
+        "note": "ñññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññ",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [
+          "note_too_long"
+        ],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-74: los espacios de la nota cuentan: 300 caracteres con espacios es válida",
+      "input": {
+        "name": "Ana",
+        "note": "palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra palabra pala",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-74: nota muy larga se rechaza",
+      "input": {
+        "name": "Ana",
+        "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [
+          "note_too_long"
+        ],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-15 y RF-74: nombre vacío y nota larga producen ambos errores, nombre primero",
+      "input": {
+        "name": "",
+        "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [
+          "name_required",
+          "note_too_long"
+        ],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-17: el mismo nombre ya existe",
+      "input": {
+        "name": "Juan Pérez",
+        "existingNames": [
+          "Juan Pérez"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": true
+      }
+    },
+    {
+      "name": "RF-17: difiere solo en mayúsculas",
+      "input": {
+        "name": "juan pérez",
+        "existingNames": [
+          "Juan Pérez"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": true
+      }
+    },
+    {
+      "name": "RF-17: mayúsculas con tilde (José y JOSÉ)",
+      "input": {
+        "name": "JOSÉ",
+        "existingNames": [
+          "José"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": true
+      }
+    },
+    {
+      "name": "RF-17: espacios exteriores al principio y al final",
+      "input": {
+        "name": "  Juan Pérez  ",
+        "existingNames": [
+          "Juan Pérez"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": true
+      }
+    },
+    {
+      "name": "RF-17: el existente tiene espacios exteriores",
+      "input": {
+        "name": "Juan Pérez",
+        "existingNames": [
+          "  Juan Pérez "
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": true
+      }
+    },
+    {
+      "name": "RF-17: tabulación exterior",
+      "input": {
+        "name": "\tJuan Pérez\t",
+        "existingNames": [
+          "Juan Pérez"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": true
+      }
+    },
+    {
+      "name": "RF-17: mayúsculas y espacios exteriores a la vez",
+      "input": {
+        "name": "  JUAN PÉREZ ",
+        "existingNames": [
+          "Juan Pérez"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": true
+      }
+    },
+    {
+      "name": "RF-17: coincide con uno entre varios clientes",
+      "input": {
+        "name": "Carla",
+        "existingNames": [
+          "Ana",
+          "Beto",
+          "carla",
+          "Dani"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": true
+      }
+    },
+    {
+      "name": "RF-17: nombres distintos no son homónimos",
+      "input": {
+        "name": "Juan Pérez",
+        "existingNames": [
+          "Juan Pereira",
+          "Ana"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-17: sin tilde no es el mismo nombre (Jose y José)",
+      "input": {
+        "name": "Jose",
+        "existingNames": [
+          "José"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-17: solo los espacios exteriores se ignoran; los interiores cuentan",
+      "input": {
+        "name": "Juan  Pérez",
+        "existingNames": [
+          "Juan Pérez"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-17: un nombre contenido en otro no es homónimo",
+      "input": {
+        "name": "Ana",
+        "existingNames": [
+          "Ana María"
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-17: no hay otros clientes, no hay homónimo",
+      "input": {
+        "name": "Ana",
+        "existingNames": []
+      },
+      "expected": {
+        "errors": [],
+        "duplicate": false
+      }
+    },
+    {
+      "name": "RF-17 con RF-74: homónimo y nota larga a la vez",
+      "input": {
+        "name": "Ana",
+        "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "existingNames": [
+          "ana"
+        ]
+      },
+      "expected": {
+        "errors": [
+          "note_too_long"
+        ],
+        "duplicate": true
+      }
+    },
+    {
+      "name": "RF-15: un nombre vacío no es homónimo de nada",
+      "input": {
+        "name": "  ",
+        "existingNames": [
+          "",
+          "Ana"
+        ]
+      },
+      "expected": {
+        "errors": [
+          "name_required"
+        ],
+        "duplicate": false
+      }
+    }
+  ]
+}
