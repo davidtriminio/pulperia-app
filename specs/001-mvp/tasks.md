@@ -32,7 +32,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T013** Vectores de modos de negocio. RF: 8, 9, 32, 35, 36, 84. *Hecho cuando:* cubre las transiciones permitidas y prohibidas, y montos o cantidades válidos e inválidos por modo, incluida una cantidad con 4 decimales.
 
 ## Fase 2 — Dominio del móvil (Dart, sin UI ni red)
-- [ ] **T014** Tipo de dinero en unidad menor (suma, resta, comparación). RF: —; RNF-2. *Hecho cuando:* tests en verde y ninguna aparición de `double` en el dominio de montos.
+- [x] **T014** Tipo de dinero en unidad menor (suma, resta, comparación). RF: —; RNF-2. *Hecho cuando:* tests en verde y ninguna aparición de `double` en el dominio de montos.
 - [ ] **T015** Tipo de cantidad en milésimas y su lectura. RF: 84. Dep: T013. *Hecho cuando:* pasan los vectores de cantidad.
 - [ ] **T016** Subtotal con montos enteros. RF: 34. Dep: T006, T014, T015. *Hecho cuando:* pasan todos los vectores de T006.
 - [ ] **T017** Subtotal con 2 decimales. RF: 83. Dep: T007. *Hecho cuando:* pasan todos los vectores de T007.

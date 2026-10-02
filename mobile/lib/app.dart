@@ -5,9 +5,6 @@ class PulperiaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Pulpería',
-      home: Scaffold(),
-    );
+    return const MaterialApp(title: 'Pulpería', home: Scaffold());
   }
 }
