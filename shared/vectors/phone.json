@@ -1,0 +1,269 @@
+{
+  "description": "Validación del teléfono de un cliente (campo opcional; estos vectores aplican cuando hay valor): exactamente 8 dígitos ASCII 0-9 y el primero es 2, 3, 8 o 9. El texto se evalúa tal cual, sin recortar espacios",
+  "rf": [
+    77
+  ],
+  "cases": [
+    {
+      "name": "válido: 90000000",
+      "input": {
+        "phone": "90000000"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "válido: 80000000",
+      "input": {
+        "phone": "80000000"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "válido: 30000000",
+      "input": {
+        "phone": "30000000"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "válido: 20000000, también el menor posible",
+      "input": {
+        "phone": "20000000"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "válido: prefijo 2 con dígitos variados",
+      "input": {
+        "phone": "22345678"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "válido: prefijo 3 con dígitos variados",
+      "input": {
+        "phone": "31234567"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "válido: prefijo 8 con dígitos variados",
+      "input": {
+        "phone": "89999999"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "válido: prefijo 9 con dígitos variados",
+      "input": {
+        "phone": "98765432"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "válido: 99999999, el mayor posible",
+      "input": {
+        "phone": "99999999"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "inválido: 7 dígitos",
+      "input": {
+        "phone": "9000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: 9 dígitos",
+      "input": {
+        "phone": "900000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: un solo dígito",
+      "input": {
+        "phone": "9"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: prefijo 1",
+      "input": {
+        "phone": "10000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: prefijo 4",
+      "input": {
+        "phone": "40000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: prefijo 5",
+      "input": {
+        "phone": "50000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: prefijo 6",
+      "input": {
+        "phone": "60000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: prefijo 7",
+      "input": {
+        "phone": "70000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: prefijo 0",
+      "input": {
+        "phone": "00000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: una letra al final",
+      "input": {
+        "phone": "9000000a"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: la letra O en lugar del cero",
+      "input": {
+        "phone": "9O000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: solo letras",
+      "input": {
+        "phone": "abcdefgh"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: espacio en medio",
+      "input": {
+        "phone": "9000 0000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: guion en medio",
+      "input": {
+        "phone": "9000-0000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: con código de país y signo más",
+      "input": {
+        "phone": "+50490000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: con código de país sin signo",
+      "input": {
+        "phone": "50490000000"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: ocho dígitos no ASCII (árabes índicos)",
+      "input": {
+        "phone": "٩٠٠٠٠٠٠٠"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    },
+    {
+      "name": "inválido: símbolos",
+      "input": {
+        "phone": "9000000#"
+      },
+      "expected": {
+        "valid": false,
+        "error": "phone_invalid_format"
+      }
+    }
+  ]
+}
