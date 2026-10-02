@@ -15,7 +15,7 @@ Monorepo:
 
 ## Estilo y convenciones
 - Código e identificadores en inglés; mensajes al usuario y documentación en español.
-- Dinero: siempre `decimal` en .NET y enteros en la unidad menor (o decimal exacto) en Flutter/Angular. Nunca `double`/`float`.
+- Dinero: siempre enteros en la unidad menor (centavos de lempira) en .NET, Flutter y Angular, según el plan (D-1). Nunca `double`/`float`.
 - IDs generados en el cliente (GUID/UUID) para poder crear registros offline.
 - Fechas en UTC en almacenamiento y API.
 
