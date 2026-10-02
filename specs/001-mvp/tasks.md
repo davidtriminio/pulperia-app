@@ -23,7 +23,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 
 ## Fase 1 — Datos compartidos (`shared/`)
 - [x] **T006** Vectores de subtotal con montos enteros. RF: 34. *Hecho cuando:* incluye al menos 10 casos: .5 que sube, 0.25×30, cantidad entera, 0.499, valores grandes.
-- [ ] **T007** Vectores de subtotal con 2 decimales. RF: 83. *Hecho cuando:* incluye al menos 10 casos, entre ellos 0.333×12.50 y .5 de centavo.
+- [x] **T007** Vectores de subtotal con 2 decimales. RF: 83. *Hecho cuando:* incluye al menos 10 casos, entre ellos 0.333×12.50 y .5 de centavo.
 - [ ] **T008** Vectores de saldo. RF: 39, 40, 42, 44, 47. *Hecho cuando:* cubre solo fiados, fiados con abonos, abono mayor que la deuda, movimientos anulados y fiado anulado con abonos.
 - [ ] **T009** Vectores de teléfono. RF: 77. *Hecho cuando:* los válidos incluyen 90000000, 80000000, 30000000 y 20000000, y los inválidos cubren 7 y 9 dígitos, prefijos 1/4/5/6/7, letras y espacios.
 - [ ] **T010** Vectores de resumen. RF: 63, 64, 65. *Hecho cuando:* cubre saldos positivos, saldo a favor, clientes archivados excluidos y empates en el orden.
