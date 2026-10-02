@@ -1,0 +1,450 @@
+{
+  "description": "Saldo de un cliente: suma de fiados vigentes menos suma de abonos vigentes, en centavos de lempira. Positivo es deuda, negativo es saldo a favor, cero es saldado. Los movimientos anulados no cuentan",
+  "rf": [
+    39,
+    40,
+    42,
+    44,
+    47
+  ],
+  "cases": [
+    {
+      "name": "cliente sin movimientos tiene saldo cero",
+      "input": {
+        "movements": []
+      },
+      "expected": {
+        "balance": 0,
+        "label": "settled"
+      }
+    },
+    {
+      "name": "un solo fiado de L 50 deja L 50 de deuda",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 5000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": 5000,
+        "label": "debt"
+      }
+    },
+    {
+      "name": "varios fiados se suman: 50 + 30 + 12.50 son L 92.50",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 5000,
+            "annulled": false
+          },
+          {
+            "type": "fiado",
+            "amount": 3000,
+            "annulled": false
+          },
+          {
+            "type": "fiado",
+            "amount": 1250,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": 9250,
+        "label": "debt"
+      }
+    },
+    {
+      "name": "un abono parcial de L 30 sobre L 100 deja L 70",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 10000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 3000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": 7000,
+        "label": "debt"
+      }
+    },
+    {
+      "name": "un abono igual a la deuda deja el saldo en cero",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 10000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 10000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": 0,
+        "label": "settled"
+      }
+    },
+    {
+      "name": "RF-39: un abono de L 120 sobre L 100 deja L 20 a favor",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 10000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 12000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": -2000,
+        "label": "credit"
+      }
+    },
+    {
+      "name": "un abono sin ningún fiado deja el monto completo a favor",
+      "input": {
+        "movements": [
+          {
+            "type": "payment",
+            "amount": 5000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": -5000,
+        "label": "credit"
+      }
+    },
+    {
+      "name": "dos abonos que juntos superan la deuda dejan saldo a favor",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 1000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 600,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 600,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": -200,
+        "label": "credit"
+      }
+    },
+    {
+      "name": "RF-44: un fiado anulado no cuenta",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 5000,
+            "annulled": true
+          },
+          {
+            "type": "fiado",
+            "amount": 3000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": 3000,
+        "label": "debt"
+      }
+    },
+    {
+      "name": "RF-44: un abono anulado no cuenta",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 10000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 4000,
+            "annulled": true
+          }
+        ]
+      },
+      "expected": {
+        "balance": 10000,
+        "label": "debt"
+      }
+    },
+    {
+      "name": "todos los movimientos anulados dejan el saldo en cero",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 5000,
+            "annulled": true
+          },
+          {
+            "type": "payment",
+            "amount": 2000,
+            "annulled": true
+          }
+        ]
+      },
+      "expected": {
+        "balance": 0,
+        "label": "settled"
+      }
+    },
+    {
+      "name": "RF-47: fiado anulado con abonos de otro dispositivo deja todo el abono a favor",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 8000,
+            "annulled": true
+          },
+          {
+            "type": "payment",
+            "amount": 3000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 2000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": -5000,
+        "label": "credit"
+      }
+    },
+    {
+      "name": "RF-47: fiado anulado más otro vigente; el excedente de abonos queda a favor",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 8000,
+            "annulled": true
+          },
+          {
+            "type": "fiado",
+            "amount": 2000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 3000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": -1000,
+        "label": "credit"
+      }
+    },
+    {
+      "name": "mezcla con anulados: vigentes 80 menos 30 dan L 50",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 1500,
+            "annulled": false
+          },
+          {
+            "type": "fiado",
+            "amount": 2500,
+            "annulled": false
+          },
+          {
+            "type": "fiado",
+            "amount": 4000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 1000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 2000,
+            "annulled": false
+          },
+          {
+            "type": "fiado",
+            "amount": 9999,
+            "annulled": true
+          },
+          {
+            "type": "payment",
+            "amount": 7777,
+            "annulled": true
+          }
+        ]
+      },
+      "expected": {
+        "balance": 5000,
+        "label": "debt"
+      }
+    },
+    {
+      "name": "un saldo a favor se absorbe con fiados nuevos: 20 + 70 menos 50 dan L 40",
+      "input": {
+        "movements": [
+          {
+            "type": "payment",
+            "amount": 5000,
+            "annulled": false
+          },
+          {
+            "type": "fiado",
+            "amount": 2000,
+            "annulled": false
+          },
+          {
+            "type": "fiado",
+            "amount": 7000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": 4000,
+        "label": "debt"
+      }
+    },
+    {
+      "name": "el orden de los movimientos no altera el saldo",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 7000,
+            "annulled": false
+          },
+          {
+            "type": "fiado",
+            "amount": 2000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 5000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": 4000,
+        "label": "debt"
+      }
+    },
+    {
+      "name": "un centavo de deuda",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 1,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": 1,
+        "label": "debt"
+      }
+    },
+    {
+      "name": "un abono de un centavo salda un fiado de un centavo",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 1,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 1,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": 0,
+        "label": "settled"
+      }
+    },
+    {
+      "name": "valores grandes: tres fiados de L 999999990 menos un abono de L 1000000000",
+      "input": {
+        "movements": [
+          {
+            "type": "fiado",
+            "amount": 99999999000,
+            "annulled": false
+          },
+          {
+            "type": "fiado",
+            "amount": 99999999000,
+            "annulled": false
+          },
+          {
+            "type": "fiado",
+            "amount": 99999999000,
+            "annulled": false
+          },
+          {
+            "type": "payment",
+            "amount": 100000000000,
+            "annulled": false
+          }
+        ]
+      },
+      "expected": {
+        "balance": 199999997000,
+        "label": "debt"
+      }
+    }
+  ]
+}
