@@ -19,7 +19,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T002** Crear el proyecto Flutter en `mobile/`. RF: —. *Hecho cuando:* `flutter test` (en `mobile/`) pasa con un test de humo.
 - [x] **T003** Crear el proyecto Angular en `web/` con Tailwind CSS. RF: —. *Hecho cuando:* `ng test` (en `web/`) pasa con un test de humo.
 - [x] **T004** Completar la sección "Comandos" de `AGENTS.md` con los comandos reales. RF: —. Dep: T001–T003. *Hecho cuando:* cada comando listado se ejecutó con éxito.
-- [ ] **T005** Crear `shared/` con un README que describe el formato de los vectores (entrada y salida esperada) y cómo los lee cada plataforma. RF: —. *Hecho cuando:* el README existe y define el formato con un ejemplo.
+- [x] **T005** Crear `shared/` con un README que describe el formato de los vectores (entrada y salida esperada) y cómo los lee cada plataforma. RF: —. *Hecho cuando:* el README existe y define el formato con un ejemplo.
 
 ## Fase 1 — Datos compartidos (`shared/`)
 - [ ] **T006** Vectores de subtotal con montos enteros. RF: 34. *Hecho cuando:* incluye al menos 10 casos: .5 que sube, 0.25×30, cantidad entera, 0.499, valores grandes.
