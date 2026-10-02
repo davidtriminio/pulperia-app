@@ -1,0 +1,228 @@
+{
+  "description": "Subtotal de un ítem con montos de 2 decimales: cantidad (milésimas) por precio unitario (centavos de lempira), redondeado al centavo más cercano con la mitad hacia arriba",
+  "rf": [
+    83
+  ],
+  "cases": [
+    {
+      "name": "0.333 por L 12.50 son L 4.1625 y baja a L 4.16",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 333,
+        "unitPrice": 1250
+      },
+      "expected": {
+        "subtotal": 416
+      }
+    },
+    {
+      "name": "cantidad entera: 2 por L 12.50 son L 25",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 2000,
+        "unitPrice": 1250
+      },
+      "expected": {
+        "subtotal": 2500
+      }
+    },
+    {
+      "name": "0.5 por L 12.50 son exactamente L 6.25, sin redondeo",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 500,
+        "unitPrice": 1250
+      },
+      "expected": {
+        "subtotal": 625
+      }
+    },
+    {
+      "name": "1.25 por L 1234.56 son exactamente L 1543.20",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 1250,
+        "unitPrice": 123456
+      },
+      "expected": {
+        "subtotal": 154320
+      }
+    },
+    {
+      "name": "0.25 por L 30 son L 7.50: aquí no se redondea al lempira como en modo entero",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 250,
+        "unitPrice": 3000
+      },
+      "expected": {
+        "subtotal": 750
+      }
+    },
+    {
+      "name": "0.5 por L 10.01 son L 5.005: el medio centavo sube a L 5.01",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 500,
+        "unitPrice": 1001
+      },
+      "expected": {
+        "subtotal": 501
+      }
+    },
+    {
+      "name": "0.1 por L 10.05 son L 1.005: el medio centavo sube a L 1.01",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 100,
+        "unitPrice": 1005
+      },
+      "expected": {
+        "subtotal": 101
+      }
+    },
+    {
+      "name": "0.25 por L 2.02 son L 0.505: el medio centavo sube a L 0.51",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 250,
+        "unitPrice": 202
+      },
+      "expected": {
+        "subtotal": 51
+      }
+    },
+    {
+      "name": "1.5 por L 0.99 son L 1.485: el medio centavo sube a L 1.49",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 1500,
+        "unitPrice": 99
+      },
+      "expected": {
+        "subtotal": 149
+      }
+    },
+    {
+      "name": "0.001 por L 5 son L 0.005: el medio centavo mínimo sube a L 0.01",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 1,
+        "unitPrice": 500
+      },
+      "expected": {
+        "subtotal": 1
+      }
+    },
+    {
+      "name": "0.5 por L 0.01 son L 0.005: sube a L 0.01 (no se redondea al par)",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 500,
+        "unitPrice": 1
+      },
+      "expected": {
+        "subtotal": 1
+      }
+    },
+    {
+      "name": "2.5 por L 0.01 son L 0.025: sube a L 0.03 (no se redondea al par)",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 2500,
+        "unitPrice": 1
+      },
+      "expected": {
+        "subtotal": 3
+      }
+    },
+    {
+      "name": "0.499 por L 10.01 son L 4.99499 y baja a L 4.99 (justo debajo de la mitad)",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 499,
+        "unitPrice": 1001
+      },
+      "expected": {
+        "subtotal": 499
+      }
+    },
+    {
+      "name": "0.501 por L 10.01 son L 5.01501 y sube a L 5.02 (justo encima de la mitad)",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 501,
+        "unitPrice": 1001
+      },
+      "expected": {
+        "subtotal": 502
+      }
+    },
+    {
+      "name": "0.333 por L 0.99 son L 0.32967 y sube a L 0.33",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 333,
+        "unitPrice": 99
+      },
+      "expected": {
+        "subtotal": 33
+      }
+    },
+    {
+      "name": "0.667 por L 3 son L 2.001 y baja a L 2.00",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 667,
+        "unitPrice": 300
+      },
+      "expected": {
+        "subtotal": 200
+      }
+    },
+    {
+      "name": "0.001 por L 12.50 son L 0.0125 y baja a L 0.01",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 1,
+        "unitPrice": 1250
+      },
+      "expected": {
+        "subtotal": 1
+      }
+    },
+    {
+      "name": "3 por L 0.01 son L 0.03",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 3000,
+        "unitPrice": 1
+      },
+      "expected": {
+        "subtotal": 3
+      }
+    },
+    {
+      "name": "valor grande: 1000 por L 999999.99 son L 999999990",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 1000000,
+        "unitPrice": 99999999
+      },
+      "expected": {
+        "subtotal": 99999999000
+      }
+    },
+    {
+      "name": "valor grande con fracción: 1.5 por L 999999.99 son L 1499999.985 y sube a L 1499999.99",
+      "input": {
+        "amountMode": "two_decimals",
+        "quantityMilli": 1500,
+        "unitPrice": 99999999
+      },
+      "expected": {
+        "subtotal": 149999999
+      }
+    }
+  ]
+}
