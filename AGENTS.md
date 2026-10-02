@@ -8,10 +8,12 @@ Monorepo:
 - `mobile/` — App Flutter, SQLite local (Drift) + cola de cambios para sync por lote.
 - `web/`    — Cliente Angular.
 
-## Comandos (completar al crear cada proyecto)
-- API:    `dotnet run --project api/...`  | tests: `dotnet test api`
-- Mobile: `flutter run`                   | tests: `flutter test` (en `mobile/`)
-- Web:    `ng serve`                      | tests: `ng test` (en `web/`)
+## Comandos
+Desde la raíz del repo salvo donde se indica.
+- API:    `dotnet run --project api/src/Pulperia.Api` (http://localhost:5109) | tests: `dotnet test api`
+- Mobile: `flutter run` (en `mobile/`; requiere emulador o teléfono) | análisis: `flutter analyze` | tests: `flutter test` (en `mobile/`)
+- Web:    `pnpm start` (en `web/`, equivale a `ng serve`; http://localhost:4200) | tests: `pnpm test --watch=false` (en `web/`, una sola pasada) | build: `pnpm build`
+- Emulador Android: `ANDROID_SDK_ROOT` y `ANDROID_HOME` deben apuntar a `V:\Programas\Android\Sdk` al lanzarlo (`emulator -avd Resizable_Experimental`); Flutter ya usa ese SDK (`flutter config --android-sdk`). Luego `flutter run -d emulator-5554`.
 
 ## Estilo y convenciones
 - Código e identificadores en inglés; mensajes al usuario y documentación en español.
