@@ -26,6 +26,12 @@ Monorepo:
 - El mensaje no lleva el ID de la tarea: es Conventional Commits puro (ej. `feat(api): crear solución .NET por capas`).
 - Nunca añadir a Claude como coautor ni atribución a Claude en commits o PRs.
 
+## Ramas
+- Flujo `main` ← `develop` ← ramas de trabajo. Nunca se commitea directo en `main` ni en `develop`.
+- Cada rama de trabajo se crea desde `develop` y se llama `<tipo>/<scope>-<descripción-corta>` (ej. `feat/api-solucion-por-capas`), con tipo y scope de Conventional Commits.
+- Las ramas de trabajo entran en `develop` mediante PR; `develop` entra en `main` mediante PR cuando hay un estado estable con las suites en verde.
+- Al terminar una rama, se para en el paso del PR.
+
 ## Reglas
 - Lee `docs/constitution.md` y la spec activa en `specs/` antes de tocar código.
 - No añadas dependencias ni cambies el contrato de la API sin actualizar antes la spec/plan.
