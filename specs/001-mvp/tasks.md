@@ -60,7 +60,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T037** Repositorio de abonos: crear, también para clientes archivados. RF: 37, 75. Dep: T021. *Hecho cuando:* un abono a un archivado se guarda y reduce su saldo.
 - [x] **T038** Anulación de fiados y abonos con usuario y fecha. RF: 43, 44, 45, 46, 49. Dep: T025. *Hecho cuando:* el movimiento anulado se conserva, no cuenta en el saldo, el empleado no puede anular y no existe operación de borrar ni de editar.
 - [x] **T039** Consultas de saldo e historial. RF: 40, 41, 42. Dep: T022, T027. *Hecho cuando:* el historial incluye anulados marcados y el saldo negativo se identifica como saldo a favor.
-- [ ] **T040** Consulta del resumen sobre datos locales. RF: 66. Dep: T026. *Hecho cuando:* incluye cambios aún no sincronizados.
+- [x] **T040** Consulta del resumen sobre datos locales. RF: 66. Dep: T026. *Hecho cuando:* incluye cambios aún no sincronizados.
 
 ## Fase 3b — Tramo de prueba del móvil, sin servidor (para probar la app pronto)
 Lleva a esta altura las pantallas de clientes, fiados, abonos y catálogo, que antes estaban en la Fase 9, para poder usar la app en el emulador, en modo avión, antes de construir la API. Se usa un negocio y un usuario de desarrollo fijos (T040a) que T088 reemplaza por la sesión real. Las tareas T100, T101, T102, T104, T106 a T112 y T115 se movieron aquí sin cambiar su contenido; solo se les añadió `Dep:`.
