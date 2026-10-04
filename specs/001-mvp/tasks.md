@@ -3,11 +3,12 @@
 Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cubre `spec.md` (RF-1 a RF-85, RNF-1 a RNF-8).
 
 ## Cómo se trabaja
-- **Una tarea cada vez.** Al terminarla, se marca y se para.
-- **Tests primero**: se escriben los tests de la tarea, se ven fallar, se implementa y se ejecuta la suite del proyecto tocado. Una tarea no se marca hecha con la suite en rojo.
+- **Una unidad de trabajo es un bloque** de tareas relacionadas, con una rama y un PR. Se trabaja el bloque entero, tarea a tarea, y se para al cerrarlo (en el paso del PR) o antes si algo bloquea: un test que no pasa, una laguna de la spec, una dependencia no aprobada o una tarea de más de 30 minutos.
+- **Tests primero** en cada tarea: se escriben los tests, se ven fallar, se implementa y se ejecuta la suite del proyecto tocado. Una tarea no se marca hecha con la suite en rojo.
 - Cada tarea cabe en menos de 30 minutos. Si una crece, se divide antes de seguir.
 - Las tareas van en orden de dependencia. Salvo que se indique `Dep:`, cada tarea depende solo de las anteriores de su fase y las fases dependen de las anteriores.
-- Commit por tarea, en Conventional Commits con el scope que corresponda (`api`, `mobile`, `web`, `specs`, `docs`, `repo`).
+- **Un commit por tarea**, en Conventional Commits con el scope que corresponda (`api`, `mobile`, `web`, `specs`, `docs`, `repo`), con la casilla de la tarea marcada en ese mismo commit.
+- El PR del bloque se fusiona con "rebase and merge" para conservar un commit por tarea, y solo con CI en verde. Las tareas delicadas (sincronización, permisos, API/servidor, seguridad, migraciones) llevan rama y PR propios.
 - Los vectores de `shared/` se leen desde los tests de cada plataforma; ninguna plataforma redefine esos casos.
 
 ## Bloqueos externos
@@ -55,18 +56,22 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T032** Repositorio de clientes: crear y editar, encolando la operación en la misma transacción. RF: 14, 19, 51. Dep: T023, T031. *Hecho cuando:* si falla el encolado, no queda el cliente guardado.
 - [x] **T033** Repositorio de clientes: archivar y restaurar, listas normal y de archivados. RF: 20, 22, 23. *Hecho cuando:* un archivado sale de la lista normal, aparece en archivados con su saldo y vuelve al restaurarlo.
 - [x] **T034** Repositorio de productos: crear, cambiar precio, archivar; sin borrar. RF: 24, 25, 26, 27. *Hecho cuando:* cambiar el precio no altera ítems ya guardados y archivar no los borra.
-- [x] **T035** Repositorio de fiados: crear con ítems o solo total. RF: 8, 28, 29, 31, 49, 51. Dep: T020. *Hecho cuando:* el fiado y su operación se guardan juntos, con el usuario que lo registró; un ítem sin producto del catálogo se acepta.
+- [x] **T035** Repositorio de fiados: crear con ítems o solo total. RF: 25, 28, 29, 31, 49, 51. Dep: T020. *Hecho cuando:* el fiado y su operación se guardan juntos, con el usuario que lo registró; un ítem sin producto del catálogo se acepta.
 - [x] **T036** Repositorio de fiados: rechazo para clientes archivados. RF: 76. *Hecho cuando:* el intento falla con el error esperado y no deja operación en la cola.
 - [x] **T037** Repositorio de abonos: crear, también para clientes archivados. RF: 37, 75. Dep: T021. *Hecho cuando:* un abono a un archivado se guarda y reduce su saldo.
 - [x] **T038** Anulación de fiados y abonos con usuario y fecha. RF: 43, 44, 45, 46, 49. Dep: T025. *Hecho cuando:* el movimiento anulado se conserva, no cuenta en el saldo, el empleado no puede anular y no existe operación de borrar ni de editar.
 - [x] **T039** Consultas de saldo e historial. RF: 40, 41, 42. Dep: T022, T027. *Hecho cuando:* el historial incluye anulados marcados y el saldo negativo se identifica como saldo a favor.
 - [x] **T040** Consulta del resumen sobre datos locales. RF: 66. Dep: T026. *Hecho cuando:* incluye cambios aún no sincronizados.
 
+## Fase 3a — Proceso e ids
+- [ ] **T152** Integración continua en GitHub Actions (D-22). RF: —. *Hecho cuando:* `.github/workflows/ci.yml` se dispara en pull_request y push hacia `develop` y `main`; ejecuta los jobs api (`dotnet test api`), mobile (`flutter pub get`, código de Drift al día con `build_runner` y `git diff --exit-code`, `flutter analyze`, `flutter test`) y web (`pnpm install --frozen-lockfile`, `pnpm test --watch=false`, `pnpm build`) solo si cambian sus rutas; un job final `ci-ok` siempre se ejecuta y falla si falla alguno; las acciones de terceros van fijadas por SHA y los permisos son `contents: read`; existe `.github/pull_request_template.md`; y una ejecución real termina en verde.
+- [ ] **T153** Generador de ids UUID v7 (D-21). RF: —. Dep: D-21. *Hecho cuando:* una función única `newId()` en `mobile/lib/data/` devuelve UUID v7 en minúsculas con el paquete `uuid`, y los tests comprueban formato válido, versión 7 y variante correctas, 100 000 ids sin repetirse y orden creciente por tiempo; y los repositorios existentes reciben el generador por inyección, con generadores deterministas en sus tests.
+
 ## Fase 3b — Tramo de prueba del móvil, sin servidor (para probar la app pronto)
-Lleva a esta altura las pantallas de clientes, fiados, abonos y catálogo, que antes estaban en la Fase 9, para poder usar la app en el emulador, en modo avión, antes de construir la API. Se usa un negocio y un usuario de desarrollo fijos (T040a) que T088 reemplaza por la sesión real. Las tareas T100, T101, T102, T104, T106 a T112 y T115 se movieron aquí sin cambiar su contenido; solo se les añadió `Dep:`.
+Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T104), C (T106, T107, T108), D (T109 a T112 y T115) y E (T040c). Lleva a esta altura las pantallas de clientes, fiados, abonos y catálogo, que antes estaban en la Fase 9, para poder usar la app en el emulador, en modo avión, antes de construir la API. Se usa un negocio y un usuario de desarrollo fijos (T040a) que T088 reemplaza por la sesión real. Las tareas T100, T101, T102, T104, T106 a T112 y T115 se movieron aquí sin cambiar su contenido; solo se les añadió `Dep:`.
 
 - [ ] **T040a** Sesión simulada solo para desarrollo: un negocio de prueba y un usuario dueño, con los modos de montos y cantidades definidos por constantes. RF: —. Dep: T040. *Hecho cuando:* en depuración la app arranca con ese negocio y usuario activos, y un test comprueba que en modo release no están disponibles. Se elimina en T088.
-- [ ] **T040b** Cableado de la app: añadir Riverpod (D-11) y los proveedores de la base local, del negocio activo y del usuario activo. RF: —. Dep: T040a. *Hecho cuando:* un test de widget lee el negocio activo desde un `ProviderScope` con una base en memoria.
+- [ ] **T040b** Cableado de la app: añadir Riverpod (D-11) y los proveedores de la base local, del negocio activo y del usuario activo. RF: —. Dep: T040a, T153. *Hecho cuando:* los ids se generan con `newId()` y un test de widget lee el negocio activo desde un `ProviderScope` con una base en memoria.
 - [ ] **T100** Navegación, tema y textos en español. RF: —; RNF-5. Dep: T040b. *Hecho cuando:* ninguna cadena visible está en otro idioma y la navegación llega a cada sección.
 - [ ] **T101** Widget de avatar compuesto (personaje, tono y fondo). RF: 14, 72. Dep: T028, T040b. *Hecho cuando:* test de widget con varias combinaciones.
 - [ ] **T102** Formato de personaje con tono parametrizable y 3 personajes de prueba. RF: 72. Dep: T040b. *Hecho cuando:* los 3 se ven con los 6 tonos y 12 fondos en un test de widget.
