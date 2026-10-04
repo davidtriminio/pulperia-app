@@ -59,7 +59,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T036** Repositorio de fiados: rechazo para clientes archivados. RF: 76. *Hecho cuando:* el intento falla con el error esperado y no deja operación en la cola.
 - [x] **T037** Repositorio de abonos: crear, también para clientes archivados. RF: 37, 75. Dep: T021. *Hecho cuando:* un abono a un archivado se guarda y reduce su saldo.
 - [x] **T038** Anulación de fiados y abonos con usuario y fecha. RF: 43, 44, 45, 46, 49. Dep: T025. *Hecho cuando:* el movimiento anulado se conserva, no cuenta en el saldo, el empleado no puede anular y no existe operación de borrar ni de editar.
-- [ ] **T039** Consultas de saldo e historial. RF: 40, 41, 42. Dep: T022, T027. *Hecho cuando:* el historial incluye anulados marcados y el saldo negativo se identifica como saldo a favor.
+- [x] **T039** Consultas de saldo e historial. RF: 40, 41, 42. Dep: T022, T027. *Hecho cuando:* el historial incluye anulados marcados y el saldo negativo se identifica como saldo a favor.
 - [ ] **T040** Consulta del resumen sobre datos locales. RF: 66. Dep: T026. *Hecho cuando:* incluye cambios aún no sincronizados.
 
 ## Fase 3b — Tramo de prueba del móvil, sin servidor (para probar la app pronto)
