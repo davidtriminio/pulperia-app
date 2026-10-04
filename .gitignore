@@ -18,3 +18,7 @@ Thumbs.db
 
 # Claude Code (configuración local)
 .claude/settings.local.json
+
+# Claude Code (el archivo del repo se versiona; el local no)
+!CLAUDE.md
+CLAUDE.local.md
