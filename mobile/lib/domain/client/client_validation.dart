@@ -1,3 +1,5 @@
+import '../avatar/avatar.dart';
+
 /// Lo que el usuario ingresa al crear o editar un cliente.
 final class ClientDraft {
   const ClientDraft({
@@ -63,7 +65,13 @@ final RegExp _phoneFormat = RegExp(r'^[2389][0-9]{7}$');
 
 bool _isMissing(String? value) => value == null || value.isEmpty;
 
-/// Valida un cliente según RF-15, RF-16, RF-74 y RF-77. Reporta todos los
+const Map<AvatarComponent, ClientField> _avatarFields = {
+  AvatarComponent.character: ClientField.avatarCharacter,
+  AvatarComponent.skin: ClientField.avatarSkin,
+  AvatarComponent.background: ClientField.avatarBackground,
+};
+
+/// Valida un cliente según RF-15, RF-16, RF-72, RF-74 y RF-77. Reporta todos los
 /// problemas, en este orden: nombre, nota, teléfono, personaje, tono de piel
 /// y fondo. El aviso de nombre repetido (RF-17) es aparte, no es un error.
 ClientValidationResult validateClient(ClientDraft draft) {
@@ -85,26 +93,15 @@ ClientValidationResult validateClient(ClientDraft draft) {
     issues.add(const ClientIssue(ClientField.phone, 'phone_invalid_format'));
   }
 
-  if (_isMissing(draft.characterId)) {
-    issues.add(
-      const ClientIssue(
-        ClientField.avatarCharacter,
-        'avatar_character_required',
-      ),
-    );
-  }
-  if (_isMissing(draft.skinId)) {
-    issues.add(
-      const ClientIssue(ClientField.avatarSkin, 'avatar_skin_required'),
-    );
-  }
-  if (_isMissing(draft.backgroundId)) {
-    issues.add(
-      const ClientIssue(
-        ClientField.avatarBackground,
-        'avatar_background_required',
-      ),
-    );
+  final avatar = validateAvatar(
+    characterId: draft.characterId,
+    skinId: draft.skinId,
+    backgroundId: draft.backgroundId,
+  );
+  if (avatar is InvalidAvatar) {
+    for (final issue in avatar.issues) {
+      issues.add(ClientIssue(_avatarFields[issue.component]!, issue.code));
+    }
   }
 
   return issues.isEmpty ? ValidClient(draft) : InvalidClient(issues);
