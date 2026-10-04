@@ -2,7 +2,10 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 
+import '../../domain/access/access.dart';
 import '../../domain/client/client_validation.dart';
+import '../../domain/ledger/balance.dart';
+import '../../domain/money/money.dart';
 import '../local/app_database.dart';
 
 sealed class ClientSaveResult {
@@ -26,6 +29,19 @@ final class ClientRejected extends ClientSaveResult {
 /// El cliente no existe en ese negocio; no se escribió nada.
 final class ClientNotFound extends ClientSaveResult {
   const ClientNotFound();
+}
+
+/// El rol del usuario no permite la acción; no se escribió nada.
+final class ClientForbidden extends ClientSaveResult {
+  const ClientForbidden();
+}
+
+/// Un cliente con su saldo, para las listas.
+final class ClientWithBalance {
+  const ClientWithBalance(this.client, this.balance);
+
+  final Client client;
+  final Balance balance;
 }
 
 /// Crea y edita clientes en la base local. Cada cambio se escribe junto con su
@@ -140,6 +156,157 @@ class ClientRepository {
       );
       return ClientSaved(await _find(businessId, clientId) as Client);
     });
+  }
+
+  /// Archiva un cliente (RF-20): sale de la lista normal pero conserva su
+  /// historial y su saldo. Solo el dueño puede (RF-21). Archivar uno que ya
+  /// está archivado no cambia nada.
+  Future<ClientSaveResult> archive({
+    required String businessId,
+    required String userId,
+    required Role role,
+    required String clientId,
+  }) => _setArchived(
+    businessId: businessId,
+    role: role,
+    permission: Permission.archiveClient,
+    clientId: clientId,
+    archived: true,
+    type: 'client.archive',
+  );
+
+  /// Restaura un cliente archivado (RF-23): vuelve a la lista normal con su
+  /// historial y su saldo. Solo el dueño puede. Restaurar uno que no está
+  /// archivado no cambia nada.
+  Future<ClientSaveResult> restore({
+    required String businessId,
+    required String userId,
+    required Role role,
+    required String clientId,
+  }) => _setArchived(
+    businessId: businessId,
+    role: role,
+    permission: Permission.restoreClient,
+    clientId: clientId,
+    archived: false,
+    type: 'client.restore',
+  );
+
+  Future<ClientSaveResult> _setArchived({
+    required String businessId,
+    required Role role,
+    required Permission permission,
+    required String clientId,
+    required bool archived,
+    required String type,
+  }) async {
+    if (!can(role, permission)) {
+      return const ClientForbidden();
+    }
+
+    final opId = _newId();
+    final now = _now();
+
+    return _db.transaction(() async {
+      final current = await _find(businessId, clientId);
+      if (current == null) {
+        return const ClientNotFound();
+      }
+      if (current.archived == archived) {
+        return ClientSaved(current);
+      }
+
+      await (_db.update(_db.clients)..where(
+            (c) => c.id.equals(clientId) & c.businessId.equals(businessId),
+          ))
+          .write(
+            ClientsCompanion(
+              archived: Value(archived),
+              version: Value(current.version + 1),
+              updatedAt: Value(now),
+            ),
+          );
+      await _db
+          .into(_db.outboxOps)
+          .insert(
+            OutboxOpsCompanion.insert(
+              opId: opId,
+              businessId: businessId,
+              type: type,
+              entityId: clientId,
+              payload: '{}',
+              baseVersion: Value(current.version),
+              createdAt: now,
+            ),
+          );
+      return ClientSaved(await _find(businessId, clientId) as Client);
+    });
+  }
+
+  /// Clientes no archivados del negocio, con su saldo (RF-42).
+  Future<List<ClientWithBalance>> activeClients(String businessId) =>
+      _list(businessId, archived: false);
+
+  /// Clientes archivados del negocio, con su saldo (RF-22).
+  Future<List<ClientWithBalance>> archivedClients(String businessId) =>
+      _list(businessId, archived: true);
+
+  /// En orden alfabético sin distinguir mayúsculas; los empates, por id.
+  Future<List<ClientWithBalance>> _list(
+    String businessId, {
+    required bool archived,
+  }) async {
+    final clients =
+        await (_db.select(_db.clients)..where(
+              (c) =>
+                  c.businessId.equals(businessId) & c.archived.equals(archived),
+            ))
+            .get();
+    if (clients.isEmpty) {
+      return const [];
+    }
+
+    final movements = <String, List<LedgerMovement>>{};
+    final fiados = await (_db.select(
+      _db.fiados,
+    )..where((f) => f.businessId.equals(businessId))).get();
+    for (final f in fiados) {
+      movements
+          .putIfAbsent(f.clientId, () => [])
+          .add(
+            LedgerMovement(
+              kind: MovementKind.fiado,
+              amount: Money(f.total),
+              annulled: f.annulledAt != null,
+            ),
+          );
+    }
+    final payments = await (_db.select(
+      _db.payments,
+    )..where((p) => p.businessId.equals(businessId))).get();
+    for (final p in payments) {
+      movements
+          .putIfAbsent(p.clientId, () => [])
+          .add(
+            LedgerMovement(
+              kind: MovementKind.payment,
+              amount: Money(p.amount),
+              annulled: p.annulledAt != null,
+            ),
+          );
+    }
+
+    final result = [
+      for (final c in clients)
+        ClientWithBalance(c, computeBalance(movements[c.id] ?? const [])),
+    ];
+    result.sort((a, b) {
+      final byName = a.client.name.toLowerCase().compareTo(
+        b.client.name.toLowerCase(),
+      );
+      return byName != 0 ? byName : a.client.id.compareTo(b.client.id);
+    });
+    return result;
   }
 
   Future<Client?> _find(String businessId, String clientId) =>
