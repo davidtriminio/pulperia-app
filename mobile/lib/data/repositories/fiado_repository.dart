@@ -32,6 +32,15 @@ final class FiadoClientNotFound extends FiadoSaveResult {
   const FiadoClientNotFound();
 }
 
+/// El cliente está archivado: hay que restaurarlo antes de fiarle (RF-76); no
+/// se escribió nada.
+final class FiadoClientArchived extends FiadoSaveResult {
+  const FiadoClientArchived();
+
+  /// Código estable, el mismo de la API.
+  String get code => 'client_archived';
+}
+
 /// El rol del usuario no permite la acción; no se escribió nada.
 final class FiadoForbidden extends FiadoSaveResult {
   const FiadoForbidden();
@@ -76,19 +85,15 @@ class FiadoRepository {
       );
     }
 
-    final validation = validateFiado(
-      draft,
-      amountMode: AmountMode.fromId(business.amountMode),
-      quantityMode: QuantityMode.fromId(business.quantityMode),
-    );
-    if (validation is InvalidFiado) {
-      return FiadoRejected(validation.issues);
-    }
-    final valid = validation as ValidFiado;
-
+    // Los ids se piden antes de abrir la transacción; un fiado sin ítems no
+    // pide ninguno.
+    final itemCount = switch (draft) {
+      FiadoWithItems(:final items) => items.length,
+      FiadoTotalOnly() => 0,
+    };
     final fiadoId = _newId();
     final opId = _newId();
-    final itemIds = [for (final _ in valid.items) _newId()];
+    final itemIds = [for (var i = 0; i < itemCount; i++) _newId()];
     final now = _now();
 
     return _db.transaction(() async {
@@ -100,6 +105,21 @@ class FiadoRepository {
       if (client == null) {
         return const FiadoClientNotFound();
       }
+      // RF-76: a un cliente archivado no se le fía hasta restaurarlo. Se
+      // comprueba antes que el contenido del fiado.
+      if (client.archived) {
+        return const FiadoClientArchived();
+      }
+
+      final validation = validateFiado(
+        draft,
+        amountMode: AmountMode.fromId(business.amountMode),
+        quantityMode: QuantityMode.fromId(business.quantityMode),
+      );
+      if (validation is InvalidFiado) {
+        return FiadoRejected(validation.issues);
+      }
+      final valid = validation as ValidFiado;
 
       await _db
           .into(_db.fiados)
