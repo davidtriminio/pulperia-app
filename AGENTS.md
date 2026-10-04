@@ -11,7 +11,7 @@ Monorepo:
 ## Comandos
 Desde la raíz del repo salvo donde se indica.
 - API:    `dotnet run --project api/src/Pulperia.Api` (http://localhost:5109) | tests: `dotnet test api`
-- Mobile: `flutter run` (en `mobile/`; requiere emulador o teléfono) | análisis: `flutter analyze` | tests: `flutter test` (en `mobile/`)
+- Mobile: `flutter run` (en `mobile/`; requiere emulador o teléfono) | análisis: `flutter analyze` | tests: `flutter test` (en `mobile/`) | código generado de Drift: `dart run build_runner build --delete-conflicting-outputs` (en `mobile/`; el `.g.dart` se versiona)
 - Web:    `pnpm start` (en `web/`, equivale a `ng serve`; http://localhost:4200) | tests: `pnpm test --watch=false` (en `web/`, una sola pasada) | build: `pnpm build`
 - Emulador Android: `ANDROID_SDK_ROOT` y `ANDROID_HOME` deben apuntar a `V:\Programas\Android\Sdk` al lanzarlo (`emulator -avd Resizable_Experimental`); Flutter ya usa ese SDK (`flutter config --android-sdk`). Luego `flutter run -d emulator-5554`.
 
