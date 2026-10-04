@@ -45,7 +45,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T024** Detección de homónimo. RF: 17. Dep: T012. *Hecho cuando:* los homónimos se detectan ignorando mayúsculas y espacios exteriores.
 - [x] **T025** Matriz de permisos por rol. RF: 13, 21, 45, 48. *Hecho cuando:* el empleado no puede anular, archivar, gestionar equipo ni ajustes, y puede el resto; el dueño puede todo.
 - [ ] **T026** Resumen del negocio. RF: 63, 64, 65. Dep: T010, T022. *Hecho cuando:* pasan los vectores de resumen.
-- [ ] **T027** Orden del historial por fecha del dispositivo con desempate estable. RF: 41. *Hecho cuando:* dos movimientos con la misma fecha salen siempre en el mismo orden.
+- [x] **T027** Orden del historial por fecha del dispositivo con desempate estable. RF: 41. *Hecho cuando:* dos movimientos con la misma fecha salen siempre en el mismo orden.
 - [ ] **T028** Composición y validación de avatar. RF: 14, 72. Dep: T011. *Hecho cuando:* rechaza identificadores fuera de la paleta.
 
 ## Fase 3 — Base local y cola del móvil (Drift)
