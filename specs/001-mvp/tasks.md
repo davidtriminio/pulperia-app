@@ -54,7 +54,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T031** Esquema local de la cola (outbox) y del cursor de sincronización. RF: 51, 57. *Hecho cuando:* se guardan operaciones con su estado (pendiente, enviada, rechazada).
 - [x] **T032** Repositorio de clientes: crear y editar, encolando la operación en la misma transacción. RF: 14, 19, 51. Dep: T023, T031. *Hecho cuando:* si falla el encolado, no queda el cliente guardado.
 - [x] **T033** Repositorio de clientes: archivar y restaurar, listas normal y de archivados. RF: 20, 22, 23. *Hecho cuando:* un archivado sale de la lista normal, aparece en archivados con su saldo y vuelve al restaurarlo.
-- [ ] **T034** Repositorio de productos: crear, cambiar precio, archivar; sin borrar. RF: 24, 25, 26, 27. *Hecho cuando:* cambiar el precio no altera ítems ya guardados y archivar no los borra.
+- [x] **T034** Repositorio de productos: crear, cambiar precio, archivar; sin borrar. RF: 24, 25, 26, 27. *Hecho cuando:* cambiar el precio no altera ítems ya guardados y archivar no los borra.
 - [ ] **T035** Repositorio de fiados: crear con ítems o solo total. RF: 8, 28, 29, 31, 49, 51. Dep: T020. *Hecho cuando:* el fiado y su operación se guardan juntos, con el usuario que lo registró; un ítem sin producto del catálogo se acepta.
 - [ ] **T036** Repositorio de fiados: rechazo para clientes archivados. RF: 76. *Hecho cuando:* el intento falla con el error esperado y no deja operación en la cola.
 - [ ] **T037** Repositorio de abonos: crear, también para clientes archivados. RF: 37, 75. Dep: T021. *Hecho cuando:* un abono a un archivado se guarda y reduce su saldo.
