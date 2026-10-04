@@ -49,7 +49,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T028** Composición y validación de avatar. RF: 14, 72. Dep: T011. *Hecho cuando:* rechaza identificadores fuera de la paleta.
 
 ## Fase 3 — Base local y cola del móvil (Drift)
-- [ ] **T029** Esquema local de negocios, pertenencias, clientes y productos, todos con `business_id`. RF: 51. *Hecho cuando:* una base en memoria se crea y guarda un registro de cada tabla.
+- [x] **T029** Esquema local de negocios, pertenencias, clientes y productos, todos con `business_id`. RF: 51. *Hecho cuando:* una base en memoria se crea y guarda un registro de cada tabla.
 - [ ] **T030** Esquema local de fiados, ítems de fiado y abonos. RF: 51. *Hecho cuando:* se guardan y se leen con sus relaciones.
 - [ ] **T031** Esquema local de la cola (outbox) y del cursor de sincronización. RF: 51, 57. *Hecho cuando:* se guardan operaciones con su estado (pendiente, enviada, rechazada).
 - [ ] **T032** Repositorio de clientes: crear y editar, encolando la operación en la misma transacción. RF: 14, 19, 51. Dep: T023, T031. *Hecho cuando:* si falla el encolado, no queda el cliente guardado.
