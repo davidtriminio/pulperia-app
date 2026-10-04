@@ -50,7 +50,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 
 ## Fase 3 — Base local y cola del móvil (Drift)
 - [x] **T029** Esquema local de negocios, pertenencias, clientes y productos, todos con `business_id`. RF: 51. *Hecho cuando:* una base en memoria se crea y guarda un registro de cada tabla.
-- [ ] **T030** Esquema local de fiados, ítems de fiado y abonos. RF: 51. *Hecho cuando:* se guardan y se leen con sus relaciones.
+- [x] **T030** Esquema local de fiados, ítems de fiado y abonos. RF: 51. *Hecho cuando:* se guardan y se leen con sus relaciones.
 - [ ] **T031** Esquema local de la cola (outbox) y del cursor de sincronización. RF: 51, 57. *Hecho cuando:* se guardan operaciones con su estado (pendiente, enviada, rechazada).
 - [ ] **T032** Repositorio de clientes: crear y editar, encolando la operación en la misma transacción. RF: 14, 19, 51. Dep: T023, T031. *Hecho cuando:* si falla el encolado, no queda el cliente guardado.
 - [ ] **T033** Repositorio de clientes: archivar y restaurar, listas normal y de archivados. RF: 20, 22, 23. *Hecho cuando:* un archivado sale de la lista normal, aparece en archivados con su saldo y vuelve al restaurarlo.

@@ -6,7 +6,17 @@ part 'app_database.g.dart';
 
 /// Base de datos local del móvil (SQLite vía Drift). Todo cambio se escribe
 /// primero aquí (principio 2).
-@DriftDatabase(tables: [Businesses, Memberships, Clients, Products])
+@DriftDatabase(
+  tables: [
+    Businesses,
+    Memberships,
+    Clients,
+    Products,
+    Fiados,
+    FiadoItems,
+    Payments,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
