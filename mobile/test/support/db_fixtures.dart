@@ -137,3 +137,30 @@ Future<void> insertPayment(
         serverSeq: Value(serverSeq),
       ),
     );
+
+Future<void> insertOutboxOp(
+  AppDatabase db,
+  String opId,
+  String businessId, {
+  String type = 'client.create',
+  String entityId = 'c-1',
+  String payload = '{}',
+  int? baseVersion,
+  String status = 'pending',
+  String? errorCode,
+  DateTime? createdAt,
+}) => db
+    .into(db.outboxOps)
+    .insert(
+      OutboxOpsCompanion.insert(
+        opId: opId,
+        businessId: businessId,
+        type: type,
+        entityId: entityId,
+        payload: payload,
+        baseVersion: Value(baseVersion),
+        status: Value(status),
+        errorCode: Value(errorCode),
+        createdAt: createdAt ?? created,
+      ),
+    );

@@ -15,6 +15,8 @@ part 'app_database.g.dart';
     Fiados,
     FiadoItems,
     Payments,
+    OutboxOps,
+    SyncStates,
   ],
 )
 class AppDatabase extends _$AppDatabase {

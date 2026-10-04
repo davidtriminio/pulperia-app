@@ -221,3 +221,76 @@ class Payments extends Table {
     'CHECK ((annulled_at IS NULL) = (annulled_by IS NULL))',
   ];
 }
+
+/// Tipos de operación que viajan en la cola (plan, sección 4.1). Nada más:
+/// no existe operación para borrar ni para editar un fiado o un abono
+/// (RF-46).
+const List<String> outboxOperationTypes = [
+  'client.create',
+  'client.update',
+  'client.archive',
+  'client.restore',
+  'product.create',
+  'product.update',
+  'product.archive',
+  'fiado.create',
+  'payment.create',
+  'fiado.annul',
+  'payment.annul',
+];
+
+/// Cambios hechos en este dispositivo que aún faltan por enviar al servidor
+/// (principio 2). Cada escritura local se encola en la misma transacción que
+/// el cambio.
+@DataClassName('OutboxOp')
+@TableIndex(name: 'outbox_ops_business_status', columns: {#businessId, #status})
+class OutboxOps extends Table {
+  /// Orden local de creación: el envío respeta este orden aunque dos
+  /// operaciones tengan la misma fecha. Con AUTOINCREMENT nunca se reutiliza.
+  IntColumn get localSeq => integer().autoIncrement()();
+
+  /// Identificador de la operación (GUID): reenviarla no duplica nada en el
+  /// servidor (RF-53).
+  TextColumn get opId => text().unique()();
+  TextColumn get businessId => text().references(Businesses, #id)();
+  TextColumn get type => text()();
+
+  /// Id del cliente, producto, fiado o abono sobre el que actúa.
+  TextColumn get entityId => text()();
+
+  /// Contenido de la operación, en JSON.
+  TextColumn get payload => text()();
+
+  /// Versión de la entidad sobre la que se hizo una edición, para detectar
+  /// conflictos (D-8).
+  IntColumn get baseVersion => integer().nullable()();
+
+  /// `pending`, `sent` o `rejected`.
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+
+  /// Motivo del rechazo; solo cuando el estado es `rejected`.
+  TextColumn get errorCode => text().nullable()();
+  DateTimeColumn get createdAt =>
+      dateTime().map(const UtcDateTimeConverter())();
+
+  @override
+  List<String> get customConstraints => [
+    "CHECK (type IN (${outboxOperationTypes.map((t) => "'$t'").join(', ')}))",
+    "CHECK (status IN ('pending', 'sent', 'rejected'))",
+    "CHECK ((status = 'rejected') = (error_code IS NOT NULL))",
+  ];
+}
+
+/// Hasta dónde se han recibido los cambios del servidor, por negocio. Cero
+/// significa que falta la descarga inicial (RF-58).
+@DataClassName('SyncState')
+class SyncStates extends Table {
+  TextColumn get businessId => text().references(Businesses, #id)();
+  IntColumn get cursor => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {businessId};
+
+  @override
+  List<String> get customConstraints => ['CHECK (cursor >= 0)'];
+}
