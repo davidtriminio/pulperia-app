@@ -41,7 +41,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T020** Validación de fiado (con ítems, solo total, vacío, valores en cero o negativos). RF: 28, 29, 32, 33. Dep: T016–T018. *Hecho cuando:* cada caso devuelve el error esperado, y un fiado con ítems conserva cantidad y precio de cada uno.
 - [x] **T021** Validación de abono. RF: 37, 38. Dep: T014. *Hecho cuando:* un abono de cero o negativo se rechaza.
 - [x] **T022** Cálculo de saldo. RF: 39, 40, 42, 44, 47. Dep: T008. *Hecho cuando:* pasan los vectores de saldo.
-- [ ] **T023** Validación de cliente (nombre, avatar completo, nota, teléfono). RF: 15, 16, 74, 77. Dep: T009, T011, T012. *Hecho cuando:* pasan los vectores correspondientes.
+- [x] **T023** Validación de cliente (nombre, avatar completo, nota, teléfono). RF: 15, 16, 74, 77. Dep: T009, T011, T012. *Hecho cuando:* pasan los vectores correspondientes.
 - [ ] **T024** Detección de homónimo. RF: 17. Dep: T012. *Hecho cuando:* los homónimos se detectan ignorando mayúsculas y espacios exteriores.
 - [ ] **T025** Matriz de permisos por rol. RF: 13, 21, 45, 48. *Hecho cuando:* el empleado no puede anular, archivar, gestionar equipo ni ajustes, y puede el resto; el dueño puede todo.
 - [ ] **T026** Resumen del negocio. RF: 63, 64, 65. Dep: T010, T022. *Hecho cuando:* pasan los vectores de resumen.
