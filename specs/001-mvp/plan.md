@@ -71,7 +71,7 @@ Capas: **Domain** (reglas puras: dinero, saldo, permisos, validaciones; sin EF n
 ## 3. Modelo de datos
 
 ### 3.1 Servidor (PostgreSQL)
-Todo registro de negocio lleva `business_id` (principio 6). Los IDs son GUID generados en el cliente (AGENTS.md). Fechas en UTC.
+Todo registro de negocio lleva `business_id` (principio 6). Los IDs son GUID generados en el cliente, UUID v7 (D-21). Fechas en UTC.
 
 | Tabla | Campos principales |
 |---|---|
@@ -162,7 +162,7 @@ El negocio activo se indica en cada petición y el servidor comprueba siempre qu
 | D-9 | Autenticación por correo y contraseña; token de acceso corto y token de renovación largo guardado de forma segura | La invitación se asocia al correo y se muestra al iniciar sesión, así que no se necesita enviar correos (RF-10, 67) | Enlace mágico o código por correo: exige un proveedor de correo y no funciona bien con conectividad pobre |
 | D-10 | Si el token de renovación caduca estando sin conexión, la app sigue funcionando y exige iniciar sesión solo para sincronizar; la cola no se pierde | RF-4 y RNF-1 | Cerrar la sesión local al caducar: perdería la cola |
 | D-11 | Estado de la app móvil con Riverpod | Menos código repetido, fácil de probar sin UI (principio 7) | BLoC: más ceremonia; `setState`/Provider: no escala a varios módulos |
-| D-12 | Dependencias móviles mínimas: Drift, Riverpod, cliente HTTP, almacenamiento seguro, detección de conectividad | Principio 9 | Frameworks de sincronización de terceros: opacos y con reglas de conflicto propias |
+| D-12 | Dependencias móviles mínimas: Drift, Riverpod, `uuid`, cliente HTTP, almacenamiento seguro, detección de conectividad | Principio 9 | Frameworks de sincronización de terceros: opacos y con reglas de conflicto propias |
 | D-13 | Sincronización del móvil al abrir la app, al recuperar conexión y manualmente; no en segundo plano en el MVP | Menor consumo y menor complejidad | Servicio en segundo plano: se evalúa después |
 | D-14 | Web en Angular con Tailwind CSS, sin biblioteca de componentes | Ligera (principio 9) y coherente con el diseño actual del proyecto | Angular Material: más peso, estilo propio difícil de igualar al móvil |
 | D-15 | Avatar como tres identificadores; las imágenes viajan dentro de cada aplicación | Payload mínimo y funciona sin conexión (RNF-7) | Imágenes en el servidor: requiere descarga y almacenamiento |
@@ -170,6 +170,8 @@ El negocio activo se indica en cada petición y el servidor comprueba siempre qu
 | D-17 | Clientes HTTP escritos a mano contra un contrato OpenAPI, validado con ejemplos compartidos | Sin generadores de código ni dependencias extra | Generar clientes: añade herramientas y plantillas |
 | D-19 | El restablecimiento de contraseña es un comando del servidor, sin endpoint ni pantalla, que solo recibe el correo de la cuenta, deja la contraseña nueva y escribe en `admin_audit` | Mínima superficie de ataque; no hay rol de superadmin dentro de las apps (RF-81, 82) | Rol de superadmin en la web: otra funcionalidad con su propia spec |
 | D-20 | Copia diaria de la base con `pg_dump` en un servicio del Compose, enviada fuera de la máquina, con rotación de 3 copias | Cumple RNF-8 con herramientas estándar y sin dependencias de código | Replicación de la base: más costo y complejidad que lo que pide la spec |
+| D-21 | IDs generados en el cliente con el paquete `uuid`, UUID v7 (RFC 9562), desde un único generador inyectable; el servidor acepta cualquier GUID válido y puede generar los mismos con `Guid.CreateVersion7` de .NET | Estándar, ordenable por tiempo (mejor rendimiento de índices en PostgreSQL) y repositorios con generadores deterministas en los tests | Generador propio con `Random.secure`: mantenimiento y auditoría a nuestro cargo |
+| D-22 | Integración continua con GitHub Actions: tests de api, mobile y web en cada PR hacia `develop` y `main`, con un job final `ci-ok` exigible como comprobación obligatoria | Principio 8 (tests como puerta) aplicado también a la fusión de PR | Comprobar solo en local: depende de la disciplina de cada persona |
 | D-18 | Historial ordenado por la fecha de creación del dispositivo, con desempate por orden de llegada al servidor | Refleja cuándo ocurrió la venta aunque se sincronice tarde | Orden por llegada al servidor: confundiría al usuario con ventas hechas sin conexión |
 
 ## 7. Estrategia de tests
