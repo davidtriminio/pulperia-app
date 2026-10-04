@@ -18,27 +18,30 @@ Desde la raíz del repo salvo donde se indica.
 ## Estilo y convenciones
 - Código e identificadores en inglés; mensajes al usuario y documentación en español.
 - Dinero: siempre enteros en la unidad menor (centavos de lempira) en .NET, Flutter y Angular, según el plan (D-1). Nunca `double`/`float`.
-- IDs generados en el cliente (GUID/UUID) para poder crear registros offline.
+- IDs generados en el cliente para poder crear registros offline: paquete `uuid`, UUID v7 (RFC 9562), mediante un único generador inyectable (D-21). El servidor acepta cualquier GUID válido, sin suponer v4.
 - Fechas en UTC en almacenamiento y API.
 
 ## Commits
 - Conventional Commits con scope: `tipo(scope): descripción` (ej. `feat(mobile): registrar abono general`).
 - Scopes permitidos: `api`, `mobile`, `web`, `specs`, `docs`, `repo` (configuración transversal).
-- Un commit por tarea de `specs/*/tasks.md`, al terminarla con la suite en verde; tests e implementación van juntos.
+- Un commit por tarea de `specs/*/tasks.md`, al terminarla con la suite en verde; tests e implementación van juntos, y la casilla de la tarea se marca en ese mismo commit.
 - El mensaje no lleva el ID de la tarea: es Conventional Commits puro (ej. `feat(api): crear solución .NET por capas`).
 - Nunca añadir a Claude como coautor ni atribución a Claude en commits o PRs.
 
 ## Ramas
 - Flujo `main` ← `develop` ← ramas de trabajo. Nunca se commitea directo en `main` ni en `develop`.
-- Cada rama de trabajo se crea desde `develop` y se llama `<tipo>/<scope>-<descripción-corta>` (ej. `feat/api-solucion-por-capas`), con tipo y scope de Conventional Commits.
-- Las ramas de trabajo entran en `develop` mediante PR; `develop` entra en `main` mediante PR cuando hay un estado estable con las suites en verde.
-- Al terminar una rama, se para en el paso del PR.
+- Unidad de trabajo = bloque (un grupo de tareas relacionadas). Cada bloque tiene una rama y un PR, con un commit por tarea.
+- La rama se crea desde `develop` y se llama `<tipo>/<scope>-<descripción-del-bloque>` (ej. `feat/mobile-estructura-app`), con tipo y scope de Conventional Commits.
+- Las tareas delicadas (sincronización, permisos, API/servidor, seguridad, migraciones) llevan rama y PR propios.
+- Las ramas entran en `develop` mediante PR con "rebase and merge" (nunca squash), para conservar un commit por tarea; solo con CI (`ci-ok`) en verde. `develop` entra en `main` mediante PR cuando hay un estado estable con las suites en verde.
+- Antes de cada bloque: `git fetch --prune`, `gh pr list --state all` y pull de `develop`, verificando qué está realmente fusionado.
+- Al terminar el bloque, se sube la rama y se para en el paso del PR, con un informe de cierre (por tarea: qué se hizo, tests, y decisiones que la spec no define). No se abren ni se fusionan PR sin petición del usuario.
 
 ## Reglas
 - Lee `docs/constitution.md` y la spec activa en `specs/` antes de tocar código.
 - No añadas dependencias ni cambies el contrato de la API sin actualizar antes la spec/plan.
 - No modifiques archivos dentro de `specs/` salvo petición explícita.
-- Una tarea cada vez, tests primero; al terminar la tarea, párate.
+- Tests primero en cada tarea (verlos en rojo, implementar, ver verde) y un commit por tarea. Párate al terminar el bloque, o antes si algo bloquea: un test que no pasa, una laguna de la spec, una dependencia no aprobada o una tarea de más de 30 minutos.
 
-## Al terminar cualquier tarea
+## Al terminar cada tarea y al cerrar el bloque
 - Ejecuta los tests del/los proyecto(s) tocados y confirma en tu respuesta que todo pasa.
