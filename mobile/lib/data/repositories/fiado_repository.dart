@@ -7,6 +7,7 @@ import '../../domain/business/amount_mode.dart';
 import '../../domain/business/quantity_mode.dart';
 import '../../domain/ledger/fiado_validation.dart';
 import '../local/app_database.dart';
+import 'annul_result.dart';
 
 sealed class FiadoSaveResult {
   const FiadoSaveResult();
@@ -187,6 +188,62 @@ class FiadoRepository {
                 ..orderBy([(i) => OrderingTerm.asc(i.rowId)]))
               .get();
       return FiadoSaved(fiado, items);
+    });
+  }
+
+  /// Anula un fiado (RF-43): se conserva en el historial, marcado con quién y
+  /// cuándo lo anuló, y deja de contar en el saldo del cliente (RF-44). Solo
+  /// el dueño puede (RF-45). Un fiado no se edita ni se borra (RF-46).
+  /// Anular uno ya anulado no cambia nada.
+  Future<AnnulResult<Fiado>> annul({
+    required String businessId,
+    required String userId,
+    required Role role,
+    required String fiadoId,
+  }) async {
+    if (!can(role, Permission.annulMovement)) {
+      return const AnnulForbidden();
+    }
+
+    final opId = _newId();
+    final now = _now();
+
+    return _db.transaction(() async {
+      final current =
+          await (_db.select(_db.fiados)..where(
+                (f) => f.id.equals(fiadoId) & f.businessId.equals(businessId),
+              ))
+              .getSingleOrNull();
+      if (current == null) {
+        return const AnnulNotFound();
+      }
+      if (current.annulledAt != null) {
+        return Annulled(current, alreadyAnnulled: true);
+      }
+
+      await (_db.update(_db.fiados)..where(
+            (f) => f.id.equals(fiadoId) & f.businessId.equals(businessId),
+          ))
+          .write(
+            FiadosCompanion(annulledAt: Value(now), annulledBy: Value(userId)),
+          );
+      await _db
+          .into(_db.outboxOps)
+          .insert(
+            OutboxOpsCompanion.insert(
+              opId: opId,
+              businessId: businessId,
+              type: 'fiado.annul',
+              entityId: fiadoId,
+              payload: '{}',
+              createdAt: now,
+            ),
+          );
+
+      final annulled = await (_db.select(
+        _db.fiados,
+      )..where((f) => f.id.equals(fiadoId))).getSingle();
+      return Annulled(annulled, alreadyAnnulled: false);
     });
   }
 }
