@@ -119,6 +119,39 @@ void main() {
         (ClientField.avatarCharacter, 'avatar_character_required'),
       ]);
     });
+
+    test('un personaje fuera de la paleta se rechaza (RF-72)', () {
+      expect(issuesOf(validateClient(draft(characterId: 'char-99'))), [
+        (ClientField.avatarCharacter, 'avatar_character_unknown'),
+      ]);
+    });
+
+    test('un tono de piel fuera de la paleta se rechaza (RF-72)', () {
+      expect(issuesOf(validateClient(draft(skinId: 'skin-9'))), [
+        (ClientField.avatarSkin, 'avatar_skin_unknown'),
+      ]);
+    });
+
+    test('un fondo fuera de la paleta se rechaza (RF-72)', () {
+      expect(issuesOf(validateClient(draft(backgroundId: 'bg-99'))), [
+        (ClientField.avatarBackground, 'avatar_background_unknown'),
+      ]);
+    });
+
+    test('el avatar más alto de la paleta se acepta', () {
+      expect(
+        issuesOf(
+          validateClient(
+            draft(
+              characterId: 'char-24',
+              skinId: 'skin-6',
+              backgroundId: 'bg-12',
+            ),
+          ),
+        ),
+        isEmpty,
+      );
+    });
   });
 
   group('varios problemas a la vez', () {
