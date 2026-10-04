@@ -7,6 +7,7 @@ import '../../domain/business/amount_mode.dart';
 import '../../domain/ledger/payment_validation.dart';
 import '../../domain/money/money.dart';
 import '../local/app_database.dart';
+import 'annul_result.dart';
 
 sealed class PaymentSaveResult {
   const PaymentSaveResult();
@@ -128,6 +129,65 @@ class PaymentRepository {
           _db.payments,
         )..where((p) => p.id.equals(paymentId))).getSingle(),
       );
+    });
+  }
+
+  /// Anula un abono (RF-43): se conserva en el historial, marcado con quién y
+  /// cuándo lo anuló, y deja de contar en el saldo del cliente (RF-44). Solo
+  /// el dueño puede (RF-45). Un abono no se edita ni se borra (RF-46).
+  /// Anular uno ya anulado no cambia nada.
+  Future<AnnulResult<Payment>> annul({
+    required String businessId,
+    required String userId,
+    required Role role,
+    required String paymentId,
+  }) async {
+    if (!can(role, Permission.annulMovement)) {
+      return const AnnulForbidden();
+    }
+
+    final opId = _newId();
+    final now = _now();
+
+    return _db.transaction(() async {
+      final current =
+          await (_db.select(_db.payments)..where(
+                (p) => p.id.equals(paymentId) & p.businessId.equals(businessId),
+              ))
+              .getSingleOrNull();
+      if (current == null) {
+        return const AnnulNotFound();
+      }
+      if (current.annulledAt != null) {
+        return Annulled(current, alreadyAnnulled: true);
+      }
+
+      await (_db.update(_db.payments)..where(
+            (p) => p.id.equals(paymentId) & p.businessId.equals(businessId),
+          ))
+          .write(
+            PaymentsCompanion(
+              annulledAt: Value(now),
+              annulledBy: Value(userId),
+            ),
+          );
+      await _db
+          .into(_db.outboxOps)
+          .insert(
+            OutboxOpsCompanion.insert(
+              opId: opId,
+              businessId: businessId,
+              type: 'payment.annul',
+              entityId: paymentId,
+              payload: '{}',
+              createdAt: now,
+            ),
+          );
+
+      final annulled = await (_db.select(
+        _db.payments,
+      )..where((p) => p.id.equals(paymentId))).getSingle();
+      return Annulled(annulled, alreadyAnnulled: false);
     });
   }
 }
