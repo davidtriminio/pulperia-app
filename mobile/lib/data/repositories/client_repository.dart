@@ -7,6 +7,7 @@ import '../../domain/client/client_validation.dart';
 import '../../domain/ledger/balance.dart';
 import '../../domain/money/money.dart';
 import '../local/app_database.dart';
+import 'ledger_queries.dart';
 
 sealed class ClientSaveResult {
   const ClientSaveResult();
@@ -266,39 +267,11 @@ class ClientRepository {
       return const [];
     }
 
-    final movements = <String, List<LedgerMovement>>{};
-    final fiados = await (_db.select(
-      _db.fiados,
-    )..where((f) => f.businessId.equals(businessId))).get();
-    for (final f in fiados) {
-      movements
-          .putIfAbsent(f.clientId, () => [])
-          .add(
-            LedgerMovement(
-              kind: MovementKind.fiado,
-              amount: Money(f.total),
-              annulled: f.annulledAt != null,
-            ),
-          );
-    }
-    final payments = await (_db.select(
-      _db.payments,
-    )..where((p) => p.businessId.equals(businessId))).get();
-    for (final p in payments) {
-      movements
-          .putIfAbsent(p.clientId, () => [])
-          .add(
-            LedgerMovement(
-              kind: MovementKind.payment,
-              amount: Money(p.amount),
-              annulled: p.annulledAt != null,
-            ),
-          );
-    }
+    final balances = await LedgerQueries(_db).balancesByClient(businessId);
 
     final result = [
       for (final c in clients)
-        ClientWithBalance(c, computeBalance(movements[c.id] ?? const [])),
+        ClientWithBalance(c, balances[c.id] ?? const Balance(Money.zero)),
     ];
     result.sort((a, b) {
       final byName = a.client.name.toLowerCase().compareTo(
