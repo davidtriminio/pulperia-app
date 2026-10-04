@@ -57,7 +57,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T034** Repositorio de productos: crear, cambiar precio, archivar; sin borrar. RF: 24, 25, 26, 27. *Hecho cuando:* cambiar el precio no altera ítems ya guardados y archivar no los borra.
 - [x] **T035** Repositorio de fiados: crear con ítems o solo total. RF: 8, 28, 29, 31, 49, 51. Dep: T020. *Hecho cuando:* el fiado y su operación se guardan juntos, con el usuario que lo registró; un ítem sin producto del catálogo se acepta.
 - [x] **T036** Repositorio de fiados: rechazo para clientes archivados. RF: 76. *Hecho cuando:* el intento falla con el error esperado y no deja operación en la cola.
-- [ ] **T037** Repositorio de abonos: crear, también para clientes archivados. RF: 37, 75. Dep: T021. *Hecho cuando:* un abono a un archivado se guarda y reduce su saldo.
+- [x] **T037** Repositorio de abonos: crear, también para clientes archivados. RF: 37, 75. Dep: T021. *Hecho cuando:* un abono a un archivado se guarda y reduce su saldo.
 - [ ] **T038** Anulación de fiados y abonos con usuario y fecha. RF: 43, 44, 45, 46, 49. Dep: T025. *Hecho cuando:* el movimiento anulado se conserva, no cuenta en el saldo, el empleado no puede anular y no existe operación de borrar ni de editar.
 - [ ] **T039** Consultas de saldo e historial. RF: 40, 41, 42. Dep: T022, T027. *Hecho cuando:* el historial incluye anulados marcados y el saldo negativo se identifica como saldo a favor.
 - [ ] **T040** Consulta del resumen sobre datos locales. RF: 66. Dep: T026. *Hecho cuando:* incluye cambios aún no sincronizados.
