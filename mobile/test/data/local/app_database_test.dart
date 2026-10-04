@@ -1,66 +1,8 @@
 import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/data/local/app_database.dart';
 
-final created = DateTime.utc(2026, 10, 2, 15, 30, 45);
-
-AppDatabase openDb() => AppDatabase(NativeDatabase.memory());
-
-Future<void> insertBusiness(
-  AppDatabase db,
-  String id, {
-  String name = 'Pulpería Don Chepe',
-}) => db
-    .into(db.businesses)
-    .insert(
-      BusinessesCompanion.insert(
-        id: id,
-        name: name,
-        amountMode: 'two_decimals',
-        quantityMode: 'fractional',
-        createdAt: created,
-      ),
-    );
-
-Future<void> insertClient(
-  AppDatabase db,
-  String id,
-  String businessId, {
-  String name = 'Ana',
-}) => db
-    .into(db.clients)
-    .insert(
-      ClientsCompanion.insert(
-        id: id,
-        businessId: businessId,
-        name: name,
-        characterId: 'char-01',
-        skinId: 'skin-1',
-        backgroundId: 'bg-01',
-        createdBy: 'u-1',
-        createdAt: created,
-        updatedAt: created,
-      ),
-    );
-
-Future<void> insertProduct(
-  AppDatabase db,
-  String id,
-  String businessId, {
-  int price = 2500,
-}) => db
-    .into(db.products)
-    .insert(
-      ProductsCompanion.insert(
-        id: id,
-        businessId: businessId,
-        name: 'Arroz',
-        price: price,
-        createdBy: 'u-1',
-        createdAt: created,
-      ),
-    );
+import '../../support/db_fixtures.dart';
 
 void main() {
   late AppDatabase db;

@@ -927,6 +927,10 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {id, businessId},
+  ];
+  @override
   Client map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Client(
@@ -1631,6 +1635,10 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {id, businessId},
+  ];
+  @override
   Product map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Product(
@@ -1974,6 +1982,1697 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   }
 }
 
+class $FiadosTable extends Fiados with TableInfo<$FiadosTable, Fiado> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FiadosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES businesses (id)',
+    ),
+  );
+  static const VerificationMeta _clientIdMeta = const VerificationMeta(
+    'clientId',
+  );
+  @override
+  late final GeneratedColumn<String> clientId = GeneratedColumn<String>(
+    'client_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<int> total = GeneratedColumn<int>(
+    'total',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (total > 0)',
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> occurredAt =
+      GeneratedColumn<DateTime>(
+        'occurred_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($FiadosTable.$converteroccurredAt);
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> annulledAt =
+      GeneratedColumn<DateTime>(
+        'annulled_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($FiadosTable.$converterannulledAt);
+  static const VerificationMeta _annulledByMeta = const VerificationMeta(
+    'annulledBy',
+  );
+  @override
+  late final GeneratedColumn<String> annulledBy = GeneratedColumn<String>(
+    'annulled_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _serverSeqMeta = const VerificationMeta(
+    'serverSeq',
+  );
+  @override
+  late final GeneratedColumn<int> serverSeq = GeneratedColumn<int>(
+    'server_seq',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    clientId,
+    total,
+    occurredAt,
+    createdBy,
+    annulledAt,
+    annulledBy,
+    serverSeq,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fiados';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Fiado> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('client_id')) {
+      context.handle(
+        _clientIdMeta,
+        clientId.isAcceptableOrUnknown(data['client_id']!, _clientIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_clientIdMeta);
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_totalMeta);
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdByMeta);
+    }
+    if (data.containsKey('annulled_by')) {
+      context.handle(
+        _annulledByMeta,
+        annulledBy.isAcceptableOrUnknown(data['annulled_by']!, _annulledByMeta),
+      );
+    }
+    if (data.containsKey('server_seq')) {
+      context.handle(
+        _serverSeqMeta,
+        serverSeq.isAcceptableOrUnknown(data['server_seq']!, _serverSeqMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {id, businessId},
+  ];
+  @override
+  Fiado map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Fiado(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      clientId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}client_id'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total'],
+      )!,
+      occurredAt: $FiadosTable.$converteroccurredAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}occurred_at'],
+        )!,
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      )!,
+      annulledAt: $FiadosTable.$converterannulledAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}annulled_at'],
+        ),
+      ),
+      annulledBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}annulled_by'],
+      ),
+      serverSeq: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}server_seq'],
+      ),
+    );
+  }
+
+  @override
+  $FiadosTable createAlias(String alias) {
+    return $FiadosTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converteroccurredAt =
+      const UtcDateTimeConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterannulledAt =
+      NullAwareTypeConverter.wrap(const UtcDateTimeConverter());
+}
+
+class Fiado extends DataClass implements Insertable<Fiado> {
+  final String id;
+  final String businessId;
+  final String clientId;
+
+  /// Total en la unidad menor; con ítems es la suma de sus subtotales,
+  /// calculada al crear y nunca recalculada (principio 4).
+  final int total;
+
+  /// Cuándo ocurrió la venta, según el dispositivo que la registró (D-18).
+  final DateTime occurredAt;
+  final String createdBy;
+  final DateTime? annulledAt;
+  final String? annulledBy;
+
+  /// Orden de llegada al servidor; null mientras no se ha sincronizado.
+  final int? serverSeq;
+  const Fiado({
+    required this.id,
+    required this.businessId,
+    required this.clientId,
+    required this.total,
+    required this.occurredAt,
+    required this.createdBy,
+    this.annulledAt,
+    this.annulledBy,
+    this.serverSeq,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['client_id'] = Variable<String>(clientId);
+    map['total'] = Variable<int>(total);
+    {
+      map['occurred_at'] = Variable<DateTime>(
+        $FiadosTable.$converteroccurredAt.toSql(occurredAt),
+      );
+    }
+    map['created_by'] = Variable<String>(createdBy);
+    if (!nullToAbsent || annulledAt != null) {
+      map['annulled_at'] = Variable<DateTime>(
+        $FiadosTable.$converterannulledAt.toSql(annulledAt),
+      );
+    }
+    if (!nullToAbsent || annulledBy != null) {
+      map['annulled_by'] = Variable<String>(annulledBy);
+    }
+    if (!nullToAbsent || serverSeq != null) {
+      map['server_seq'] = Variable<int>(serverSeq);
+    }
+    return map;
+  }
+
+  FiadosCompanion toCompanion(bool nullToAbsent) {
+    return FiadosCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      clientId: Value(clientId),
+      total: Value(total),
+      occurredAt: Value(occurredAt),
+      createdBy: Value(createdBy),
+      annulledAt: annulledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(annulledAt),
+      annulledBy: annulledBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(annulledBy),
+      serverSeq: serverSeq == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverSeq),
+    );
+  }
+
+  factory Fiado.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Fiado(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      clientId: serializer.fromJson<String>(json['clientId']),
+      total: serializer.fromJson<int>(json['total']),
+      occurredAt: serializer.fromJson<DateTime>(json['occurredAt']),
+      createdBy: serializer.fromJson<String>(json['createdBy']),
+      annulledAt: serializer.fromJson<DateTime?>(json['annulledAt']),
+      annulledBy: serializer.fromJson<String?>(json['annulledBy']),
+      serverSeq: serializer.fromJson<int?>(json['serverSeq']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'clientId': serializer.toJson<String>(clientId),
+      'total': serializer.toJson<int>(total),
+      'occurredAt': serializer.toJson<DateTime>(occurredAt),
+      'createdBy': serializer.toJson<String>(createdBy),
+      'annulledAt': serializer.toJson<DateTime?>(annulledAt),
+      'annulledBy': serializer.toJson<String?>(annulledBy),
+      'serverSeq': serializer.toJson<int?>(serverSeq),
+    };
+  }
+
+  Fiado copyWith({
+    String? id,
+    String? businessId,
+    String? clientId,
+    int? total,
+    DateTime? occurredAt,
+    String? createdBy,
+    Value<DateTime?> annulledAt = const Value.absent(),
+    Value<String?> annulledBy = const Value.absent(),
+    Value<int?> serverSeq = const Value.absent(),
+  }) => Fiado(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    clientId: clientId ?? this.clientId,
+    total: total ?? this.total,
+    occurredAt: occurredAt ?? this.occurredAt,
+    createdBy: createdBy ?? this.createdBy,
+    annulledAt: annulledAt.present ? annulledAt.value : this.annulledAt,
+    annulledBy: annulledBy.present ? annulledBy.value : this.annulledBy,
+    serverSeq: serverSeq.present ? serverSeq.value : this.serverSeq,
+  );
+  Fiado copyWithCompanion(FiadosCompanion data) {
+    return Fiado(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      clientId: data.clientId.present ? data.clientId.value : this.clientId,
+      total: data.total.present ? data.total.value : this.total,
+      occurredAt: data.occurredAt.present
+          ? data.occurredAt.value
+          : this.occurredAt,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      annulledAt: data.annulledAt.present
+          ? data.annulledAt.value
+          : this.annulledAt,
+      annulledBy: data.annulledBy.present
+          ? data.annulledBy.value
+          : this.annulledBy,
+      serverSeq: data.serverSeq.present ? data.serverSeq.value : this.serverSeq,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Fiado(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('clientId: $clientId, ')
+          ..write('total: $total, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('annulledAt: $annulledAt, ')
+          ..write('annulledBy: $annulledBy, ')
+          ..write('serverSeq: $serverSeq')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    clientId,
+    total,
+    occurredAt,
+    createdBy,
+    annulledAt,
+    annulledBy,
+    serverSeq,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Fiado &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.clientId == this.clientId &&
+          other.total == this.total &&
+          other.occurredAt == this.occurredAt &&
+          other.createdBy == this.createdBy &&
+          other.annulledAt == this.annulledAt &&
+          other.annulledBy == this.annulledBy &&
+          other.serverSeq == this.serverSeq);
+}
+
+class FiadosCompanion extends UpdateCompanion<Fiado> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> clientId;
+  final Value<int> total;
+  final Value<DateTime> occurredAt;
+  final Value<String> createdBy;
+  final Value<DateTime?> annulledAt;
+  final Value<String?> annulledBy;
+  final Value<int?> serverSeq;
+  final Value<int> rowid;
+  const FiadosCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.clientId = const Value.absent(),
+    this.total = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.annulledAt = const Value.absent(),
+    this.annulledBy = const Value.absent(),
+    this.serverSeq = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FiadosCompanion.insert({
+    required String id,
+    required String businessId,
+    required String clientId,
+    required int total,
+    required DateTime occurredAt,
+    required String createdBy,
+    this.annulledAt = const Value.absent(),
+    this.annulledBy = const Value.absent(),
+    this.serverSeq = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       clientId = Value(clientId),
+       total = Value(total),
+       occurredAt = Value(occurredAt),
+       createdBy = Value(createdBy);
+  static Insertable<Fiado> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? clientId,
+    Expression<int>? total,
+    Expression<DateTime>? occurredAt,
+    Expression<String>? createdBy,
+    Expression<DateTime>? annulledAt,
+    Expression<String>? annulledBy,
+    Expression<int>? serverSeq,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (clientId != null) 'client_id': clientId,
+      if (total != null) 'total': total,
+      if (occurredAt != null) 'occurred_at': occurredAt,
+      if (createdBy != null) 'created_by': createdBy,
+      if (annulledAt != null) 'annulled_at': annulledAt,
+      if (annulledBy != null) 'annulled_by': annulledBy,
+      if (serverSeq != null) 'server_seq': serverSeq,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FiadosCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? clientId,
+    Value<int>? total,
+    Value<DateTime>? occurredAt,
+    Value<String>? createdBy,
+    Value<DateTime?>? annulledAt,
+    Value<String?>? annulledBy,
+    Value<int?>? serverSeq,
+    Value<int>? rowid,
+  }) {
+    return FiadosCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      clientId: clientId ?? this.clientId,
+      total: total ?? this.total,
+      occurredAt: occurredAt ?? this.occurredAt,
+      createdBy: createdBy ?? this.createdBy,
+      annulledAt: annulledAt ?? this.annulledAt,
+      annulledBy: annulledBy ?? this.annulledBy,
+      serverSeq: serverSeq ?? this.serverSeq,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (clientId.present) {
+      map['client_id'] = Variable<String>(clientId.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<int>(total.value);
+    }
+    if (occurredAt.present) {
+      map['occurred_at'] = Variable<DateTime>(
+        $FiadosTable.$converteroccurredAt.toSql(occurredAt.value),
+      );
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (annulledAt.present) {
+      map['annulled_at'] = Variable<DateTime>(
+        $FiadosTable.$converterannulledAt.toSql(annulledAt.value),
+      );
+    }
+    if (annulledBy.present) {
+      map['annulled_by'] = Variable<String>(annulledBy.value);
+    }
+    if (serverSeq.present) {
+      map['server_seq'] = Variable<int>(serverSeq.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FiadosCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('clientId: $clientId, ')
+          ..write('total: $total, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('annulledAt: $annulledAt, ')
+          ..write('annulledBy: $annulledBy, ')
+          ..write('serverSeq: $serverSeq, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FiadoItemsTable extends FiadoItems
+    with TableInfo<$FiadoItemsTable, FiadoItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FiadoItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES businesses (id)',
+    ),
+  );
+  static const VerificationMeta _fiadoIdMeta = const VerificationMeta(
+    'fiadoId',
+  );
+  @override
+  late final GeneratedColumn<String> fiadoId = GeneratedColumn<String>(
+    'fiado_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<String> productId = GeneratedColumn<String>(
+    'product_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (quantity > 0)',
+  );
+  static const VerificationMeta _unitPriceMeta = const VerificationMeta(
+    'unitPrice',
+  );
+  @override
+  late final GeneratedColumn<int> unitPrice = GeneratedColumn<int>(
+    'unit_price',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (unit_price > 0)',
+  );
+  static const VerificationMeta _subtotalMeta = const VerificationMeta(
+    'subtotal',
+  );
+  @override
+  late final GeneratedColumn<int> subtotal = GeneratedColumn<int>(
+    'subtotal',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (subtotal > 0)',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    fiadoId,
+    productId,
+    description,
+    quantity,
+    unitPrice,
+    subtotal,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fiado_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FiadoItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('fiado_id')) {
+      context.handle(
+        _fiadoIdMeta,
+        fiadoId.isAcceptableOrUnknown(data['fiado_id']!, _fiadoIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fiadoIdMeta);
+    }
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('unit_price')) {
+      context.handle(
+        _unitPriceMeta,
+        unitPrice.isAcceptableOrUnknown(data['unit_price']!, _unitPriceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitPriceMeta);
+    }
+    if (data.containsKey('subtotal')) {
+      context.handle(
+        _subtotalMeta,
+        subtotal.isAcceptableOrUnknown(data['subtotal']!, _subtotalMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subtotalMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FiadoItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FiadoItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      fiadoId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fiado_id'],
+      )!,
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_id'],
+      ),
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+      unitPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}unit_price'],
+      )!,
+      subtotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}subtotal'],
+      )!,
+    );
+  }
+
+  @override
+  $FiadoItemsTable createAlias(String alias) {
+    return $FiadoItemsTable(attachedDatabase, alias);
+  }
+}
+
+class FiadoItem extends DataClass implements Insertable<FiadoItem> {
+  final String id;
+  final String businessId;
+  final String fiadoId;
+
+  /// Producto del catálogo del que se copió; null en un ítem libre (RF-31).
+  final String? productId;
+  final String description;
+
+  /// Cantidad en milésimas.
+  final int quantity;
+
+  /// Precio unitario en la unidad menor.
+  final int unitPrice;
+
+  /// Subtotal ya redondeado según el modo del negocio, en la unidad menor.
+  final int subtotal;
+  const FiadoItem({
+    required this.id,
+    required this.businessId,
+    required this.fiadoId,
+    this.productId,
+    required this.description,
+    required this.quantity,
+    required this.unitPrice,
+    required this.subtotal,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['fiado_id'] = Variable<String>(fiadoId);
+    if (!nullToAbsent || productId != null) {
+      map['product_id'] = Variable<String>(productId);
+    }
+    map['description'] = Variable<String>(description);
+    map['quantity'] = Variable<int>(quantity);
+    map['unit_price'] = Variable<int>(unitPrice);
+    map['subtotal'] = Variable<int>(subtotal);
+    return map;
+  }
+
+  FiadoItemsCompanion toCompanion(bool nullToAbsent) {
+    return FiadoItemsCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      fiadoId: Value(fiadoId),
+      productId: productId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productId),
+      description: Value(description),
+      quantity: Value(quantity),
+      unitPrice: Value(unitPrice),
+      subtotal: Value(subtotal),
+    );
+  }
+
+  factory FiadoItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FiadoItem(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      fiadoId: serializer.fromJson<String>(json['fiadoId']),
+      productId: serializer.fromJson<String?>(json['productId']),
+      description: serializer.fromJson<String>(json['description']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      unitPrice: serializer.fromJson<int>(json['unitPrice']),
+      subtotal: serializer.fromJson<int>(json['subtotal']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'fiadoId': serializer.toJson<String>(fiadoId),
+      'productId': serializer.toJson<String?>(productId),
+      'description': serializer.toJson<String>(description),
+      'quantity': serializer.toJson<int>(quantity),
+      'unitPrice': serializer.toJson<int>(unitPrice),
+      'subtotal': serializer.toJson<int>(subtotal),
+    };
+  }
+
+  FiadoItem copyWith({
+    String? id,
+    String? businessId,
+    String? fiadoId,
+    Value<String?> productId = const Value.absent(),
+    String? description,
+    int? quantity,
+    int? unitPrice,
+    int? subtotal,
+  }) => FiadoItem(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    fiadoId: fiadoId ?? this.fiadoId,
+    productId: productId.present ? productId.value : this.productId,
+    description: description ?? this.description,
+    quantity: quantity ?? this.quantity,
+    unitPrice: unitPrice ?? this.unitPrice,
+    subtotal: subtotal ?? this.subtotal,
+  );
+  FiadoItem copyWithCompanion(FiadoItemsCompanion data) {
+    return FiadoItem(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      fiadoId: data.fiadoId.present ? data.fiadoId.value : this.fiadoId,
+      productId: data.productId.present ? data.productId.value : this.productId,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
+      subtotal: data.subtotal.present ? data.subtotal.value : this.subtotal,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FiadoItem(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('fiadoId: $fiadoId, ')
+          ..write('productId: $productId, ')
+          ..write('description: $description, ')
+          ..write('quantity: $quantity, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('subtotal: $subtotal')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    fiadoId,
+    productId,
+    description,
+    quantity,
+    unitPrice,
+    subtotal,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FiadoItem &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.fiadoId == this.fiadoId &&
+          other.productId == this.productId &&
+          other.description == this.description &&
+          other.quantity == this.quantity &&
+          other.unitPrice == this.unitPrice &&
+          other.subtotal == this.subtotal);
+}
+
+class FiadoItemsCompanion extends UpdateCompanion<FiadoItem> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> fiadoId;
+  final Value<String?> productId;
+  final Value<String> description;
+  final Value<int> quantity;
+  final Value<int> unitPrice;
+  final Value<int> subtotal;
+  final Value<int> rowid;
+  const FiadoItemsCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.fiadoId = const Value.absent(),
+    this.productId = const Value.absent(),
+    this.description = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.unitPrice = const Value.absent(),
+    this.subtotal = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FiadoItemsCompanion.insert({
+    required String id,
+    required String businessId,
+    required String fiadoId,
+    this.productId = const Value.absent(),
+    required String description,
+    required int quantity,
+    required int unitPrice,
+    required int subtotal,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       fiadoId = Value(fiadoId),
+       description = Value(description),
+       quantity = Value(quantity),
+       unitPrice = Value(unitPrice),
+       subtotal = Value(subtotal);
+  static Insertable<FiadoItem> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? fiadoId,
+    Expression<String>? productId,
+    Expression<String>? description,
+    Expression<int>? quantity,
+    Expression<int>? unitPrice,
+    Expression<int>? subtotal,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (fiadoId != null) 'fiado_id': fiadoId,
+      if (productId != null) 'product_id': productId,
+      if (description != null) 'description': description,
+      if (quantity != null) 'quantity': quantity,
+      if (unitPrice != null) 'unit_price': unitPrice,
+      if (subtotal != null) 'subtotal': subtotal,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FiadoItemsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? fiadoId,
+    Value<String?>? productId,
+    Value<String>? description,
+    Value<int>? quantity,
+    Value<int>? unitPrice,
+    Value<int>? subtotal,
+    Value<int>? rowid,
+  }) {
+    return FiadoItemsCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      fiadoId: fiadoId ?? this.fiadoId,
+      productId: productId ?? this.productId,
+      description: description ?? this.description,
+      quantity: quantity ?? this.quantity,
+      unitPrice: unitPrice ?? this.unitPrice,
+      subtotal: subtotal ?? this.subtotal,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (fiadoId.present) {
+      map['fiado_id'] = Variable<String>(fiadoId.value);
+    }
+    if (productId.present) {
+      map['product_id'] = Variable<String>(productId.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (unitPrice.present) {
+      map['unit_price'] = Variable<int>(unitPrice.value);
+    }
+    if (subtotal.present) {
+      map['subtotal'] = Variable<int>(subtotal.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FiadoItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('fiadoId: $fiadoId, ')
+          ..write('productId: $productId, ')
+          ..write('description: $description, ')
+          ..write('quantity: $quantity, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('subtotal: $subtotal, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PaymentsTable extends Payments with TableInfo<$PaymentsTable, Payment> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PaymentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES businesses (id)',
+    ),
+  );
+  static const VerificationMeta _clientIdMeta = const VerificationMeta(
+    'clientId',
+  );
+  @override
+  late final GeneratedColumn<String> clientId = GeneratedColumn<String>(
+    'client_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (amount > 0)',
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> occurredAt =
+      GeneratedColumn<DateTime>(
+        'occurred_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($PaymentsTable.$converteroccurredAt);
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> annulledAt =
+      GeneratedColumn<DateTime>(
+        'annulled_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($PaymentsTable.$converterannulledAt);
+  static const VerificationMeta _annulledByMeta = const VerificationMeta(
+    'annulledBy',
+  );
+  @override
+  late final GeneratedColumn<String> annulledBy = GeneratedColumn<String>(
+    'annulled_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _serverSeqMeta = const VerificationMeta(
+    'serverSeq',
+  );
+  @override
+  late final GeneratedColumn<int> serverSeq = GeneratedColumn<int>(
+    'server_seq',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    clientId,
+    amount,
+    occurredAt,
+    createdBy,
+    annulledAt,
+    annulledBy,
+    serverSeq,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'payments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Payment> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('client_id')) {
+      context.handle(
+        _clientIdMeta,
+        clientId.isAcceptableOrUnknown(data['client_id']!, _clientIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_clientIdMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdByMeta);
+    }
+    if (data.containsKey('annulled_by')) {
+      context.handle(
+        _annulledByMeta,
+        annulledBy.isAcceptableOrUnknown(data['annulled_by']!, _annulledByMeta),
+      );
+    }
+    if (data.containsKey('server_seq')) {
+      context.handle(
+        _serverSeqMeta,
+        serverSeq.isAcceptableOrUnknown(data['server_seq']!, _serverSeqMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Payment map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Payment(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      clientId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}client_id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      occurredAt: $PaymentsTable.$converteroccurredAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}occurred_at'],
+        )!,
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      )!,
+      annulledAt: $PaymentsTable.$converterannulledAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}annulled_at'],
+        ),
+      ),
+      annulledBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}annulled_by'],
+      ),
+      serverSeq: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}server_seq'],
+      ),
+    );
+  }
+
+  @override
+  $PaymentsTable createAlias(String alias) {
+    return $PaymentsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converteroccurredAt =
+      const UtcDateTimeConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterannulledAt =
+      NullAwareTypeConverter.wrap(const UtcDateTimeConverter());
+}
+
+class Payment extends DataClass implements Insertable<Payment> {
+  final String id;
+  final String businessId;
+  final String clientId;
+  final int amount;
+  final DateTime occurredAt;
+  final String createdBy;
+  final DateTime? annulledAt;
+  final String? annulledBy;
+  final int? serverSeq;
+  const Payment({
+    required this.id,
+    required this.businessId,
+    required this.clientId,
+    required this.amount,
+    required this.occurredAt,
+    required this.createdBy,
+    this.annulledAt,
+    this.annulledBy,
+    this.serverSeq,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['client_id'] = Variable<String>(clientId);
+    map['amount'] = Variable<int>(amount);
+    {
+      map['occurred_at'] = Variable<DateTime>(
+        $PaymentsTable.$converteroccurredAt.toSql(occurredAt),
+      );
+    }
+    map['created_by'] = Variable<String>(createdBy);
+    if (!nullToAbsent || annulledAt != null) {
+      map['annulled_at'] = Variable<DateTime>(
+        $PaymentsTable.$converterannulledAt.toSql(annulledAt),
+      );
+    }
+    if (!nullToAbsent || annulledBy != null) {
+      map['annulled_by'] = Variable<String>(annulledBy);
+    }
+    if (!nullToAbsent || serverSeq != null) {
+      map['server_seq'] = Variable<int>(serverSeq);
+    }
+    return map;
+  }
+
+  PaymentsCompanion toCompanion(bool nullToAbsent) {
+    return PaymentsCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      clientId: Value(clientId),
+      amount: Value(amount),
+      occurredAt: Value(occurredAt),
+      createdBy: Value(createdBy),
+      annulledAt: annulledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(annulledAt),
+      annulledBy: annulledBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(annulledBy),
+      serverSeq: serverSeq == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverSeq),
+    );
+  }
+
+  factory Payment.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Payment(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      clientId: serializer.fromJson<String>(json['clientId']),
+      amount: serializer.fromJson<int>(json['amount']),
+      occurredAt: serializer.fromJson<DateTime>(json['occurredAt']),
+      createdBy: serializer.fromJson<String>(json['createdBy']),
+      annulledAt: serializer.fromJson<DateTime?>(json['annulledAt']),
+      annulledBy: serializer.fromJson<String?>(json['annulledBy']),
+      serverSeq: serializer.fromJson<int?>(json['serverSeq']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'clientId': serializer.toJson<String>(clientId),
+      'amount': serializer.toJson<int>(amount),
+      'occurredAt': serializer.toJson<DateTime>(occurredAt),
+      'createdBy': serializer.toJson<String>(createdBy),
+      'annulledAt': serializer.toJson<DateTime?>(annulledAt),
+      'annulledBy': serializer.toJson<String?>(annulledBy),
+      'serverSeq': serializer.toJson<int?>(serverSeq),
+    };
+  }
+
+  Payment copyWith({
+    String? id,
+    String? businessId,
+    String? clientId,
+    int? amount,
+    DateTime? occurredAt,
+    String? createdBy,
+    Value<DateTime?> annulledAt = const Value.absent(),
+    Value<String?> annulledBy = const Value.absent(),
+    Value<int?> serverSeq = const Value.absent(),
+  }) => Payment(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    clientId: clientId ?? this.clientId,
+    amount: amount ?? this.amount,
+    occurredAt: occurredAt ?? this.occurredAt,
+    createdBy: createdBy ?? this.createdBy,
+    annulledAt: annulledAt.present ? annulledAt.value : this.annulledAt,
+    annulledBy: annulledBy.present ? annulledBy.value : this.annulledBy,
+    serverSeq: serverSeq.present ? serverSeq.value : this.serverSeq,
+  );
+  Payment copyWithCompanion(PaymentsCompanion data) {
+    return Payment(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      clientId: data.clientId.present ? data.clientId.value : this.clientId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      occurredAt: data.occurredAt.present
+          ? data.occurredAt.value
+          : this.occurredAt,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      annulledAt: data.annulledAt.present
+          ? data.annulledAt.value
+          : this.annulledAt,
+      annulledBy: data.annulledBy.present
+          ? data.annulledBy.value
+          : this.annulledBy,
+      serverSeq: data.serverSeq.present ? data.serverSeq.value : this.serverSeq,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Payment(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('clientId: $clientId, ')
+          ..write('amount: $amount, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('annulledAt: $annulledAt, ')
+          ..write('annulledBy: $annulledBy, ')
+          ..write('serverSeq: $serverSeq')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    clientId,
+    amount,
+    occurredAt,
+    createdBy,
+    annulledAt,
+    annulledBy,
+    serverSeq,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Payment &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.clientId == this.clientId &&
+          other.amount == this.amount &&
+          other.occurredAt == this.occurredAt &&
+          other.createdBy == this.createdBy &&
+          other.annulledAt == this.annulledAt &&
+          other.annulledBy == this.annulledBy &&
+          other.serverSeq == this.serverSeq);
+}
+
+class PaymentsCompanion extends UpdateCompanion<Payment> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> clientId;
+  final Value<int> amount;
+  final Value<DateTime> occurredAt;
+  final Value<String> createdBy;
+  final Value<DateTime?> annulledAt;
+  final Value<String?> annulledBy;
+  final Value<int?> serverSeq;
+  final Value<int> rowid;
+  const PaymentsCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.clientId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.annulledAt = const Value.absent(),
+    this.annulledBy = const Value.absent(),
+    this.serverSeq = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PaymentsCompanion.insert({
+    required String id,
+    required String businessId,
+    required String clientId,
+    required int amount,
+    required DateTime occurredAt,
+    required String createdBy,
+    this.annulledAt = const Value.absent(),
+    this.annulledBy = const Value.absent(),
+    this.serverSeq = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       clientId = Value(clientId),
+       amount = Value(amount),
+       occurredAt = Value(occurredAt),
+       createdBy = Value(createdBy);
+  static Insertable<Payment> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? clientId,
+    Expression<int>? amount,
+    Expression<DateTime>? occurredAt,
+    Expression<String>? createdBy,
+    Expression<DateTime>? annulledAt,
+    Expression<String>? annulledBy,
+    Expression<int>? serverSeq,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (clientId != null) 'client_id': clientId,
+      if (amount != null) 'amount': amount,
+      if (occurredAt != null) 'occurred_at': occurredAt,
+      if (createdBy != null) 'created_by': createdBy,
+      if (annulledAt != null) 'annulled_at': annulledAt,
+      if (annulledBy != null) 'annulled_by': annulledBy,
+      if (serverSeq != null) 'server_seq': serverSeq,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PaymentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? clientId,
+    Value<int>? amount,
+    Value<DateTime>? occurredAt,
+    Value<String>? createdBy,
+    Value<DateTime?>? annulledAt,
+    Value<String?>? annulledBy,
+    Value<int?>? serverSeq,
+    Value<int>? rowid,
+  }) {
+    return PaymentsCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      clientId: clientId ?? this.clientId,
+      amount: amount ?? this.amount,
+      occurredAt: occurredAt ?? this.occurredAt,
+      createdBy: createdBy ?? this.createdBy,
+      annulledAt: annulledAt ?? this.annulledAt,
+      annulledBy: annulledBy ?? this.annulledBy,
+      serverSeq: serverSeq ?? this.serverSeq,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (clientId.present) {
+      map['client_id'] = Variable<String>(clientId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (occurredAt.present) {
+      map['occurred_at'] = Variable<DateTime>(
+        $PaymentsTable.$converteroccurredAt.toSql(occurredAt.value),
+      );
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (annulledAt.present) {
+      map['annulled_at'] = Variable<DateTime>(
+        $PaymentsTable.$converterannulledAt.toSql(annulledAt.value),
+      );
+    }
+    if (annulledBy.present) {
+      map['annulled_by'] = Variable<String>(annulledBy.value);
+    }
+    if (serverSeq.present) {
+      map['server_seq'] = Variable<int>(serverSeq.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PaymentsCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('clientId: $clientId, ')
+          ..write('amount: $amount, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('annulledAt: $annulledAt, ')
+          ..write('annulledBy: $annulledBy, ')
+          ..write('serverSeq: $serverSeq, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1981,6 +3680,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MembershipsTable memberships = $MembershipsTable(this);
   late final $ClientsTable clients = $ClientsTable(this);
   late final $ProductsTable products = $ProductsTable(this);
+  late final $FiadosTable fiados = $FiadosTable(this);
+  late final $FiadoItemsTable fiadoItems = $FiadoItemsTable(this);
+  late final $PaymentsTable payments = $PaymentsTable(this);
   late final Index clientsBusiness = Index(
     'clients_business',
     'CREATE INDEX clients_business ON clients (business_id)',
@@ -1988,6 +3690,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index productsBusiness = Index(
     'products_business',
     'CREATE INDEX products_business ON products (business_id)',
+  );
+  late final Index fiadosBusiness = Index(
+    'fiados_business',
+    'CREATE INDEX fiados_business ON fiados (business_id)',
+  );
+  late final Index fiadosClient = Index(
+    'fiados_client',
+    'CREATE INDEX fiados_client ON fiados (client_id)',
+  );
+  late final Index fiadoItemsFiado = Index(
+    'fiado_items_fiado',
+    'CREATE INDEX fiado_items_fiado ON fiado_items (fiado_id)',
+  );
+  late final Index paymentsBusiness = Index(
+    'payments_business',
+    'CREATE INDEX payments_business ON payments (business_id)',
+  );
+  late final Index paymentsClient = Index(
+    'payments_client',
+    'CREATE INDEX payments_client ON payments (client_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -1998,8 +3720,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     memberships,
     clients,
     products,
+    fiados,
+    fiadoItems,
+    payments,
     clientsBusiness,
     productsBusiness,
+    fiadosBusiness,
+    fiadosClient,
+    fiadoItemsFiado,
+    paymentsBusiness,
+    paymentsClient,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -2078,6 +3808,62 @@ final class $$BusinessesTableReferences
     ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_productsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$FiadosTable, List<Fiado>> _fiadosRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.fiados,
+    aliasName: 'businesses__id__fiados__business_id',
+  );
+
+  $$FiadosTableProcessedTableManager get fiadosRefs {
+    final manager = $$FiadosTableTableManager(
+      $_db,
+      $_db.fiados,
+    ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_fiadosRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$FiadoItemsTable, List<FiadoItem>>
+  _fiadoItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.fiadoItems,
+    aliasName: 'businesses__id__fiado_items__business_id',
+  );
+
+  $$FiadoItemsTableProcessedTableManager get fiadoItemsRefs {
+    final manager = $$FiadoItemsTableTableManager(
+      $_db,
+      $_db.fiadoItems,
+    ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_fiadoItemsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$PaymentsTable, List<Payment>> _paymentsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.payments,
+    aliasName: 'businesses__id__payments__business_id',
+  );
+
+  $$PaymentsTableProcessedTableManager get paymentsRefs {
+    final manager = $$PaymentsTableTableManager(
+      $_db,
+      $_db.payments,
+    ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_paymentsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2185,6 +3971,81 @@ class $$BusinessesTableFilterComposer
           }) => $$ProductsTableFilterComposer(
             $db: $db,
             $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> fiadosRefs(
+    Expression<bool> Function($$FiadosTableFilterComposer f) f,
+  ) {
+    final $$FiadosTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fiados,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FiadosTableFilterComposer(
+            $db: $db,
+            $table: $db.fiados,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> fiadoItemsRefs(
+    Expression<bool> Function($$FiadoItemsTableFilterComposer f) f,
+  ) {
+    final $$FiadoItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fiadoItems,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FiadoItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.fiadoItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> paymentsRefs(
+    Expression<bool> Function($$PaymentsTableFilterComposer f) f,
+  ) {
+    final $$PaymentsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.payments,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PaymentsTableFilterComposer(
+            $db: $db,
+            $table: $db.payments,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2332,6 +4193,81 @@ class $$BusinessesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> fiadosRefs<T extends Object>(
+    Expression<T> Function($$FiadosTableAnnotationComposer a) f,
+  ) {
+    final $$FiadosTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fiados,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FiadosTableAnnotationComposer(
+            $db: $db,
+            $table: $db.fiados,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> fiadoItemsRefs<T extends Object>(
+    Expression<T> Function($$FiadoItemsTableAnnotationComposer a) f,
+  ) {
+    final $$FiadoItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fiadoItems,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FiadoItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.fiadoItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> paymentsRefs<T extends Object>(
+    Expression<T> Function($$PaymentsTableAnnotationComposer a) f,
+  ) {
+    final $$PaymentsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.payments,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PaymentsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.payments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BusinessesTableTableManager
@@ -2351,6 +4287,9 @@ class $$BusinessesTableTableManager
             bool membershipsRefs,
             bool clientsRefs,
             bool productsRefs,
+            bool fiadosRefs,
+            bool fiadoItemsRefs,
+            bool paymentsRefs,
           })
         > {
   $$BusinessesTableTableManager(_$AppDatabase db, $BusinessesTable table)
@@ -2409,6 +4348,9 @@ class $$BusinessesTableTableManager
                 membershipsRefs = false,
                 clientsRefs = false,
                 productsRefs = false,
+                fiadosRefs = false,
+                fiadoItemsRefs = false,
+                paymentsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -2416,6 +4358,9 @@ class $$BusinessesTableTableManager
                     if (membershipsRefs) db.memberships,
                     if (clientsRefs) db.clients,
                     if (productsRefs) db.products,
+                    if (fiadosRefs) db.fiados,
+                    if (fiadoItemsRefs) db.fiadoItems,
+                    if (paymentsRefs) db.payments,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -2483,6 +4428,69 @@ class $$BusinessesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (fiadosRefs)
+                        await $_getPrefetchedData<
+                          Business,
+                          $BusinessesTable,
+                          Fiado
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BusinessesTableReferences
+                              ._fiadosRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BusinessesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).fiadosRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.businessId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (fiadoItemsRefs)
+                        await $_getPrefetchedData<
+                          Business,
+                          $BusinessesTable,
+                          FiadoItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BusinessesTableReferences
+                              ._fiadoItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BusinessesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).fiadoItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.businessId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (paymentsRefs)
+                        await $_getPrefetchedData<
+                          Business,
+                          $BusinessesTable,
+                          Payment
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BusinessesTableReferences
+                              ._paymentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BusinessesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).paymentsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.businessId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -2507,6 +4515,9 @@ typedef $$BusinessesTableProcessedTableManager =
         bool membershipsRefs,
         bool clientsRefs,
         bool productsRefs,
+        bool fiadosRefs,
+        bool fiadoItemsRefs,
+        bool paymentsRefs,
       })
     >;
 typedef $$MembershipsTableCreateCompanionBuilder =
@@ -3647,6 +5658,1176 @@ typedef $$ProductsTableProcessedTableManager =
       Product,
       PrefetchHooks Function({bool businessId})
     >;
+typedef $$FiadosTableCreateCompanionBuilder = FiadosCompanion Function({
+  required String id,
+  required String businessId,
+  required String clientId,
+  required int total,
+  required DateTime occurredAt,
+  required String createdBy,
+  Value<DateTime?> annulledAt,
+  Value<String?> annulledBy,
+  Value<int?> serverSeq,
+  Value<int> rowid,
+});
+typedef $$FiadosTableUpdateCompanionBuilder = FiadosCompanion Function({
+  Value<String> id,
+  Value<String> businessId,
+  Value<String> clientId,
+  Value<int> total,
+  Value<DateTime> occurredAt,
+  Value<String> createdBy,
+  Value<DateTime?> annulledAt,
+  Value<String?> annulledBy,
+  Value<int?> serverSeq,
+  Value<int> rowid,
+});
+
+final class $$FiadosTableReferences
+    extends BaseReferences<_$AppDatabase, $FiadosTable, Fiado> {
+  $$FiadosTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $BusinessesTable _businessIdTable(_$AppDatabase db) =>
+      db.businesses.createAlias('fiados__business_id__businesses__id');
+
+  $$BusinessesTableProcessedTableManager get businessId {
+    final $_column = $_itemColumn<String>('business_id')!;
+
+    final manager = $$BusinessesTableTableManager(
+      $_db,
+      $_db.businesses,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_businessIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$FiadosTableFilterComposer
+    extends Composer<_$AppDatabase, $FiadosTable> {
+  $$FiadosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get clientId => $composableBuilder(
+    column: $table.clientId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get occurredAt =>
+      $composableBuilder(
+        column: $table.occurredAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get annulledAt => $composableBuilder(
+    column: $table.annulledAt,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get annulledBy => $composableBuilder(
+    column: $table.annulledBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get serverSeq => $composableBuilder(
+    column: $table.serverSeq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$BusinessesTableFilterComposer get businessId {
+    final $$BusinessesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableFilterComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FiadosTableOrderingComposer
+    extends Composer<_$AppDatabase, $FiadosTable> {
+  $$FiadosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get clientId => $composableBuilder(
+    column: $table.clientId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get annulledAt => $composableBuilder(
+    column: $table.annulledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get annulledBy => $composableBuilder(
+    column: $table.annulledBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get serverSeq => $composableBuilder(
+    column: $table.serverSeq,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BusinessesTableOrderingComposer get businessId {
+    final $$BusinessesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableOrderingComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FiadosTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FiadosTable> {
+  $$FiadosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get clientId =>
+      $composableBuilder(column: $table.clientId, builder: (column) => column);
+
+  GeneratedColumn<int> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get occurredAt =>
+      $composableBuilder(
+        column: $table.occurredAt,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get annulledAt =>
+      $composableBuilder(
+        column: $table.annulledAt,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get annulledBy => $composableBuilder(
+    column: $table.annulledBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get serverSeq =>
+      $composableBuilder(column: $table.serverSeq, builder: (column) => column);
+
+  $$BusinessesTableAnnotationComposer get businessId {
+    final $$BusinessesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FiadosTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FiadosTable,
+          Fiado,
+          $$FiadosTableFilterComposer,
+          $$FiadosTableOrderingComposer,
+          $$FiadosTableAnnotationComposer,
+          $$FiadosTableCreateCompanionBuilder,
+          $$FiadosTableUpdateCompanionBuilder,
+          (Fiado, $$FiadosTableReferences),
+          Fiado,
+          PrefetchHooks Function({bool businessId})
+        > {
+  $$FiadosTableTableManager(_$AppDatabase db, $FiadosTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FiadosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FiadosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FiadosTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> clientId = const Value.absent(),
+                Value<int> total = const Value.absent(),
+                Value<DateTime> occurredAt = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<DateTime?> annulledAt = const Value.absent(),
+                Value<String?> annulledBy = const Value.absent(),
+                Value<int?> serverSeq = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FiadosCompanion(
+                id: id,
+                businessId: businessId,
+                clientId: clientId,
+                total: total,
+                occurredAt: occurredAt,
+                createdBy: createdBy,
+                annulledAt: annulledAt,
+                annulledBy: annulledBy,
+                serverSeq: serverSeq,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String clientId,
+                required int total,
+                required DateTime occurredAt,
+                required String createdBy,
+                Value<DateTime?> annulledAt = const Value.absent(),
+                Value<String?> annulledBy = const Value.absent(),
+                Value<int?> serverSeq = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FiadosCompanion.insert(
+                id: id,
+                businessId: businessId,
+                clientId: clientId,
+                total: total,
+                occurredAt: occurredAt,
+                createdBy: createdBy,
+                annulledAt: annulledAt,
+                annulledBy: annulledBy,
+                serverSeq: serverSeq,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$FiadosTable, Fiado>(table),
+                  $$FiadosTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({businessId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (businessId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.businessId,
+                        referencedTable: $$FiadosTableReferences
+                            ._businessIdTable(db),
+                        referencedColumn: $$FiadosTableReferences
+                            ._businessIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$FiadosTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FiadosTable,
+      Fiado,
+      $$FiadosTableFilterComposer,
+      $$FiadosTableOrderingComposer,
+      $$FiadosTableAnnotationComposer,
+      $$FiadosTableCreateCompanionBuilder,
+      $$FiadosTableUpdateCompanionBuilder,
+      (Fiado, $$FiadosTableReferences),
+      Fiado,
+      PrefetchHooks Function({bool businessId})
+    >;
+typedef $$FiadoItemsTableCreateCompanionBuilder = FiadoItemsCompanion Function({
+  required String id,
+  required String businessId,
+  required String fiadoId,
+  Value<String?> productId,
+  required String description,
+  required int quantity,
+  required int unitPrice,
+  required int subtotal,
+  Value<int> rowid,
+});
+typedef $$FiadoItemsTableUpdateCompanionBuilder = FiadoItemsCompanion Function({
+  Value<String> id,
+  Value<String> businessId,
+  Value<String> fiadoId,
+  Value<String?> productId,
+  Value<String> description,
+  Value<int> quantity,
+  Value<int> unitPrice,
+  Value<int> subtotal,
+  Value<int> rowid,
+});
+
+final class $$FiadoItemsTableReferences
+    extends BaseReferences<_$AppDatabase, $FiadoItemsTable, FiadoItem> {
+  $$FiadoItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $BusinessesTable _businessIdTable(_$AppDatabase db) =>
+      db.businesses.createAlias('fiado_items__business_id__businesses__id');
+
+  $$BusinessesTableProcessedTableManager get businessId {
+    final $_column = $_itemColumn<String>('business_id')!;
+
+    final manager = $$BusinessesTableTableManager(
+      $_db,
+      $_db.businesses,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_businessIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$FiadoItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $FiadoItemsTable> {
+  $$FiadoItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fiadoId => $composableBuilder(
+    column: $table.fiadoId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get productId => $composableBuilder(
+    column: $table.productId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get unitPrice => $composableBuilder(
+    column: $table.unitPrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get subtotal => $composableBuilder(
+    column: $table.subtotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$BusinessesTableFilterComposer get businessId {
+    final $$BusinessesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableFilterComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FiadoItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $FiadoItemsTable> {
+  $$FiadoItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fiadoId => $composableBuilder(
+    column: $table.fiadoId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get productId => $composableBuilder(
+    column: $table.productId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get unitPrice => $composableBuilder(
+    column: $table.unitPrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get subtotal => $composableBuilder(
+    column: $table.subtotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BusinessesTableOrderingComposer get businessId {
+    final $$BusinessesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableOrderingComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FiadoItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FiadoItemsTable> {
+  $$FiadoItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get fiadoId =>
+      $composableBuilder(column: $table.fiadoId, builder: (column) => column);
+
+  GeneratedColumn<String> get productId =>
+      $composableBuilder(column: $table.productId, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<int> get unitPrice =>
+      $composableBuilder(column: $table.unitPrice, builder: (column) => column);
+
+  GeneratedColumn<int> get subtotal =>
+      $composableBuilder(column: $table.subtotal, builder: (column) => column);
+
+  $$BusinessesTableAnnotationComposer get businessId {
+    final $$BusinessesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FiadoItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FiadoItemsTable,
+          FiadoItem,
+          $$FiadoItemsTableFilterComposer,
+          $$FiadoItemsTableOrderingComposer,
+          $$FiadoItemsTableAnnotationComposer,
+          $$FiadoItemsTableCreateCompanionBuilder,
+          $$FiadoItemsTableUpdateCompanionBuilder,
+          (FiadoItem, $$FiadoItemsTableReferences),
+          FiadoItem,
+          PrefetchHooks Function({bool businessId})
+        > {
+  $$FiadoItemsTableTableManager(_$AppDatabase db, $FiadoItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FiadoItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FiadoItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FiadoItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> fiadoId = const Value.absent(),
+                Value<String?> productId = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<int> unitPrice = const Value.absent(),
+                Value<int> subtotal = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FiadoItemsCompanion(
+                id: id,
+                businessId: businessId,
+                fiadoId: fiadoId,
+                productId: productId,
+                description: description,
+                quantity: quantity,
+                unitPrice: unitPrice,
+                subtotal: subtotal,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String fiadoId,
+                Value<String?> productId = const Value.absent(),
+                required String description,
+                required int quantity,
+                required int unitPrice,
+                required int subtotal,
+                Value<int> rowid = const Value.absent(),
+              }) => FiadoItemsCompanion.insert(
+                id: id,
+                businessId: businessId,
+                fiadoId: fiadoId,
+                productId: productId,
+                description: description,
+                quantity: quantity,
+                unitPrice: unitPrice,
+                subtotal: subtotal,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$FiadoItemsTable, FiadoItem>(table),
+                  $$FiadoItemsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({businessId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (businessId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.businessId,
+                        referencedTable: $$FiadoItemsTableReferences
+                            ._businessIdTable(db),
+                        referencedColumn: $$FiadoItemsTableReferences
+                            ._businessIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$FiadoItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FiadoItemsTable,
+      FiadoItem,
+      $$FiadoItemsTableFilterComposer,
+      $$FiadoItemsTableOrderingComposer,
+      $$FiadoItemsTableAnnotationComposer,
+      $$FiadoItemsTableCreateCompanionBuilder,
+      $$FiadoItemsTableUpdateCompanionBuilder,
+      (FiadoItem, $$FiadoItemsTableReferences),
+      FiadoItem,
+      PrefetchHooks Function({bool businessId})
+    >;
+typedef $$PaymentsTableCreateCompanionBuilder = PaymentsCompanion Function({
+  required String id,
+  required String businessId,
+  required String clientId,
+  required int amount,
+  required DateTime occurredAt,
+  required String createdBy,
+  Value<DateTime?> annulledAt,
+  Value<String?> annulledBy,
+  Value<int?> serverSeq,
+  Value<int> rowid,
+});
+typedef $$PaymentsTableUpdateCompanionBuilder = PaymentsCompanion Function({
+  Value<String> id,
+  Value<String> businessId,
+  Value<String> clientId,
+  Value<int> amount,
+  Value<DateTime> occurredAt,
+  Value<String> createdBy,
+  Value<DateTime?> annulledAt,
+  Value<String?> annulledBy,
+  Value<int?> serverSeq,
+  Value<int> rowid,
+});
+
+final class $$PaymentsTableReferences
+    extends BaseReferences<_$AppDatabase, $PaymentsTable, Payment> {
+  $$PaymentsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $BusinessesTable _businessIdTable(_$AppDatabase db) =>
+      db.businesses.createAlias('payments__business_id__businesses__id');
+
+  $$BusinessesTableProcessedTableManager get businessId {
+    final $_column = $_itemColumn<String>('business_id')!;
+
+    final manager = $$BusinessesTableTableManager(
+      $_db,
+      $_db.businesses,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_businessIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PaymentsTableFilterComposer
+    extends Composer<_$AppDatabase, $PaymentsTable> {
+  $$PaymentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get clientId => $composableBuilder(
+    column: $table.clientId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get occurredAt =>
+      $composableBuilder(
+        column: $table.occurredAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get annulledAt => $composableBuilder(
+    column: $table.annulledAt,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get annulledBy => $composableBuilder(
+    column: $table.annulledBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get serverSeq => $composableBuilder(
+    column: $table.serverSeq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$BusinessesTableFilterComposer get businessId {
+    final $$BusinessesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableFilterComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PaymentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PaymentsTable> {
+  $$PaymentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get clientId => $composableBuilder(
+    column: $table.clientId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get annulledAt => $composableBuilder(
+    column: $table.annulledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get annulledBy => $composableBuilder(
+    column: $table.annulledBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get serverSeq => $composableBuilder(
+    column: $table.serverSeq,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BusinessesTableOrderingComposer get businessId {
+    final $$BusinessesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableOrderingComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PaymentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PaymentsTable> {
+  $$PaymentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get clientId =>
+      $composableBuilder(column: $table.clientId, builder: (column) => column);
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get occurredAt =>
+      $composableBuilder(
+        column: $table.occurredAt,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get annulledAt =>
+      $composableBuilder(
+        column: $table.annulledAt,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get annulledBy => $composableBuilder(
+    column: $table.annulledBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get serverSeq =>
+      $composableBuilder(column: $table.serverSeq, builder: (column) => column);
+
+  $$BusinessesTableAnnotationComposer get businessId {
+    final $$BusinessesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PaymentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PaymentsTable,
+          Payment,
+          $$PaymentsTableFilterComposer,
+          $$PaymentsTableOrderingComposer,
+          $$PaymentsTableAnnotationComposer,
+          $$PaymentsTableCreateCompanionBuilder,
+          $$PaymentsTableUpdateCompanionBuilder,
+          (Payment, $$PaymentsTableReferences),
+          Payment,
+          PrefetchHooks Function({bool businessId})
+        > {
+  $$PaymentsTableTableManager(_$AppDatabase db, $PaymentsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PaymentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PaymentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PaymentsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> clientId = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<DateTime> occurredAt = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<DateTime?> annulledAt = const Value.absent(),
+                Value<String?> annulledBy = const Value.absent(),
+                Value<int?> serverSeq = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PaymentsCompanion(
+                id: id,
+                businessId: businessId,
+                clientId: clientId,
+                amount: amount,
+                occurredAt: occurredAt,
+                createdBy: createdBy,
+                annulledAt: annulledAt,
+                annulledBy: annulledBy,
+                serverSeq: serverSeq,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String clientId,
+                required int amount,
+                required DateTime occurredAt,
+                required String createdBy,
+                Value<DateTime?> annulledAt = const Value.absent(),
+                Value<String?> annulledBy = const Value.absent(),
+                Value<int?> serverSeq = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PaymentsCompanion.insert(
+                id: id,
+                businessId: businessId,
+                clientId: clientId,
+                amount: amount,
+                occurredAt: occurredAt,
+                createdBy: createdBy,
+                annulledAt: annulledAt,
+                annulledBy: annulledBy,
+                serverSeq: serverSeq,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PaymentsTable, Payment>(table),
+                  $$PaymentsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({businessId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (businessId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.businessId,
+                        referencedTable: $$PaymentsTableReferences
+                            ._businessIdTable(db),
+                        referencedColumn: $$PaymentsTableReferences
+                            ._businessIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PaymentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PaymentsTable,
+      Payment,
+      $$PaymentsTableFilterComposer,
+      $$PaymentsTableOrderingComposer,
+      $$PaymentsTableAnnotationComposer,
+      $$PaymentsTableCreateCompanionBuilder,
+      $$PaymentsTableUpdateCompanionBuilder,
+      (Payment, $$PaymentsTableReferences),
+      Payment,
+      PrefetchHooks Function({bool businessId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3659,4 +6840,10 @@ class $AppDatabaseManager {
       $$ClientsTableTableManager(_db, _db.clients);
   $$ProductsTableTableManager get products =>
       $$ProductsTableTableManager(_db, _db.products);
+  $$FiadosTableTableManager get fiados =>
+      $$FiadosTableTableManager(_db, _db.fiados);
+  $$FiadoItemsTableTableManager get fiadoItems =>
+      $$FiadoItemsTableTableManager(_db, _db.fiadoItems);
+  $$PaymentsTableTableManager get payments =>
+      $$PaymentsTableTableManager(_db, _db.payments);
 }
