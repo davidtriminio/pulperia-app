@@ -3673,6 +3673,849 @@ class PaymentsCompanion extends UpdateCompanion<Payment> {
   }
 }
 
+class $OutboxOpsTable extends OutboxOps
+    with TableInfo<$OutboxOpsTable, OutboxOp> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OutboxOpsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _localSeqMeta = const VerificationMeta(
+    'localSeq',
+  );
+  @override
+  late final GeneratedColumn<int> localSeq = GeneratedColumn<int>(
+    'local_seq',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _opIdMeta = const VerificationMeta('opId');
+  @override
+  late final GeneratedColumn<String> opId = GeneratedColumn<String>(
+    'op_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES businesses (id)',
+    ),
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityIdMeta = const VerificationMeta(
+    'entityId',
+  );
+  @override
+  late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
+    'entity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _baseVersionMeta = const VerificationMeta(
+    'baseVersion',
+  );
+  @override
+  late final GeneratedColumn<int> baseVersion = GeneratedColumn<int>(
+    'base_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _errorCodeMeta = const VerificationMeta(
+    'errorCode',
+  );
+  @override
+  late final GeneratedColumn<String> errorCode = GeneratedColumn<String>(
+    'error_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($OutboxOpsTable.$convertercreatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    localSeq,
+    opId,
+    businessId,
+    type,
+    entityId,
+    payload,
+    baseVersion,
+    status,
+    errorCode,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'outbox_ops';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OutboxOp> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('local_seq')) {
+      context.handle(
+        _localSeqMeta,
+        localSeq.isAcceptableOrUnknown(data['local_seq']!, _localSeqMeta),
+      );
+    }
+    if (data.containsKey('op_id')) {
+      context.handle(
+        _opIdMeta,
+        opId.isAcceptableOrUnknown(data['op_id']!, _opIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_opIdMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('entity_id')) {
+      context.handle(
+        _entityIdMeta,
+        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityIdMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('base_version')) {
+      context.handle(
+        _baseVersionMeta,
+        baseVersion.isAcceptableOrUnknown(
+          data['base_version']!,
+          _baseVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('error_code')) {
+      context.handle(
+        _errorCodeMeta,
+        errorCode.isAcceptableOrUnknown(data['error_code']!, _errorCodeMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {localSeq};
+  @override
+  OutboxOp map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OutboxOp(
+      localSeq: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}local_seq'],
+      )!,
+      opId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}op_id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      entityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_id'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      baseVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}base_version'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      errorCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}error_code'],
+      ),
+      createdAt: $OutboxOpsTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $OutboxOpsTable createAlias(String alias) {
+    return $OutboxOpsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const UtcDateTimeConverter();
+}
+
+class OutboxOp extends DataClass implements Insertable<OutboxOp> {
+  /// Orden local de creación: el envío respeta este orden aunque dos
+  /// operaciones tengan la misma fecha. Con AUTOINCREMENT nunca se reutiliza.
+  final int localSeq;
+
+  /// Identificador de la operación (GUID): reenviarla no duplica nada en el
+  /// servidor (RF-53).
+  final String opId;
+  final String businessId;
+  final String type;
+
+  /// Id del cliente, producto, fiado o abono sobre el que actúa.
+  final String entityId;
+
+  /// Contenido de la operación, en JSON.
+  final String payload;
+
+  /// Versión de la entidad sobre la que se hizo una edición, para detectar
+  /// conflictos (D-8).
+  final int? baseVersion;
+
+  /// `pending`, `sent` o `rejected`.
+  final String status;
+
+  /// Motivo del rechazo; solo cuando el estado es `rejected`.
+  final String? errorCode;
+  final DateTime createdAt;
+  const OutboxOp({
+    required this.localSeq,
+    required this.opId,
+    required this.businessId,
+    required this.type,
+    required this.entityId,
+    required this.payload,
+    this.baseVersion,
+    required this.status,
+    this.errorCode,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['local_seq'] = Variable<int>(localSeq);
+    map['op_id'] = Variable<String>(opId);
+    map['business_id'] = Variable<String>(businessId);
+    map['type'] = Variable<String>(type);
+    map['entity_id'] = Variable<String>(entityId);
+    map['payload'] = Variable<String>(payload);
+    if (!nullToAbsent || baseVersion != null) {
+      map['base_version'] = Variable<int>(baseVersion);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || errorCode != null) {
+      map['error_code'] = Variable<String>(errorCode);
+    }
+    {
+      map['created_at'] = Variable<DateTime>(
+        $OutboxOpsTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    return map;
+  }
+
+  OutboxOpsCompanion toCompanion(bool nullToAbsent) {
+    return OutboxOpsCompanion(
+      localSeq: Value(localSeq),
+      opId: Value(opId),
+      businessId: Value(businessId),
+      type: Value(type),
+      entityId: Value(entityId),
+      payload: Value(payload),
+      baseVersion: baseVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(baseVersion),
+      status: Value(status),
+      errorCode: errorCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(errorCode),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory OutboxOp.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OutboxOp(
+      localSeq: serializer.fromJson<int>(json['localSeq']),
+      opId: serializer.fromJson<String>(json['opId']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      type: serializer.fromJson<String>(json['type']),
+      entityId: serializer.fromJson<String>(json['entityId']),
+      payload: serializer.fromJson<String>(json['payload']),
+      baseVersion: serializer.fromJson<int?>(json['baseVersion']),
+      status: serializer.fromJson<String>(json['status']),
+      errorCode: serializer.fromJson<String?>(json['errorCode']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'localSeq': serializer.toJson<int>(localSeq),
+      'opId': serializer.toJson<String>(opId),
+      'businessId': serializer.toJson<String>(businessId),
+      'type': serializer.toJson<String>(type),
+      'entityId': serializer.toJson<String>(entityId),
+      'payload': serializer.toJson<String>(payload),
+      'baseVersion': serializer.toJson<int?>(baseVersion),
+      'status': serializer.toJson<String>(status),
+      'errorCode': serializer.toJson<String?>(errorCode),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  OutboxOp copyWith({
+    int? localSeq,
+    String? opId,
+    String? businessId,
+    String? type,
+    String? entityId,
+    String? payload,
+    Value<int?> baseVersion = const Value.absent(),
+    String? status,
+    Value<String?> errorCode = const Value.absent(),
+    DateTime? createdAt,
+  }) => OutboxOp(
+    localSeq: localSeq ?? this.localSeq,
+    opId: opId ?? this.opId,
+    businessId: businessId ?? this.businessId,
+    type: type ?? this.type,
+    entityId: entityId ?? this.entityId,
+    payload: payload ?? this.payload,
+    baseVersion: baseVersion.present ? baseVersion.value : this.baseVersion,
+    status: status ?? this.status,
+    errorCode: errorCode.present ? errorCode.value : this.errorCode,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  OutboxOp copyWithCompanion(OutboxOpsCompanion data) {
+    return OutboxOp(
+      localSeq: data.localSeq.present ? data.localSeq.value : this.localSeq,
+      opId: data.opId.present ? data.opId.value : this.opId,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      type: data.type.present ? data.type.value : this.type,
+      entityId: data.entityId.present ? data.entityId.value : this.entityId,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      baseVersion: data.baseVersion.present
+          ? data.baseVersion.value
+          : this.baseVersion,
+      status: data.status.present ? data.status.value : this.status,
+      errorCode: data.errorCode.present ? data.errorCode.value : this.errorCode,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OutboxOp(')
+          ..write('localSeq: $localSeq, ')
+          ..write('opId: $opId, ')
+          ..write('businessId: $businessId, ')
+          ..write('type: $type, ')
+          ..write('entityId: $entityId, ')
+          ..write('payload: $payload, ')
+          ..write('baseVersion: $baseVersion, ')
+          ..write('status: $status, ')
+          ..write('errorCode: $errorCode, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    localSeq,
+    opId,
+    businessId,
+    type,
+    entityId,
+    payload,
+    baseVersion,
+    status,
+    errorCode,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OutboxOp &&
+          other.localSeq == this.localSeq &&
+          other.opId == this.opId &&
+          other.businessId == this.businessId &&
+          other.type == this.type &&
+          other.entityId == this.entityId &&
+          other.payload == this.payload &&
+          other.baseVersion == this.baseVersion &&
+          other.status == this.status &&
+          other.errorCode == this.errorCode &&
+          other.createdAt == this.createdAt);
+}
+
+class OutboxOpsCompanion extends UpdateCompanion<OutboxOp> {
+  final Value<int> localSeq;
+  final Value<String> opId;
+  final Value<String> businessId;
+  final Value<String> type;
+  final Value<String> entityId;
+  final Value<String> payload;
+  final Value<int?> baseVersion;
+  final Value<String> status;
+  final Value<String?> errorCode;
+  final Value<DateTime> createdAt;
+  const OutboxOpsCompanion({
+    this.localSeq = const Value.absent(),
+    this.opId = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.entityId = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.baseVersion = const Value.absent(),
+    this.status = const Value.absent(),
+    this.errorCode = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  OutboxOpsCompanion.insert({
+    this.localSeq = const Value.absent(),
+    required String opId,
+    required String businessId,
+    required String type,
+    required String entityId,
+    required String payload,
+    this.baseVersion = const Value.absent(),
+    this.status = const Value.absent(),
+    this.errorCode = const Value.absent(),
+    required DateTime createdAt,
+  }) : opId = Value(opId),
+       businessId = Value(businessId),
+       type = Value(type),
+       entityId = Value(entityId),
+       payload = Value(payload),
+       createdAt = Value(createdAt);
+  static Insertable<OutboxOp> custom({
+    Expression<int>? localSeq,
+    Expression<String>? opId,
+    Expression<String>? businessId,
+    Expression<String>? type,
+    Expression<String>? entityId,
+    Expression<String>? payload,
+    Expression<int>? baseVersion,
+    Expression<String>? status,
+    Expression<String>? errorCode,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (localSeq != null) 'local_seq': localSeq,
+      if (opId != null) 'op_id': opId,
+      if (businessId != null) 'business_id': businessId,
+      if (type != null) 'type': type,
+      if (entityId != null) 'entity_id': entityId,
+      if (payload != null) 'payload': payload,
+      if (baseVersion != null) 'base_version': baseVersion,
+      if (status != null) 'status': status,
+      if (errorCode != null) 'error_code': errorCode,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  OutboxOpsCompanion copyWith({
+    Value<int>? localSeq,
+    Value<String>? opId,
+    Value<String>? businessId,
+    Value<String>? type,
+    Value<String>? entityId,
+    Value<String>? payload,
+    Value<int?>? baseVersion,
+    Value<String>? status,
+    Value<String?>? errorCode,
+    Value<DateTime>? createdAt,
+  }) {
+    return OutboxOpsCompanion(
+      localSeq: localSeq ?? this.localSeq,
+      opId: opId ?? this.opId,
+      businessId: businessId ?? this.businessId,
+      type: type ?? this.type,
+      entityId: entityId ?? this.entityId,
+      payload: payload ?? this.payload,
+      baseVersion: baseVersion ?? this.baseVersion,
+      status: status ?? this.status,
+      errorCode: errorCode ?? this.errorCode,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (localSeq.present) {
+      map['local_seq'] = Variable<int>(localSeq.value);
+    }
+    if (opId.present) {
+      map['op_id'] = Variable<String>(opId.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (entityId.present) {
+      map['entity_id'] = Variable<String>(entityId.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (baseVersion.present) {
+      map['base_version'] = Variable<int>(baseVersion.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (errorCode.present) {
+      map['error_code'] = Variable<String>(errorCode.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(
+        $OutboxOpsTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OutboxOpsCompanion(')
+          ..write('localSeq: $localSeq, ')
+          ..write('opId: $opId, ')
+          ..write('businessId: $businessId, ')
+          ..write('type: $type, ')
+          ..write('entityId: $entityId, ')
+          ..write('payload: $payload, ')
+          ..write('baseVersion: $baseVersion, ')
+          ..write('status: $status, ')
+          ..write('errorCode: $errorCode, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncStatesTable extends SyncStates
+    with TableInfo<$SyncStatesTable, SyncState> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncStatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES businesses (id)',
+    ),
+  );
+  static const VerificationMeta _cursorMeta = const VerificationMeta('cursor');
+  @override
+  late final GeneratedColumn<int> cursor = GeneratedColumn<int>(
+    'cursor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [businessId, cursor];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_states';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncState> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('cursor')) {
+      context.handle(
+        _cursorMeta,
+        cursor.isAcceptableOrUnknown(data['cursor']!, _cursorMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {businessId};
+  @override
+  SyncState map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncState(
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      cursor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cursor'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncStatesTable createAlias(String alias) {
+    return $SyncStatesTable(attachedDatabase, alias);
+  }
+}
+
+class SyncState extends DataClass implements Insertable<SyncState> {
+  final String businessId;
+  final int cursor;
+  const SyncState({required this.businessId, required this.cursor});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['business_id'] = Variable<String>(businessId);
+    map['cursor'] = Variable<int>(cursor);
+    return map;
+  }
+
+  SyncStatesCompanion toCompanion(bool nullToAbsent) {
+    return SyncStatesCompanion(
+      businessId: Value(businessId),
+      cursor: Value(cursor),
+    );
+  }
+
+  factory SyncState.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncState(
+      businessId: serializer.fromJson<String>(json['businessId']),
+      cursor: serializer.fromJson<int>(json['cursor']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'businessId': serializer.toJson<String>(businessId),
+      'cursor': serializer.toJson<int>(cursor),
+    };
+  }
+
+  SyncState copyWith({String? businessId, int? cursor}) => SyncState(
+    businessId: businessId ?? this.businessId,
+    cursor: cursor ?? this.cursor,
+  );
+  SyncState copyWithCompanion(SyncStatesCompanion data) {
+    return SyncState(
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      cursor: data.cursor.present ? data.cursor.value : this.cursor,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncState(')
+          ..write('businessId: $businessId, ')
+          ..write('cursor: $cursor')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(businessId, cursor);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncState &&
+          other.businessId == this.businessId &&
+          other.cursor == this.cursor);
+}
+
+class SyncStatesCompanion extends UpdateCompanion<SyncState> {
+  final Value<String> businessId;
+  final Value<int> cursor;
+  final Value<int> rowid;
+  const SyncStatesCompanion({
+    this.businessId = const Value.absent(),
+    this.cursor = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncStatesCompanion.insert({
+    required String businessId,
+    this.cursor = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : businessId = Value(businessId);
+  static Insertable<SyncState> custom({
+    Expression<String>? businessId,
+    Expression<int>? cursor,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (businessId != null) 'business_id': businessId,
+      if (cursor != null) 'cursor': cursor,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncStatesCompanion copyWith({
+    Value<String>? businessId,
+    Value<int>? cursor,
+    Value<int>? rowid,
+  }) {
+    return SyncStatesCompanion(
+      businessId: businessId ?? this.businessId,
+      cursor: cursor ?? this.cursor,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (cursor.present) {
+      map['cursor'] = Variable<int>(cursor.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncStatesCompanion(')
+          ..write('businessId: $businessId, ')
+          ..write('cursor: $cursor, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3683,6 +4526,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $FiadosTable fiados = $FiadosTable(this);
   late final $FiadoItemsTable fiadoItems = $FiadoItemsTable(this);
   late final $PaymentsTable payments = $PaymentsTable(this);
+  late final $OutboxOpsTable outboxOps = $OutboxOpsTable(this);
+  late final $SyncStatesTable syncStates = $SyncStatesTable(this);
   late final Index clientsBusiness = Index(
     'clients_business',
     'CREATE INDEX clients_business ON clients (business_id)',
@@ -3711,6 +4556,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'payments_client',
     'CREATE INDEX payments_client ON payments (client_id)',
   );
+  late final Index outboxOpsBusinessStatus = Index(
+    'outbox_ops_business_status',
+    'CREATE INDEX outbox_ops_business_status ON outbox_ops (business_id, status)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3723,6 +4572,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     fiados,
     fiadoItems,
     payments,
+    outboxOps,
+    syncStates,
     clientsBusiness,
     productsBusiness,
     fiadosBusiness,
@@ -3730,6 +4581,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     fiadoItemsFiado,
     paymentsBusiness,
     paymentsClient,
+    outboxOpsBusinessStatus,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -3864,6 +4716,42 @@ final class $$BusinessesTableReferences
     ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_paymentsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$OutboxOpsTable, List<OutboxOp>>
+  _outboxOpsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.outboxOps,
+    aliasName: 'businesses__id__outbox_ops__business_id',
+  );
+
+  $$OutboxOpsTableProcessedTableManager get outboxOpsRefs {
+    final manager = $$OutboxOpsTableTableManager(
+      $_db,
+      $_db.outboxOps,
+    ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_outboxOpsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SyncStatesTable, List<SyncState>>
+  _syncStatesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.syncStates,
+    aliasName: 'businesses__id__sync_states__business_id',
+  );
+
+  $$SyncStatesTableProcessedTableManager get syncStatesRefs {
+    final manager = $$SyncStatesTableTableManager(
+      $_db,
+      $_db.syncStates,
+    ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_syncStatesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -4046,6 +4934,56 @@ class $$BusinessesTableFilterComposer
           }) => $$PaymentsTableFilterComposer(
             $db: $db,
             $table: $db.payments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> outboxOpsRefs(
+    Expression<bool> Function($$OutboxOpsTableFilterComposer f) f,
+  ) {
+    final $$OutboxOpsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.outboxOps,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OutboxOpsTableFilterComposer(
+            $db: $db,
+            $table: $db.outboxOps,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> syncStatesRefs(
+    Expression<bool> Function($$SyncStatesTableFilterComposer f) f,
+  ) {
+    final $$SyncStatesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.syncStates,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SyncStatesTableFilterComposer(
+            $db: $db,
+            $table: $db.syncStates,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4268,6 +5206,56 @@ class $$BusinessesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> outboxOpsRefs<T extends Object>(
+    Expression<T> Function($$OutboxOpsTableAnnotationComposer a) f,
+  ) {
+    final $$OutboxOpsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.outboxOps,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OutboxOpsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.outboxOps,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> syncStatesRefs<T extends Object>(
+    Expression<T> Function($$SyncStatesTableAnnotationComposer a) f,
+  ) {
+    final $$SyncStatesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.syncStates,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SyncStatesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.syncStates,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BusinessesTableTableManager
@@ -4290,6 +5278,8 @@ class $$BusinessesTableTableManager
             bool fiadosRefs,
             bool fiadoItemsRefs,
             bool paymentsRefs,
+            bool outboxOpsRefs,
+            bool syncStatesRefs,
           })
         > {
   $$BusinessesTableTableManager(_$AppDatabase db, $BusinessesTable table)
@@ -4351,6 +5341,8 @@ class $$BusinessesTableTableManager
                 fiadosRefs = false,
                 fiadoItemsRefs = false,
                 paymentsRefs = false,
+                outboxOpsRefs = false,
+                syncStatesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -4361,6 +5353,8 @@ class $$BusinessesTableTableManager
                     if (fiadosRefs) db.fiados,
                     if (fiadoItemsRefs) db.fiadoItems,
                     if (paymentsRefs) db.payments,
+                    if (outboxOpsRefs) db.outboxOps,
+                    if (syncStatesRefs) db.syncStates,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -4491,6 +5485,48 @@ class $$BusinessesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (outboxOpsRefs)
+                        await $_getPrefetchedData<
+                          Business,
+                          $BusinessesTable,
+                          OutboxOp
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BusinessesTableReferences
+                              ._outboxOpsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BusinessesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).outboxOpsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.businessId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (syncStatesRefs)
+                        await $_getPrefetchedData<
+                          Business,
+                          $BusinessesTable,
+                          SyncState
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BusinessesTableReferences
+                              ._syncStatesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BusinessesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).syncStatesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.businessId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -4518,6 +5554,8 @@ typedef $$BusinessesTableProcessedTableManager =
         bool fiadosRefs,
         bool fiadoItemsRefs,
         bool paymentsRefs,
+        bool outboxOpsRefs,
+        bool syncStatesRefs,
       })
     >;
 typedef $$MembershipsTableCreateCompanionBuilder =
@@ -6828,6 +7866,667 @@ typedef $$PaymentsTableProcessedTableManager =
       Payment,
       PrefetchHooks Function({bool businessId})
     >;
+typedef $$OutboxOpsTableCreateCompanionBuilder = OutboxOpsCompanion Function({
+  Value<int> localSeq,
+  required String opId,
+  required String businessId,
+  required String type,
+  required String entityId,
+  required String payload,
+  Value<int?> baseVersion,
+  Value<String> status,
+  Value<String?> errorCode,
+  required DateTime createdAt,
+});
+typedef $$OutboxOpsTableUpdateCompanionBuilder = OutboxOpsCompanion Function({
+  Value<int> localSeq,
+  Value<String> opId,
+  Value<String> businessId,
+  Value<String> type,
+  Value<String> entityId,
+  Value<String> payload,
+  Value<int?> baseVersion,
+  Value<String> status,
+  Value<String?> errorCode,
+  Value<DateTime> createdAt,
+});
+
+final class $$OutboxOpsTableReferences
+    extends BaseReferences<_$AppDatabase, $OutboxOpsTable, OutboxOp> {
+  $$OutboxOpsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $BusinessesTable _businessIdTable(_$AppDatabase db) =>
+      db.businesses.createAlias('outbox_ops__business_id__businesses__id');
+
+  $$BusinessesTableProcessedTableManager get businessId {
+    final $_column = $_itemColumn<String>('business_id')!;
+
+    final manager = $$BusinessesTableTableManager(
+      $_db,
+      $_db.businesses,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_businessIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$OutboxOpsTableFilterComposer
+    extends Composer<_$AppDatabase, $OutboxOpsTable> {
+  $$OutboxOpsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get localSeq => $composableBuilder(
+    column: $table.localSeq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get opId => $composableBuilder(
+    column: $table.opId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get baseVersion => $composableBuilder(
+    column: $table.baseVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get errorCode => $composableBuilder(
+    column: $table.errorCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$BusinessesTableFilterComposer get businessId {
+    final $$BusinessesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableFilterComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OutboxOpsTableOrderingComposer
+    extends Composer<_$AppDatabase, $OutboxOpsTable> {
+  $$OutboxOpsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get localSeq => $composableBuilder(
+    column: $table.localSeq,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get opId => $composableBuilder(
+    column: $table.opId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get baseVersion => $composableBuilder(
+    column: $table.baseVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get errorCode => $composableBuilder(
+    column: $table.errorCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BusinessesTableOrderingComposer get businessId {
+    final $$BusinessesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableOrderingComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OutboxOpsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OutboxOpsTable> {
+  $$OutboxOpsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get localSeq =>
+      $composableBuilder(column: $table.localSeq, builder: (column) => column);
+
+  GeneratedColumn<String> get opId =>
+      $composableBuilder(column: $table.opId, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<int> get baseVersion => $composableBuilder(
+    column: $table.baseVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get errorCode =>
+      $composableBuilder(column: $table.errorCode, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$BusinessesTableAnnotationComposer get businessId {
+    final $$BusinessesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OutboxOpsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OutboxOpsTable,
+          OutboxOp,
+          $$OutboxOpsTableFilterComposer,
+          $$OutboxOpsTableOrderingComposer,
+          $$OutboxOpsTableAnnotationComposer,
+          $$OutboxOpsTableCreateCompanionBuilder,
+          $$OutboxOpsTableUpdateCompanionBuilder,
+          (OutboxOp, $$OutboxOpsTableReferences),
+          OutboxOp,
+          PrefetchHooks Function({bool businessId})
+        > {
+  $$OutboxOpsTableTableManager(_$AppDatabase db, $OutboxOpsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OutboxOpsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OutboxOpsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OutboxOpsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> localSeq = const Value.absent(),
+                Value<String> opId = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> entityId = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<int?> baseVersion = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> errorCode = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => OutboxOpsCompanion(
+                localSeq: localSeq,
+                opId: opId,
+                businessId: businessId,
+                type: type,
+                entityId: entityId,
+                payload: payload,
+                baseVersion: baseVersion,
+                status: status,
+                errorCode: errorCode,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> localSeq = const Value.absent(),
+                required String opId,
+                required String businessId,
+                required String type,
+                required String entityId,
+                required String payload,
+                Value<int?> baseVersion = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> errorCode = const Value.absent(),
+                required DateTime createdAt,
+              }) => OutboxOpsCompanion.insert(
+                localSeq: localSeq,
+                opId: opId,
+                businessId: businessId,
+                type: type,
+                entityId: entityId,
+                payload: payload,
+                baseVersion: baseVersion,
+                status: status,
+                errorCode: errorCode,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$OutboxOpsTable, OutboxOp>(table),
+                  $$OutboxOpsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({businessId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (businessId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.businessId,
+                        referencedTable: $$OutboxOpsTableReferences
+                            ._businessIdTable(db),
+                        referencedColumn: $$OutboxOpsTableReferences
+                            ._businessIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$OutboxOpsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OutboxOpsTable,
+      OutboxOp,
+      $$OutboxOpsTableFilterComposer,
+      $$OutboxOpsTableOrderingComposer,
+      $$OutboxOpsTableAnnotationComposer,
+      $$OutboxOpsTableCreateCompanionBuilder,
+      $$OutboxOpsTableUpdateCompanionBuilder,
+      (OutboxOp, $$OutboxOpsTableReferences),
+      OutboxOp,
+      PrefetchHooks Function({bool businessId})
+    >;
+typedef $$SyncStatesTableCreateCompanionBuilder = SyncStatesCompanion Function({
+  required String businessId,
+  Value<int> cursor,
+  Value<int> rowid,
+});
+typedef $$SyncStatesTableUpdateCompanionBuilder = SyncStatesCompanion Function({
+  Value<String> businessId,
+  Value<int> cursor,
+  Value<int> rowid,
+});
+
+final class $$SyncStatesTableReferences
+    extends BaseReferences<_$AppDatabase, $SyncStatesTable, SyncState> {
+  $$SyncStatesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $BusinessesTable _businessIdTable(_$AppDatabase db) =>
+      db.businesses.createAlias('sync_states__business_id__businesses__id');
+
+  $$BusinessesTableProcessedTableManager get businessId {
+    final $_column = $_itemColumn<String>('business_id')!;
+
+    final manager = $$BusinessesTableTableManager(
+      $_db,
+      $_db.businesses,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_businessIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SyncStatesTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncStatesTable> {
+  $$SyncStatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get cursor => $composableBuilder(
+    column: $table.cursor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$BusinessesTableFilterComposer get businessId {
+    final $$BusinessesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableFilterComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SyncStatesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncStatesTable> {
+  $$SyncStatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get cursor => $composableBuilder(
+    column: $table.cursor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BusinessesTableOrderingComposer get businessId {
+    final $$BusinessesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableOrderingComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SyncStatesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncStatesTable> {
+  $$SyncStatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get cursor =>
+      $composableBuilder(column: $table.cursor, builder: (column) => column);
+
+  $$BusinessesTableAnnotationComposer get businessId {
+    final $$BusinessesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businesses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.businesses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SyncStatesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncStatesTable,
+          SyncState,
+          $$SyncStatesTableFilterComposer,
+          $$SyncStatesTableOrderingComposer,
+          $$SyncStatesTableAnnotationComposer,
+          $$SyncStatesTableCreateCompanionBuilder,
+          $$SyncStatesTableUpdateCompanionBuilder,
+          (SyncState, $$SyncStatesTableReferences),
+          SyncState,
+          PrefetchHooks Function({bool businessId})
+        > {
+  $$SyncStatesTableTableManager(_$AppDatabase db, $SyncStatesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncStatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncStatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncStatesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> businessId = const Value.absent(),
+                Value<int> cursor = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncStatesCompanion(
+                businessId: businessId,
+                cursor: cursor,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String businessId,
+                Value<int> cursor = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncStatesCompanion.insert(
+                businessId: businessId,
+                cursor: cursor,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$SyncStatesTable, SyncState>(table),
+                  $$SyncStatesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({businessId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (businessId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.businessId,
+                        referencedTable: $$SyncStatesTableReferences
+                            ._businessIdTable(db),
+                        referencedColumn: $$SyncStatesTableReferences
+                            ._businessIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SyncStatesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncStatesTable,
+      SyncState,
+      $$SyncStatesTableFilterComposer,
+      $$SyncStatesTableOrderingComposer,
+      $$SyncStatesTableAnnotationComposer,
+      $$SyncStatesTableCreateCompanionBuilder,
+      $$SyncStatesTableUpdateCompanionBuilder,
+      (SyncState, $$SyncStatesTableReferences),
+      SyncState,
+      PrefetchHooks Function({bool businessId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6846,4 +8545,8 @@ class $AppDatabaseManager {
       $$FiadoItemsTableTableManager(_db, _db.fiadoItems);
   $$PaymentsTableTableManager get payments =>
       $$PaymentsTableTableManager(_db, _db.payments);
+  $$OutboxOpsTableTableManager get outboxOps =>
+      $$OutboxOpsTableTableManager(_db, _db.outboxOps);
+  $$SyncStatesTableTableManager get syncStates =>
+      $$SyncStatesTableTableManager(_db, _db.syncStates);
 }
