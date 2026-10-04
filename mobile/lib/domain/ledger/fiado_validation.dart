@@ -1,5 +1,6 @@
 import '../business/amount_mode.dart';
 import '../business/quantity_mode.dart';
+import '../money/amount_rules.dart';
 import '../money/money.dart';
 import '../quantity/quantity.dart';
 import 'subtotal.dart';
@@ -115,7 +116,7 @@ FiadoValidationResult _validateTotalOnly(Money? total, AmountMode amountMode) {
       FiadoIssue(field: FiadoField.fiado, code: _emptyFiado),
     ]);
   }
-  final error = _amountError(total, amountMode);
+  final error = amountRuleError(total, amountMode);
   if (error != null) {
     return InvalidFiado([
       FiadoIssue(field: FiadoField.total, code: error.code),
@@ -140,7 +141,7 @@ FiadoValidationResult _validateWithItems(
   for (var i = 0; i < items.length; i++) {
     final item = items[i];
     final quantityError = _quantityError(item.quantity, quantityMode);
-    final priceError = _amountError(item.unitPrice, amountMode);
+    final priceError = amountRuleError(item.unitPrice, amountMode);
     if (quantityError != null) {
       issues.add(
         FiadoIssue(
@@ -197,14 +198,6 @@ FiadoValidationResult _validateWithItems(
     total: valid.fold(Money.zero, (sum, item) => sum + item.subtotal),
     items: valid,
   );
-}
-
-AmountError? _amountError(Money money, AmountMode mode) {
-  if (!money.isPositive) return AmountError.notPositive;
-  if (mode == AmountMode.integer && money.minorUnits % 100 != 0) {
-    return AmountError.notWhole;
-  }
-  return null;
 }
 
 QuantityError? _quantityError(Quantity quantity, QuantityMode mode) {
