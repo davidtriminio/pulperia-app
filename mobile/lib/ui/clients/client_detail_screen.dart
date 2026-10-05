@@ -14,6 +14,7 @@ import '../avatar/avatar_view.dart';
 import '../format/date_format.dart';
 import '../format/money_format.dart';
 import '../format/quantity_format.dart';
+import '../theme.dart';
 import 'client_form_screen.dart';
 import 'clients_screen.dart';
 
@@ -175,7 +176,7 @@ class _BalanceCard extends StatelessWidget {
       ),
       BalanceLabel.credit => (
         '${Strings.balanceCredit} ${formatMoney(balance.credit, mode)}',
-        Colors.green.shade800,
+        AppColors.credit,
       ),
       BalanceLabel.settled => (Strings.balanceSettled, scheme.outline),
     };
@@ -250,9 +251,7 @@ class _EntryTile extends StatelessWidget {
                   size: 20,
                   color: annulled
                       ? muted
-                      : (isFiado
-                            ? theme.colorScheme.error
-                            : Colors.green.shade800),
+                      : (isFiado ? theme.colorScheme.error : AppColors.credit),
                 ),
                 const SizedBox(width: 8),
                 Text(
