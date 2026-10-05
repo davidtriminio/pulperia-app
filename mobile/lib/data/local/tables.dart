@@ -98,6 +98,16 @@ class Products extends Table {
   /// Precio en la unidad menor (centavos de lempira); siempre positivo.
   IntColumn get price =>
       integer().customConstraint('NOT NULL CHECK (price > 0)')();
+
+  /// Unidad de venta (RF-86, RF-88): id de la lista compartida, `unit` por
+  /// omisión.
+  /// La lista del CHECK debe coincidir con `SaleUnit`; un test lo comprueba.
+  TextColumn get unit => text()
+      .withDefault(const Constant('unit'))
+      .customConstraint(
+        "NOT NULL DEFAULT 'unit' CHECK (unit IN ('unit', 'pound', 'ounce', "
+        "'kilo', 'dozen', 'liter', 'gallon', 'box', 'bag', 'pack'))",
+      )();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
   IntColumn get version => integer().withDefault(const Constant(1))();
   TextColumn get createdBy => text()();
@@ -173,6 +183,16 @@ class FiadoItems extends Table {
   /// Cantidad en milésimas.
   IntColumn get quantity =>
       integer().customConstraint('NOT NULL CHECK (quantity > 0)')();
+
+  /// Unidad de venta (RF-86, RF-88): id de la lista compartida, `unit` por
+  /// omisión.
+  /// La lista del CHECK debe coincidir con `SaleUnit`; un test lo comprueba.
+  TextColumn get unit => text()
+      .withDefault(const Constant('unit'))
+      .customConstraint(
+        "NOT NULL DEFAULT 'unit' CHECK (unit IN ('unit', 'pound', 'ounce', "
+        "'kilo', 'dozen', 'liter', 'gallon', 'box', 'bag', 'pack'))",
+      )();
 
   /// Precio unitario en la unidad menor.
   IntColumn get unitPrice =>
