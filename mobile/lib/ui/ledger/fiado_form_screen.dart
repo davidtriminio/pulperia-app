@@ -16,7 +16,9 @@ import '../format/amount_messages.dart';
 import '../format/money_format.dart';
 import '../format/quantity_messages.dart';
 import '../theme.dart';
+import '../../domain/catalog/sale_unit.dart';
 import '../catalog/catalog_screen.dart';
+import '../catalog/unit_selector.dart';
 import 'subtotal_preview.dart';
 
 /// Un ítem en edición: sus campos de texto y los errores que se le muestran.
@@ -33,6 +35,9 @@ class _ItemEditor {
   /// Producto del catálogo del que se copió el ítem; null si es libre (RF-31).
   String? productId;
   String? productName;
+
+  /// Unidad de venta del ítem (RF-87): la del producto al elegirlo, editable.
+  SaleUnit unit = SaleUnit.defaultUnit;
 
   String? quantityError;
   String? priceError;
@@ -117,6 +122,7 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
     setState(() {
       item.productId = product.id;
       item.productName = product.name;
+      item.unit = SaleUnit.fromId(product.unit);
       item.description.text = product.name;
       item.price.text = plainAmount(Money(product.price), _amountMode);
     });
@@ -173,6 +179,7 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
         FiadoItemDraft(
           description: item.description.text.trim(),
           productId: item.productId,
+          unit: item.unit,
           quantity: quantity,
           unitPrice: price,
         ),
@@ -352,6 +359,7 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
                   onRemove: () => _removeItem(i),
                   onPickProduct: () => _pickProduct(_items[i]),
                   onUnlinkProduct: () => _unlinkProduct(_items[i]),
+                  onChangeUnit: (unit) => setState(() => _items[i].unit = unit),
                 ),
               ),
             TextButton.icon(
@@ -418,6 +426,7 @@ class _ItemCard extends StatelessWidget {
     required this.onRemove,
     required this.onPickProduct,
     required this.onUnlinkProduct,
+    required this.onChangeUnit,
   });
 
   final int index;
@@ -429,6 +438,7 @@ class _ItemCard extends StatelessWidget {
   final VoidCallback onRemove;
   final VoidCallback onPickProduct;
   final VoidCallback onUnlinkProduct;
+  final ValueChanged<SaleUnit> onChangeUnit;
 
   @override
   Widget build(BuildContext context) {
@@ -504,6 +514,43 @@ class _ItemCard extends StatelessWidget {
                 labelText: Strings.fieldDescription,
               ),
             ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                key: ValueKey('item-unit-$index'),
+                onPressed: () async {
+                  final picked = await showModalBottomSheet<SaleUnit>(
+                    context: context,
+                    showDragHandle: true,
+                    builder: (context) => SafeArea(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            for (final unit in SaleUnit.values)
+                              ListTile(
+                                key: ValueKey('unit-option-${unit.id}'),
+                                title: Text(capitalize(unit.singular)),
+                                trailing: unit == editor.unit
+                                    ? const Icon(Icons.check)
+                                    : null,
+                                onTap: () => Navigator.of(context).pop(unit),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                  if (picked != null) {
+                    onChangeUnit(picked);
+                  }
+                },
+                icon: const Icon(Icons.straighten, size: 18),
+                label: Text(
+                  capitalize(editor.unit.singular),
+                  key: ValueKey('item-unit-label-$index'),
+                ),
+              ),
+            ),
             const SizedBox(height: 10),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,6 +565,7 @@ class _ItemCard extends StatelessWidget {
                     onChanged: (_) => onChanged(),
                     decoration: InputDecoration(
                       labelText: Strings.fieldQuantity,
+                      suffixText: editor.unit.abbreviation,
                       errorText: editor.quantityError,
                       errorMaxLines: 3,
                     ),
