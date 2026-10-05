@@ -1,0 +1,17 @@
+{
+  "description": "Unidades de venta de productos e ítems de fiado. Es solo una etiqueta: no convierte entre unidades ni cambia ningún cálculo (RF-89). Los ids nunca se renombran ni se reutilizan, porque se guardan en cada producto e ítem.",
+  "rf": [86, 87, 88, 89],
+  "default": "unit",
+  "units": [
+    { "id": "unit", "singular": "unidad", "plural": "unidades", "abbreviation": "u" },
+    { "id": "pound", "singular": "libra", "plural": "libras", "abbreviation": "lb" },
+    { "id": "ounce", "singular": "onza", "plural": "onzas", "abbreviation": "oz" },
+    { "id": "kilo", "singular": "kilo", "plural": "kilos", "abbreviation": "kg" },
+    { "id": "dozen", "singular": "docena", "plural": "docenas", "abbreviation": "doc" },
+    { "id": "liter", "singular": "litro", "plural": "litros", "abbreviation": "lt" },
+    { "id": "gallon", "singular": "galón", "plural": "galones", "abbreviation": "gal" },
+    { "id": "box", "singular": "caja", "plural": "cajas", "abbreviation": "cj" },
+    { "id": "bag", "singular": "bolsa", "plural": "bolsas", "abbreviation": "bls" },
+    { "id": "pack", "singular": "paquete", "plural": "paquetes", "abbreviation": "paq" }
+  ]
+}
