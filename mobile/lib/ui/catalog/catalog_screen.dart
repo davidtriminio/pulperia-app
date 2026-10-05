@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../domain/business/amount_mode.dart';
+import '../../domain/catalog/sale_unit.dart';
 import '../../domain/money/money.dart';
 import '../../l10n/strings.dart';
 import '../format/money_format.dart';
@@ -130,13 +131,26 @@ class _ProductTile extends ConsumerWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '${Strings.perUnit} '
+                        '${SaleUnit.fromId(product.unit).singular}',
+                        key: ValueKey('product-unit-${product.id}'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Text(
