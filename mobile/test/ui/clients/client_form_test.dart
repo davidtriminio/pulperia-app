@@ -217,6 +217,28 @@ void main() {
       expect((await clients(tester)).single.note, 'x' * 300);
     });
 
+    testWidgets('la nota muestra un contador de caracteres (RF-74)', (
+      tester,
+    ) async {
+      await openForm(tester);
+      String counter() =>
+          tester.widget<Text>(find.byKey(const ValueKey('note-counter'))).data!;
+
+      expect(counter(), '0/300');
+      await type(tester, 'field-note', 'hola');
+      expect(counter(), '4/300');
+      await type(tester, 'field-note', 'x' * 301);
+      expect(counter(), '301/300');
+      final color = tester
+          .widget<Text>(find.byKey(const ValueKey('note-counter')))
+          .style
+          ?.color;
+      expect(
+        color,
+        Theme.of(tester.element(find.byType(Scaffold).last)).colorScheme.error,
+      );
+    });
+
     testWidgets('corregir un error y volver a guardar funciona', (
       tester,
     ) async {
