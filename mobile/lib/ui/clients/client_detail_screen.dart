@@ -93,59 +93,43 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     final client = history.client;
     final theme = Theme.of(context);
+    final contact = [
+      if (client.phone != null)
+        ('contact-phone', Icons.phone_outlined, client.phone!),
+      if (client.address != null)
+        ('contact-address', Icons.place_outlined, client.address!),
+      if (client.note != null)
+        ('contact-note', Icons.notes_outlined, client.note!),
+    ];
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       children: [
-        Row(
-          children: [
-            AvatarView(
-              avatar: Avatar(
-                characterId: client.characterId,
-                skinId: client.skinId,
-                backgroundId: client.backgroundId,
-              ),
-              size: 72,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
+        _Header(history: history, mode: mode),
+        if (contact.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(client.name, style: theme.textTheme.titleLarge),
-                  if (client.archived)
-                    const Chip(
-                      label: Text(Strings.archivedBadge),
-                      visualDensity: VisualDensity.compact,
-                    ),
+                  for (final (key, icon, text) in contact)
+                    _ContactRow(rowKey: key, icon: icon, text: text),
                 ],
               ),
             ),
-          ],
+          ),
+        ],
+        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            Strings.historyTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
-        const SizedBox(height: 16),
-        _BalanceCard(balance: history.balance, mode: mode),
-        const SizedBox(height: 8),
-        if (client.phone != null)
-          _ContactRow(
-            rowKey: 'contact-phone',
-            icon: Icons.phone_outlined,
-            text: client.phone!,
-          ),
-        if (client.address != null)
-          _ContactRow(
-            rowKey: 'contact-address',
-            icon: Icons.place_outlined,
-            text: client.address!,
-          ),
-        if (client.note != null)
-          _ContactRow(
-            rowKey: 'contact-note',
-            icon: Icons.notes_outlined,
-            text: client.note!,
-          ),
-        const SizedBox(height: 16),
-        Text(Strings.historyTitle, style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         if (history.entries.isEmpty)
           const Padding(
@@ -154,43 +138,129 @@ class _Body extends StatelessWidget {
           )
         else
           for (final entry in history.entries)
-            _EntryTile(entry: entry, mode: mode),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _EntryTile(entry: entry, mode: mode),
+            ),
       ],
     );
   }
 }
 
-class _BalanceCard extends StatelessWidget {
-  const _BalanceCard({required this.balance, required this.mode});
+/// Tarjeta azul con el cliente y su saldo destacado (RF-42).
+class _Header extends StatelessWidget {
+  const _Header({required this.history, required this.mode});
 
-  final Balance balance;
+  final ClientHistory history;
   final AmountMode mode;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final (text, color) = switch (balance.label) {
+    final client = history.client;
+    final balance = history.balance;
+    final theme = Theme.of(context);
+
+    final (label, amount, chipColor) = switch (balance.label) {
       BalanceLabel.debt => (
-        '${Strings.balanceDebt} ${formatMoney(balance.debt, mode)}',
-        scheme.error,
+        Strings.balanceDebt,
+        formatMoney(balance.debt, mode),
+        const Color(0xFFFFB4B4),
       ),
       BalanceLabel.credit => (
-        '${Strings.balanceCredit} ${formatMoney(balance.credit, mode)}',
-        AppColors.credit,
+        Strings.balanceCredit,
+        formatMoney(balance.credit, mode),
+        AppColors.turquoise,
       ),
-      BalanceLabel.settled => (Strings.balanceSettled, scheme.outline),
+      BalanceLabel.settled => (
+        Strings.balanceSettled,
+        formatMoney(Money.zero, mode),
+        Colors.white24,
+      ),
     };
-    return Card(
-      key: const ValueKey('balance'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Center(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.headlineSmall
-                ?.copyWith(color: color, fontWeight: FontWeight.w700),
-          ),
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.navy, AppColors.navyDark],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AvatarView(
+                avatar: Avatar(
+                  characterId: client.characterId,
+                  skinId: client.skinId,
+                  backgroundId: client.backgroundId,
+                ),
+                size: 64,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      client.name,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (client.archived)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          Strings.archivedBadge,
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            key: const ValueKey('balance-chip'),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: chipColor,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              label,
+              key: const ValueKey('balance-label'),
+              style: const TextStyle(
+                color: AppColors.ink,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            amount,
+            key: const ValueKey('balance-amount'),
+            style: theme.textTheme.displaySmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -210,18 +280,20 @@ class _ContactRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     key: ValueKey(rowKey),
-    padding: const EdgeInsets.symmetric(vertical: 4),
+    padding: const EdgeInsets.symmetric(vertical: 8),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20),
-        const SizedBox(width: 8),
+        Icon(icon, size: 20, color: AppColors.navy),
+        const SizedBox(width: 12),
         Expanded(child: Text(text)),
       ],
     ),
   );
 }
 
+/// Un movimiento del historial: ícono redondo, tipo y fecha a la izquierda,
+/// monto a la derecha. Un movimiento anulado se ve atenuado y marcado.
 class _EntryTile extends StatelessWidget {
   const _EntryTile({required this.entry, required this.mode});
 
@@ -235,75 +307,95 @@ class _EntryTile extends StatelessWidget {
     final annulled = entry.isAnnulled;
     final muted = theme.colorScheme.outline;
     final strike = annulled ? TextDecoration.lineThrough : null;
+    final accent = annulled
+        ? muted
+        : (isFiado ? AppColors.debt : AppColors.credit);
 
     return Card(
       key: ValueKey('entry-${entry.id}'),
-      color: annulled ? theme.colorScheme.surfaceContainerHighest : null,
+      color: annulled ? const Color(0xFFE9EEF1) : null,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  isFiado ? Icons.shopping_bag_outlined : Icons.payments,
-                  size: 20,
-                  color: annulled
-                      ? muted
-                      : (isFiado ? theme.colorScheme.error : AppColors.credit),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  isFiado ? Strings.entryFiado : Strings.entryPayment,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    decoration: strike,
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: accent.withValues(alpha: 0.14),
+                  child: Icon(
+                    isFiado ? Icons.shopping_bag_outlined : Icons.payments,
+                    size: 20,
+                    color: accent,
                   ),
                 ),
-                if (annulled) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    key: ValueKey('annulled-${entry.id}'),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      Strings.annulled,
-                      style: TextStyle(
-                        color: theme.colorScheme.onErrorContainer,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        children: [
+                          Text(
+                            isFiado ? Strings.entryFiado : Strings.entryPayment,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              decoration: strike,
+                            ),
+                          ),
+                          if (annulled)
+                            Container(
+                              key: ValueKey('annulled-${entry.id}'),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.errorContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                Strings.annulled,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onErrorContainer,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
+                      Text(
+                        formatDateTime(entry.occurredAt),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: muted,
+                        ),
+                      ),
+                      if (annulled)
+                        Text(
+                          '${Strings.annulledOn} '
+                          '${formatDateTime(entry.annulledAt!)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.debt,
+                          ),
+                        ),
+                    ],
                   ),
-                ],
-                const Spacer(),
+                ),
                 Text(
                   formatMoney(entry.amount, mode),
-                  style: theme.textTheme.titleSmall?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
                     decoration: strike,
-                    color: annulled ? muted : null,
+                    color: annulled ? muted : AppColors.ink,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              formatDateTime(entry.occurredAt),
-              style: theme.textTheme.bodySmall,
-            ),
-            if (annulled)
-              Text(
-                '${Strings.annulledOn} ${formatDateTime(entry.annulledAt!)}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
-              ),
             for (final item in entry.items) _ItemRow(item: item, mode: mode),
           ],
         ),

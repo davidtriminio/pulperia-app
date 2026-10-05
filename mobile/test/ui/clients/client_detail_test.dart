@@ -90,7 +90,7 @@ void main() {
   ) async {
     await pumpDetail(tester);
 
-    expect(find.text(Strings.balanceSettled), findsOne);
+    expectBalance(tester, Strings.balanceSettled, 'L 0.00');
     expect(find.text(Strings.historyEmpty), findsOne);
   });
 
@@ -117,13 +117,7 @@ void main() {
       },
     );
 
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('balance')),
-        matching: find.text('${Strings.balanceDebt} L 100.50'),
-      ),
-      findsOne,
-    );
+    expectBalance(tester, Strings.balanceDebt, 'L 100.50');
   });
 
   testWidgets('un abono mayor que la deuda se ve como saldo a favor', (
@@ -137,13 +131,7 @@ void main() {
       },
     );
 
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('balance')),
-        matching: find.text('${Strings.balanceCredit} L 5.00'),
-      ),
-      findsOne,
-    );
+    expectBalance(tester, Strings.balanceCredit, 'L 5.00');
   });
 
   testWidgets('el historial va del más antiguo al más reciente', (
@@ -246,13 +234,7 @@ void main() {
     expect(find.byKey(const ValueKey('annulled-f-2')), findsNothing);
     expect(find.text(Strings.annulled), findsNWidgets(2));
     // Los anulados no cuentan en el saldo (RF-44): solo queda el fiado de 30.
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('balance')),
-        matching: find.text('${Strings.balanceDebt} L 30.00'),
-      ),
-      findsOne,
-    );
+    expectBalance(tester, Strings.balanceDebt, 'L 30.00');
   });
 
   testWidgets('un cliente archivado se indica y conserva saldo e historial', (
@@ -270,14 +252,38 @@ void main() {
 
     expect(find.text(Strings.archivedBadge), findsOne);
     expect(find.byKey(const ValueKey('entry-f-1')), findsOne);
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('balance')),
-        matching: find.text('${Strings.balanceDebt} L 50.00'),
-      ),
-      findsOne,
-    );
+    expectBalance(tester, Strings.balanceDebt, 'L 50.00');
   });
+
+  testWidgets(
+    'la etiqueta de deuda y la de saldo a favor tienen distinto color',
+    (tester) async {
+      Color chipColor() =>
+          (tester
+                      .widget<Container>(
+                        find.byKey(const ValueKey('balance-chip')),
+                      )
+                      .decoration!
+                  as BoxDecoration)
+              .color!;
+
+      await pumpDetail(
+        tester,
+        seed: () => insertFiado(db, 'f-1', businessId, 'c-1', total: 1000),
+      );
+      final debt = chipColor();
+      await tester.pumpWidget(const SizedBox());
+      await db.close();
+      db = openDb();
+      await pumpDetail(
+        tester,
+        seed: () => insertPayment(db, 'p-1', businessId, 'c-1', amount: 1000),
+      );
+      final credit = chipColor();
+
+      expect(debt, isNot(credit));
+    },
+  );
 
   testWidgets('un cliente que no existe lo indica', (tester) async {
     await pumpDetail(tester, clientId: 'no-existe');
@@ -320,4 +326,16 @@ void main() {
 
     expect(find.byType(ClientDetailScreen), findsOne);
   });
+}
+
+/// El saldo destacado del detalle: etiqueta y monto, cada uno con su clave.
+void expectBalance(WidgetTester tester, String label, String amount) {
+  expect(
+    tester.widget<Text>(find.byKey(const ValueKey('balance-label'))).data,
+    label,
+  );
+  expect(
+    tester.widget<Text>(find.byKey(const ValueKey('balance-amount'))).data,
+    amount,
+  );
 }
