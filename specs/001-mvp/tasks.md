@@ -77,7 +77,7 @@ Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T1
 - [x] **T102** Formato de personaje con tono parametrizable y 3 personajes de prueba. RF: 72. Dep: T040b. *Hecho cuando:* los 3 se ven con los 6 tonos y 12 fondos en un test de widget.
 - [x] **T104** Selector de avatar. RF: 14, 16. Dep: T101, T102. *Hecho cuando:* no se puede continuar sin elegir personaje, tono y fondo.
 - [x] **T106** Lista de clientes con saldo. RF: 20, 42. Dep: T040a, T040b, T033, T039, T100. *Hecho cuando:* los archivados no aparecen y el saldo a favor se distingue de la deuda.
-- [ ] **T107** Crear y editar cliente con teléfono, dirección, nota y aviso de homónimo. RF: 14–19, 73, 74, 77. Dep: T032, T104, T024. *Hecho cuando:* un homónimo muestra el aviso y solo continúa si se confirma.
+- [x] **T107** Crear y editar cliente con teléfono, dirección, nota y aviso de homónimo. RF: 14–19, 73, 74, 77. Dep: T032, T104, T024. *Hecho cuando:* un homónimo muestra el aviso y solo continúa si se confirma.
 - [ ] **T108** Detalle de cliente con saldo e historial. RF: 41, 42. Dep: T039, T106. *Hecho cuando:* los anulados aparecen con marca visible.
 - [ ] **T109** Formulario de fiado con ítems. RF: 28, 32, 33, 34, 83, 84. Dep: T035, T020, T108. *Hecho cuando:* el subtotal se muestra redondeado según el modo del negocio.
 - [ ] **T110** Elegir producto del catálogo o escribir un ítem libre, y cambiar el precio solo para ese ítem. RF: 30, 31. Dep: T034, T109. *Hecho cuando:* el precio del catálogo no cambia al modificarlo en el ítem.

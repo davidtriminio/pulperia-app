@@ -244,6 +244,17 @@ class ClientRepository {
     });
   }
 
+  /// Id y nombre de todos los clientes del negocio, archivados o no: sirve
+  /// para avisar de un nombre repetido (RF-17).
+  Future<List<({String id, String name})>> clientNames(
+    String businessId,
+  ) async {
+    final clients = await (_db.select(
+      _db.clients,
+    )..where((c) => c.businessId.equals(businessId))).get();
+    return [for (final c in clients) (id: c.id, name: c.name)];
+  }
+
   /// Clientes no archivados del negocio, con su saldo (RF-42).
   Future<List<ClientWithBalance>> activeClients(String businessId) =>
       _list(businessId, archived: false);
