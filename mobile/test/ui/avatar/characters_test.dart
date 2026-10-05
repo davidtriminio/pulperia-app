@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -29,26 +30,26 @@ Color _pixel(ByteData data, int x, int y) {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const prototypes = ['char-01', 'char-02', 'char-03'];
+  final allCharacters = AvatarPalette.characterIds;
 
   test('hexColor lee colores #RRGGBB', () {
     expect(hexColor('#F9DCC4'), const Color(0xFFF9DCC4));
   });
 
-  test('los 3 personajes de prueba existen y llevan su identificador', () {
-    for (final id in prototypes) {
+  test('cada uno de los 24 personajes de la paleta tiene su dibujo', () {
+    for (final id in allCharacters) {
       expect(AvatarCharacters.of(id).id, id);
       expect(AvatarCharacters.hasArt(id), isTrue);
     }
   });
 
-  test('un personaje aún sin ilustración usa un marcador, sin fallar', () {
-    expect(AvatarCharacters.hasArt('char-24'), isFalse);
-    expect(AvatarCharacters.of('char-24').id, 'char-24');
+  test('un id fuera de la paleta usa un marcador, sin fallar', () {
+    expect(AvatarCharacters.hasArt('char-99'), isFalse);
+    expect(AvatarCharacters.of('char-99').id, 'char-99');
   });
 
   test('cada personaje pinta su cara con el tono de piel elegido', () async {
-    for (final id in prototypes) {
+    for (final id in allCharacters) {
       for (final skin in AvatarPalette.skinTones) {
         final data = await _render(id, hexColor(skin.hex));
         // El centro de la cara no lleva rasgos: es piel pura.
@@ -61,20 +62,42 @@ void main() {
     }
   });
 
-  test('los personajes de prueba se distinguen entre sí', () async {
+  test('los 24 personajes se distinguen entre sí', () async {
     final skin = hexColor(AvatarPalette.skinTones.first.hex);
-    final renders = <List<int>>[
-      for (final id in prototypes)
-        (await _render(id, skin)).buffer.asUint8List().toList(),
-    ];
+    final renders = <String>{};
+    for (final id in allCharacters) {
+      final bytes = (await _render(id, skin)).buffer.asUint8List();
+      renders.add(base64.encode(bytes));
+    }
 
-    expect(renders[0], isNot(renders[1]));
-    expect(renders[0], isNot(renders[2]));
-    expect(renders[1], isNot(renders[2]));
+    expect(renders, hasLength(24));
   });
 
-  test('el fondo queda sin pintar: el personaje no lo cubre', () async {
-    final data = await _render('char-01', const Color(0xFFF9DCC4));
-    expect(_pixel(data, 0, 0).a, 0);
+  test(
+    'el fondo queda sin pintar: ningún personaje cubre la esquina',
+    () async {
+      for (final id in allCharacters) {
+        final data = await _render(id, const Color(0xFFF9DCC4));
+        expect(_pixel(data, 0, 0).a, 0, reason: id);
+      }
+    },
+  );
+
+  test('cada personaje dibuja algo más que la cara', () async {
+    final skin = hexColor(AvatarPalette.skinTones.first.hex);
+    for (final id in allCharacters) {
+      final data = await _render(id, skin);
+      var other = 0;
+      for (var y = 0; y < _size; y++) {
+        for (var x = 0; x < _size; x++) {
+          final p = _pixel(data, x, y);
+          if (p.a > 0 && p != skin) {
+            other++;
+          }
+        }
+      }
+      // Pelo, ropa y rasgos ocupan una parte apreciable del dibujo.
+      expect(other, greaterThan(_size * _size ~/ 5), reason: id);
+    }
   });
 }

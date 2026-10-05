@@ -5,10 +5,10 @@ import 'package:pulperia_mobile/ui/avatar/avatar_characters.dart';
 import 'package:pulperia_mobile/ui/avatar/hex_color.dart';
 
 void main() {
-  testWidgets('los 3 personajes se ven con los 6 tonos y los 12 fondos', (
+  testWidgets('los 24 personajes se ven con los 6 tonos y los 12 fondos', (
     tester,
   ) async {
-    const prototypes = ['char-01', 'char-02', 'char-03'];
+    final prototypes = AvatarPalette.characterIds;
     final tiles = <Widget>[
       for (final id in prototypes)
         for (final skin in AvatarPalette.skinTones)
@@ -34,8 +34,8 @@ void main() {
       ),
     );
 
-    expect(tiles, hasLength(3 * 6 * 12));
+    expect(tiles, hasLength(24 * 6 * 12));
     expect(tester.takeException(), isNull);
-    expect(find.byType(CustomPaint), findsAtLeastNWidgets(3 * 6 * 12));
+    expect(find.byType(CustomPaint), findsAtLeastNWidgets(24 * 6 * 12));
   });
 }

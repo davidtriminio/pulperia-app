@@ -40,7 +40,8 @@ class _AvatarPickerState extends State<AvatarPicker> {
       Avatar(
         // Un id vacío se dibuja con el marcador neutro de AvatarView.
         characterId: character ?? _characterId ?? '',
-        skinId: skin ?? _skinId ?? '',
+        // Sin tono elegido se dibuja con uno medio, no en gris.
+        skinId: skin ?? _skinId ?? AvatarPalette.skinTones[1].id,
         backgroundId: background ?? _backgroundId ?? '',
       );
 

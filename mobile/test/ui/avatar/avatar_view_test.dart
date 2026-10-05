@@ -25,7 +25,7 @@ void main() {
     Avatar(characterId: 'char-01', skinId: 'skin-1', backgroundId: 'bg-01'),
     Avatar(characterId: 'char-02', skinId: 'skin-3', backgroundId: 'bg-06'),
     Avatar(characterId: 'char-03', skinId: 'skin-6', backgroundId: 'bg-12'),
-    // Sin ilustración todavía: usa el marcador.
+    // El último personaje de la paleta.
     Avatar(characterId: 'char-24', skinId: 'skin-2', backgroundId: 'bg-09'),
   ];
 
