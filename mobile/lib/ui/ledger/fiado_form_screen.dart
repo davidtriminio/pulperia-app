@@ -65,6 +65,9 @@ class FiadoFormScreen extends ConsumerStatefulWidget {
 
 class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
   final List<_ItemEditor> _items = [_ItemEditor()];
+  bool _totalOnly = false;
+  final TextEditingController _totalInput = TextEditingController();
+  String? _totalError;
   String? _formError;
   bool _saving = false;
 
@@ -84,6 +87,7 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
 
   @override
   void dispose() {
+    _totalInput.dispose();
     for (final item in _items) {
       item.dispose();
     }
@@ -177,13 +181,38 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
     return ok ? drafts : null;
   }
 
+  FiadoDraft? _readItemsDraft() {
+    final drafts = _readItems();
+    return drafts == null ? null : FiadoWithItems(drafts);
+  }
+
+  /// Lee el monto total del fiado sin detalle (RF-29). Devuelve null y deja el
+  /// error en pantalla si no es válido.
+  FiadoDraft? _readTotal() {
+    final text = _totalInput.text.trim();
+    String? error;
+    Money? amount;
+    if (text.isEmpty) {
+      error = Strings.totalRequired;
+    } else {
+      switch (Money.parse(text, _amountMode)) {
+        case MoneyParsed(:final money):
+          amount = money;
+        case MoneyRejected(error: final e):
+          error = amountErrorMessage(e);
+      }
+    }
+    _totalError = error;
+    return amount == null ? null : FiadoTotalOnly(amount);
+  }
+
   Future<void> _save() async {
     if (_saving) {
       return;
     }
-    final drafts = _readItems();
+    final FiadoDraft? draft = _totalOnly ? _readTotal() : _readItemsDraft();
     setState(() => _formError = null);
-    if (drafts == null) {
+    if (draft == null) {
       setState(() {});
       return;
     }
@@ -197,7 +226,7 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
           userId: user.id,
           role: user.role,
           clientId: widget.clientId,
-          draft: FiadoWithItems(drafts),
+          draft: draft,
         );
     if (!mounted) {
       return;
@@ -256,8 +285,15 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
     final theme = Theme.of(context);
 
     var total = Money.zero;
-    for (final item in _items) {
-      total = total + (_subtotalOf(item) ?? Money.zero);
+    if (_totalOnly) {
+      final parsed = Money.parse(_totalInput.text.trim(), mode);
+      if (parsed is MoneyParsed) {
+        total = parsed.money;
+      }
+    } else {
+      for (final item in _items) {
+        total = total + (_subtotalOf(item) ?? Money.zero);
+      }
     }
 
     return Scaffold(
@@ -265,27 +301,66 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
         children: [
-          for (var i = 0; i < _items.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _ItemCard(
-                index: i,
-                editor: _items[i],
-                subtotal: _subtotalOf(_items[i]),
-                mode: mode,
-                canRemove: _items.length > 1,
-                onChanged: () => setState(() {}),
-                onRemove: () => _removeItem(i),
-                onPickProduct: () => _pickProduct(_items[i]),
-                onUnlinkProduct: () => _unlinkProduct(_items[i]),
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(
+                value: false,
+                label: Text(Strings.modeItems, key: ValueKey('mode-items')),
               ),
-            ),
-          TextButton.icon(
-            key: const ValueKey('add-item'),
-            onPressed: _addItem,
-            icon: const Icon(Icons.add),
-            label: const Text(Strings.addItem),
+              ButtonSegment(
+                value: true,
+                label: Text(Strings.modeTotal, key: ValueKey('mode-total')),
+              ),
+            ],
+            selected: {_totalOnly},
+            showSelectedIcon: false,
+            onSelectionChanged: (value) =>
+                setState(() => _totalOnly = value.first),
           ),
+          const SizedBox(height: 12),
+          if (_totalOnly)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: TextField(
+                  key: const ValueKey('fiado-total-input'),
+                  controller: _totalInput,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onChanged: (_) => setState(() => _totalError = null),
+                  decoration: InputDecoration(
+                    labelText: Strings.fieldTotal,
+                    prefixText: 'L ',
+                    errorText: _totalError,
+                    errorMaxLines: 3,
+                  ),
+                ),
+              ),
+            )
+          else ...[
+            for (var i = 0; i < _items.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _ItemCard(
+                  index: i,
+                  editor: _items[i],
+                  subtotal: _subtotalOf(_items[i]),
+                  mode: mode,
+                  canRemove: _items.length > 1,
+                  onChanged: () => setState(() {}),
+                  onRemove: () => _removeItem(i),
+                  onPickProduct: () => _pickProduct(_items[i]),
+                  onUnlinkProduct: () => _unlinkProduct(_items[i]),
+                ),
+              ),
+            TextButton.icon(
+              key: const ValueKey('add-item'),
+              onPressed: _addItem,
+              icon: const Icon(Icons.add),
+              label: const Text(Strings.addItem),
+            ),
+          ],
           const SizedBox(height: 8),
           Card(
             child: Padding(
