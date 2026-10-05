@@ -42,6 +42,16 @@ abstract final class Strings {
   static const clientNotFound = 'El cliente ya no existe';
   static const saveError = 'No se pudo guardar';
 
+  static const clientDetail = 'Cliente';
+  static const editAction = 'Editar';
+  static const archivedBadge = 'Archivado';
+  static const historyTitle = 'Historial';
+  static const historyEmpty = 'Aún no hay movimientos';
+  static const entryFiado = 'Fiado';
+  static const entryPayment = 'Abono';
+  static const annulled = 'Anulado';
+  static const annulledOn = 'Anulado el';
+
   static const clientsEmpty = 'Aún no hay clientes';
   static const catalogEmpty = 'Aún no hay productos';
 }

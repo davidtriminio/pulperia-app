@@ -5,6 +5,7 @@ import '../../app/providers.dart';
 import '../../data/repositories/client_repository.dart';
 import '../../domain/business/amount_mode.dart';
 import '../../l10n/strings.dart';
+import 'client_detail_screen.dart';
 import 'client_form_screen.dart';
 import 'client_tile.dart';
 
@@ -55,8 +56,16 @@ class ClientsScreen extends ConsumerWidget {
             key: const ValueKey('section-clients'),
             padding: const EdgeInsets.only(bottom: 88),
             itemCount: items.length,
-            itemBuilder: (context, i) =>
-                ClientTile(item: items[i], amountMode: mode),
+            itemBuilder: (context, i) => ClientTile(
+              item: items[i],
+              amountMode: mode,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      ClientDetailScreen(clientId: items[i].client.id),
+                ),
+              ),
+            ),
           );
         },
       ),
