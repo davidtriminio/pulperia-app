@@ -15,6 +15,7 @@ import '../format/date_format.dart';
 import '../format/money_format.dart';
 import '../format/quantity_format.dart';
 import '../theme.dart';
+import '../ledger/fiado_form_screen.dart';
 import 'client_form_screen.dart';
 import 'clients_screen.dart';
 
@@ -69,6 +70,29 @@ class ClientDetailScreen extends ConsumerWidget {
             ),
         ],
       ),
+      bottomNavigationBar: history.asData?.value == null
+          ? null
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        key: const ValueKey('register-fiado'),
+                        icon: const Icon(Icons.shopping_bag_outlined),
+                        label: const Text(Strings.registerFiado),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => FiadoFormScreen(clientId: clientId),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
       body: history.when(
         loading: () => const SizedBox.shrink(),
         error: (error, _) => const Center(child: Text(Strings.loadError)),

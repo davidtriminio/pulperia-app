@@ -58,6 +58,29 @@ abstract final class Strings {
   static const amountInvalid =
       'Escribe un monto válido, por ejemplo 25 o 25.50';
 
+  static const quantityNotPositive = 'La cantidad debe ser mayor que cero';
+  static const quantityNotWhole = 'Este negocio usa cantidades enteras';
+  static const quantityTooManyDecimals = 'Usa como máximo 3 decimales';
+  static const quantityInvalid =
+      'Escribe una cantidad válida, por ejemplo 2 o 0.5';
+  static const quantityRequired = 'Indica la cantidad';
+  static const subtotalZero =
+      'El subtotal queda en cero: sube la cantidad o el precio';
+
+  static const newFiado = 'Registrar fiado';
+  static const registerFiado = 'Fiar';
+  static const itemNumber = 'Ítem';
+  static const fieldDescription = 'Descripción (opcional)';
+  static const fieldQuantity = 'Cantidad';
+  static const fieldUnitPrice = 'Precio unitario';
+  static const subtotalLabel = 'Subtotal';
+  static const totalLabel = 'Total';
+  static const addItem = 'Agregar ítem';
+  static const removeItem = 'Quitar ítem';
+  static const clientArchivedFiado =
+      'Este cliente está archivado: restáuralo antes de fiarle';
+  static const fiadoEmpty = 'Agrega al menos un ítem';
+
   static const newProduct = 'Nuevo producto';
   static const editProduct = 'Editar producto';
   static const fieldProductName = 'Nombre del producto';
