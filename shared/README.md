@@ -18,6 +18,7 @@ Se crean en las tareas T006 a T013 y T086 de `specs/001-mvp/tasks.md`.
 | `vectors/avatar-palette.json` | Paleta de avatares (personajes, tonos, fondos) | 72 |
 | `vectors/client-validation.json` | Validación de cliente | 15, 17, 74 |
 | `vectors/business-modes.json` | Modos de montos y cantidades del negocio | 8, 9, 32, 35, 36, 84 |
+| `vectors/units.json` | Unidades de venta (lista fija con ids estables) | 86, 87, 88, 89 |
 | `openapi.json` | Contrato de la API | — |
 
 ## Formato de un archivo de vectores
@@ -30,7 +31,9 @@ Cada archivo de `vectors/` es un JSON con esta forma:
   - `input`: los datos de entrada.
   - `expected`: el resultado exacto que debe producir cualquier plataforma.
 
-Excepción: `vectors/avatar-palette.json` no tiene `cases`. Es un catálogo de datos (`characters`, `skinTones` y `backgrounds`, cada uno con `id` estable y, en tonos y fondos, el color `hex`) que las plataformas leen para dibujar y validar avatares. Los ids nunca se renombran ni se reutilizan.
+Excepción: `vectors/avatar-palette.json` y `vectors/units.json` no tienen `cases`. Son catálogos de datos (`characters`, `skinTones` y `backgrounds`, cada uno con `id` estable y, en tonos y fondos, el color `hex`) que las plataformas leen para dibujar y validar avatares. Los ids nunca se renombran ni se reutilizan.
+
+`vectors/units.json` es la lista `units` (cada unidad con `id` estable, `singular`, `plural` y `abbreviation`, en español) más `default`, la unidad por omisión. Los ids tampoco se renombran ni se reutilizan.
 
 Convenciones de los datos:
 - **Dinero**: entero en la unidad menor (centavos de lempira). L 30 se escribe `3000`. Nunca decimales ni cadenas.
