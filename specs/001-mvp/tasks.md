@@ -79,7 +79,7 @@ Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T1
 - [x] **T107** Crear y editar cliente con teléfono, dirección, nota y aviso de homónimo. RF: 14–19, 73, 74, 77. Dep: T032, T104, T024. *Hecho cuando:* un homónimo muestra el aviso y solo continúa si se confirma.
 - [x] **T108** Detalle de cliente con saldo e historial. RF: 41, 42. Dep: T039, T106. *Hecho cuando:* los anulados aparecen con marca visible.
 - [x] **T109** Formulario de fiado con ítems. RF: 28, 32, 33, 34, 83, 84. Dep: T035, T020, T108. *Hecho cuando:* el subtotal se muestra redondeado según el modo del negocio.
-- [ ] **T110** Elegir producto del catálogo o escribir un ítem libre, y cambiar el precio solo para ese ítem. RF: 30, 31. Dep: T034, T109. *Hecho cuando:* el precio del catálogo no cambia al modificarlo en el ítem.
+- [x] **T110** Elegir producto del catálogo o escribir un ítem libre, y cambiar el precio solo para ese ítem. RF: 30, 31. Dep: T034, T109. *Hecho cuando:* el precio del catálogo no cambia al modificarlo en el ítem.
 - [ ] **T111** Fiado por monto total. RF: 29, 33. Dep: T035, T108. *Hecho cuando:* se registra sin ítems y suma al saldo.
 - [ ] **T112** Formulario de abono. RF: 37, 38, 39, 75. Dep: T037, T108. *Hecho cuando:* un abono mayor que la deuda deja saldo a favor y un cliente archivado sí admite abonos.
 - [x] **T115** Catálogo: lista, alta, cambio de precio y archivado. RF: 24–27. Dep: T034, T100. *Hecho cuando:* empleado y dueño pueden administrarlo y no hay opción de borrar.
