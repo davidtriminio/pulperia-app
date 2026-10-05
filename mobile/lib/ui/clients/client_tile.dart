@@ -7,6 +7,7 @@ import '../../domain/ledger/balance.dart';
 import '../../l10n/strings.dart';
 import '../avatar/avatar_view.dart';
 import '../format/money_format.dart';
+import '../theme.dart';
 
 /// Una fila de la lista de clientes: avatar, nombre y saldo. La deuda y el
 /// saldo a favor se distinguen por la etiqueta y por el color (RF-42).
@@ -35,7 +36,7 @@ class ClientTile extends StatelessWidget {
       ),
       BalanceLabel.credit => (
         '${Strings.balanceCredit} ${formatMoney(balance.credit, amountMode)}',
-        Colors.green.shade800,
+        AppColors.credit,
       ),
       BalanceLabel.settled => (Strings.balanceSettled, scheme.outline),
     };
