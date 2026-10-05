@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import '../../domain/access/access.dart';
 import '../../domain/business/amount_mode.dart';
 import '../../domain/catalog/product_validation.dart';
+import '../../domain/catalog/sale_unit.dart';
 import '../../domain/money/money.dart';
 import '../local/app_database.dart';
 
@@ -57,6 +58,7 @@ class ProductRepository {
     required Role role,
     required String name,
     required Money price,
+    SaleUnit unit = SaleUnit.defaultUnit,
   }) async {
     if (!can(role, Permission.manageCatalog)) {
       return const ProductForbidden();
@@ -84,6 +86,7 @@ class ProductRepository {
               businessId: businessId,
               name: valid.name,
               price: valid.price.minorUnits,
+              unit: Value(unit.id),
               createdBy: userId,
               createdAt: now,
             ),
@@ -94,7 +97,11 @@ class ProductRepository {
         type: 'product.create',
         entityId: productId,
         baseVersion: null,
-        payload: {'name': valid.name, 'price': valid.price.minorUnits},
+        payload: {
+          'name': valid.name,
+          'price': valid.price.minorUnits,
+          'unit': unit.id,
+        },
         now: now,
       );
       return ProductSaved(await _find(businessId, productId) as Product);
@@ -111,6 +118,7 @@ class ProductRepository {
     required String productId,
     required String name,
     required Money price,
+    SaleUnit? unit,
   }) async {
     if (!can(role, Permission.manageCatalog)) {
       return const ProductForbidden();
@@ -133,6 +141,8 @@ class ProductRepository {
       if (current == null) {
         return const ProductNotFound();
       }
+      // Sin unidad indicada se conserva la que tenía.
+      final effectiveUnit = unit ?? SaleUnit.fromId(current.unit);
 
       await (_db.update(_db.products)..where(
             (p) => p.id.equals(productId) & p.businessId.equals(businessId),
@@ -141,6 +151,7 @@ class ProductRepository {
             ProductsCompanion(
               name: Value(valid.name),
               price: Value(valid.price.minorUnits),
+              unit: Value(effectiveUnit.id),
               version: Value(current.version + 1),
             ),
           );
@@ -150,7 +161,11 @@ class ProductRepository {
         type: 'product.update',
         entityId: productId,
         baseVersion: current.version,
-        payload: {'name': valid.name, 'price': valid.price.minorUnits},
+        payload: {
+          'name': valid.name,
+          'price': valid.price.minorUnits,
+          'unit': effectiveUnit.id,
+        },
         now: now,
       );
       return ProductSaved(await _find(businessId, productId) as Product);

@@ -1,5 +1,6 @@
 import '../business/amount_mode.dart';
 import '../business/quantity_mode.dart';
+import '../catalog/sale_unit.dart';
 import '../money/amount_rules.dart';
 import '../money/money.dart';
 import '../quantity/quantity.dart';
@@ -12,6 +13,7 @@ final class FiadoItemDraft {
     this.productId,
     required this.quantity,
     required this.unitPrice,
+    this.unit = SaleUnit.defaultUnit,
   });
 
   final String description;
@@ -20,6 +22,10 @@ final class FiadoItemDraft {
   final String? productId;
   final Quantity quantity;
   final Money unitPrice;
+
+  /// Unidad de venta del ítem (RF-87): la del producto o la que se le cambió;
+  /// `unidad` si es libre.
+  final SaleUnit unit;
 }
 
 /// Lo que el usuario quiere registrar: un fiado con detalle de ítems o un
@@ -61,6 +67,7 @@ final class ValidFiadoItem {
     required this.productId,
     required this.quantity,
     required this.unitPrice,
+    required this.unit,
     required this.subtotal,
   });
 
@@ -68,6 +75,7 @@ final class ValidFiadoItem {
   final String? productId;
   final Quantity quantity;
   final Money unitPrice;
+  final SaleUnit unit;
   final Money subtotal;
 }
 
@@ -188,6 +196,7 @@ FiadoValidationResult _validateWithItems(
         productId: item.productId,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
+        unit: item.unit,
         subtotal: subtotal,
       ),
     );
