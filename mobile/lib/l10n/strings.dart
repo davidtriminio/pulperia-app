@@ -52,6 +52,24 @@ abstract final class Strings {
   static const annulled = 'Anulado';
   static const annulledOn = 'Anulado el';
 
+  static const amountNotPositive = 'El monto debe ser mayor que cero';
+  static const amountNotWhole = 'Este negocio usa montos enteros, sin centavos';
+  static const amountTooManyDecimals = 'Usa como máximo 2 decimales';
+  static const amountInvalid =
+      'Escribe un monto válido, por ejemplo 25 o 25.50';
+
+  static const newProduct = 'Nuevo producto';
+  static const editProduct = 'Editar producto';
+  static const fieldProductName = 'Nombre del producto';
+  static const fieldPrice = 'Precio';
+  static const productNameRequired = 'El nombre del producto es obligatorio';
+  static const priceRequired = 'Indica el precio';
+  static const archiveProduct = 'Archivar';
+  static const archiveProductTitle = '¿Archivar este producto?';
+  static const archiveProductBody =
+      'Dejará de ofrecerse al fiar. Los fiados ya registrados no cambian.';
+  static const productNotFound = 'El producto ya no existe';
+
   static const clientsEmpty = 'Aún no hay clientes';
   static const catalogEmpty = 'Aún no hay productos';
 }

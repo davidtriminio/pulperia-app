@@ -64,6 +64,7 @@ void main() {
       Strings.catalog,
       Strings.clientsEmpty,
       Strings.newClient,
+      Strings.newProduct,
       Strings.catalogEmpty,
       devSessionFor(isRelease: false)!.businessName,
     };

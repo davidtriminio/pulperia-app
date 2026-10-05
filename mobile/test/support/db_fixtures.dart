@@ -164,3 +164,22 @@ Future<void> insertOutboxOp(
         createdAt: createdAt ?? created,
       ),
     );
+
+Future<void> insertProductNamed(
+  AppDatabase db,
+  String id,
+  String businessId,
+  String name,
+  int price,
+) => db
+    .into(db.products)
+    .insert(
+      ProductsCompanion.insert(
+        id: id,
+        businessId: businessId,
+        name: name,
+        price: price,
+        createdBy: 'u-1',
+        createdAt: created,
+      ),
+    );

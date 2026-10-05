@@ -4,6 +4,7 @@ import 'package:pulperia_mobile/domain/money/money.dart';
 import 'package:pulperia_mobile/ui/format/money_format.dart';
 
 void main() {
+  plainAmountTests();
   group('con 2 decimales', () {
     const mode = AmountMode.twoDecimals;
 
@@ -31,6 +32,31 @@ void main() {
       expect(formatMoney(const Money(15000), mode), 'L 150');
       expect(formatMoney(const Money(123400), mode), 'L 1,234');
       expect(formatMoney(Money.zero, mode), 'L 0');
+    });
+  });
+}
+
+void plainAmountTests() {
+  group('plainAmount (para rellenar un campo de texto)', () {
+    test('con 2 decimales deja punto decimal y sin separador de miles', () {
+      expect(plainAmount(const Money(2500), AmountMode.twoDecimals), '25.00');
+      expect(
+        plainAmount(const Money(123456), AmountMode.twoDecimals),
+        '1234.56',
+      );
+    });
+
+    test('con enteros no lleva decimales', () {
+      expect(plainAmount(const Money(2500), AmountMode.integer), '25');
+    });
+
+    test('se puede volver a leer con Money.parse', () {
+      for (final mode in AmountMode.values) {
+        const original = Money(123400);
+        final parsed =
+            Money.parse(plainAmount(original, mode), mode) as MoneyParsed;
+        expect(parsed.money, original);
+      }
     });
   });
 }
