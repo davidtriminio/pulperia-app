@@ -82,7 +82,7 @@ Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T1
 - [ ] **T110** Elegir producto del catálogo o escribir un ítem libre, y cambiar el precio solo para ese ítem. RF: 30, 31. Dep: T034, T109. *Hecho cuando:* el precio del catálogo no cambia al modificarlo en el ítem.
 - [ ] **T111** Fiado por monto total. RF: 29, 33. Dep: T035, T108. *Hecho cuando:* se registra sin ítems y suma al saldo.
 - [ ] **T112** Formulario de abono. RF: 37, 38, 39, 75. Dep: T037, T108. *Hecho cuando:* un abono mayor que la deuda deja saldo a favor y un cliente archivado sí admite abonos.
-- [ ] **T115** Catálogo: lista, alta, cambio de precio y archivado. RF: 24–27. Dep: T034, T100. *Hecho cuando:* empleado y dueño pueden administrarlo y no hay opción de borrar.
+- [x] **T115** Catálogo: lista, alta, cambio de precio y archivado. RF: 24–27. Dep: T034, T100. *Hecho cuando:* empleado y dueño pueden administrarlo y no hay opción de borrar.
 - [ ] **T040c** Prueba manual del tramo en el emulador, en modo avión: crear clientes con avatar, fiar con ítems y por total, abonar, ver saldo e historial, y comprobar que todo sigue al reiniciar la app. RF: 14, 28, 29, 37, 40, 41; RNF-1. Dep: T106–T112, T115. *Hecho cuando:* se recorre el flujo sin errores y se anotan los cambios de pantalla que se quieren antes de seguir.
 
 ## Fase 4 — Dominio de la API (.NET, sin EF ni HTTP)

@@ -27,3 +27,15 @@ String _withThousands(int value) {
   }
   return buffer.toString();
 }
+
+/// El monto como se escribe en un campo de texto: punto decimal y sin
+/// separador de miles (`25.00` o `25`), el mismo formato que lee
+/// [Money.parse].
+String plainAmount(Money money, AmountMode mode) {
+  final minor = money.minorUnits.abs();
+  final lempiras = minor ~/ 100;
+  final number = mode == AmountMode.twoDecimals
+      ? '$lempiras.${(minor % 100).toString().padLeft(2, '0')}'
+      : '$lempiras';
+  return money.isNegative ? '-$number' : number;
+}
