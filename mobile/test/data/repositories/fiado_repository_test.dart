@@ -276,6 +276,7 @@ void main() {
           'productId': 'p-1',
           'description': 'Arroz',
           'quantity': 2000,
+          'unit': 'unit',
           'unitPrice': 1500,
           'subtotal': 3000,
         });

@@ -87,7 +87,11 @@ void main() {
       expect(ops.single.status, 'pending');
       expect(ops.single.baseVersion, isNull);
       expect(ops.single.createdAt.isAtSameMomentAs(clock), isTrue);
-      expect(jsonDecode(ops.single.payload), {'name': 'Arroz', 'price': 2500});
+      expect(jsonDecode(ops.single.payload), {
+        'name': 'Arroz',
+        'price': 2500,
+        'unit': 'unit',
+      });
     });
 
     test('el empleado también puede administrar el catálogo (RF-48)', () async {
@@ -207,7 +211,11 @@ void main() {
         expect(op.entityId, productId);
         expect(op.status, 'pending');
         expect(op.baseVersion, 1);
-        expect(jsonDecode(op.payload), {'name': 'Arroz', 'price': 2800});
+        expect(jsonDecode(op.payload), {
+          'name': 'Arroz',
+          'price': 2800,
+          'unit': 'unit',
+        });
       },
     );
 
