@@ -97,9 +97,33 @@ void main() {
       },
     );
 
-    expect(find.text('${Strings.balanceDebt} L 150.50'), findsOne);
-    expect(find.text('${Strings.balanceCredit} L 30.00'), findsOne);
-    expect(find.text(Strings.balanceSettled), findsOne);
+    expect(find.byKey(const ValueKey('balance-label-c-1')), findsOne);
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('balance-label-c-1'))).data,
+      Strings.balanceDebt,
+    );
+    expect(
+      tester
+          .widget<Text>(find.byKey(const ValueKey('balance-amount-c-1')))
+          .data,
+      'L 150.50',
+    );
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('balance-label-c-2'))).data,
+      Strings.balanceCredit,
+    );
+    expect(
+      tester
+          .widget<Text>(find.byKey(const ValueKey('balance-amount-c-2')))
+          .data,
+      'L 30.00',
+    );
+    // Un cliente saldado no muestra monto, solo "Al día".
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('balance-label-c-3'))).data,
+      Strings.balanceSettled,
+    );
+    expect(find.byKey(const ValueKey('balance-amount-c-3')), findsNothing);
   });
 
   testWidgets('la deuda y el saldo a favor tienen colores distintos', (
@@ -115,10 +139,12 @@ void main() {
       },
     );
 
-    Color? colorOf(String text) =>
-        tester.widget<Text>(find.text(text)).style?.color;
-    final debt = colorOf('${Strings.balanceDebt} L 10.00');
-    final credit = colorOf('${Strings.balanceCredit} L 10.00');
+    Color? colorOf(String id) => tester
+        .widget<Text>(find.byKey(ValueKey('balance-amount-$id')))
+        .style
+        ?.color;
+    final debt = colorOf('c-1');
+    final credit = colorOf('c-2');
 
     expect(debt, isNotNull);
     expect(credit, isNotNull);
@@ -137,8 +163,16 @@ void main() {
       },
     );
 
-    expect(find.text('${Strings.balanceCredit} L 5.00'), findsOne);
-    expect(find.textContaining(Strings.balanceDebt), findsNothing);
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('balance-label-c-1'))).data,
+      Strings.balanceCredit,
+    );
+    expect(
+      tester
+          .widget<Text>(find.byKey(const ValueKey('balance-amount-c-1')))
+          .data,
+      'L 5.00',
+    );
   });
 
   testWidgets('no muestra clientes de otro negocio', (tester) async {

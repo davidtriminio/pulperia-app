@@ -54,7 +54,7 @@ class ClientsScreen extends ConsumerWidget {
           }
           return ListView.builder(
             key: const ValueKey('section-clients'),
-            padding: const EdgeInsets.only(bottom: 88),
+            padding: const EdgeInsets.only(top: 4, bottom: 96),
             itemCount: items.length,
             itemBuilder: (context, i) => ClientTile(
               item: items[i],
