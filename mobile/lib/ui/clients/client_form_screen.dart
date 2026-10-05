@@ -10,6 +10,7 @@ import '../../domain/client/homonym.dart';
 import '../../l10n/strings.dart';
 import '../avatar/avatar_picker.dart';
 import '../avatar/avatar_view.dart';
+import '../theme.dart';
 import 'client_messages.dart';
 import 'clients_screen.dart';
 
@@ -222,12 +223,21 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
                 key: const ValueKey('avatar-field'),
                 customBorder: const CircleBorder(),
                 onTap: _pickAvatar,
-                child: Padding(
+                child: Container(
                   padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.turquoise, width: 3),
+                  ),
                   child: _avatar == null
                       ? const CircleAvatar(
                           radius: 48,
-                          child: Icon(Icons.add_a_photo_outlined, size: 32),
+                          backgroundColor: Colors.white,
+                          child: Icon(
+                            Icons.add_a_photo_outlined,
+                            size: 32,
+                            color: AppColors.navy,
+                          ),
                         )
                       : AvatarView(avatar: _avatar!, size: 96),
                 ),
@@ -284,6 +294,28 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
               decoration: InputDecoration(
                 labelText: Strings.fieldNote,
                 errorText: _errors[ClientField.note],
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4, right: 8),
+                child: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _note,
+                  builder: (context, value, _) {
+                    final over = value.text.length > maxNoteLength;
+                    final scheme = Theme.of(context).colorScheme;
+                    return Text(
+                      '${value.text.length}/$maxNoteLength',
+                      key: const ValueKey('note-counter'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: over ? scheme.error : scheme.outline,
+                        fontWeight: over ? FontWeight.w700 : FontWeight.w400,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 24),
