@@ -81,6 +81,10 @@ abstract final class Strings {
       'Este cliente está archivado: restáuralo antes de fiarle';
   static const fiadoEmpty = 'Agrega al menos un ítem';
 
+  static const pickFromCatalog = 'Elegir del catálogo';
+  static const fromCatalog = 'Del catálogo';
+  static const unlinkProduct = 'Quitar vínculo con el catálogo';
+
   static const newProduct = 'Nuevo producto';
   static const editProduct = 'Editar producto';
   static const fieldProductName = 'Nombre del producto';
