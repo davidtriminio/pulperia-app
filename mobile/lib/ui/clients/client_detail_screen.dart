@@ -16,6 +16,7 @@ import '../format/money_format.dart';
 import '../format/quantity_format.dart';
 import '../theme.dart';
 import '../ledger/fiado_form_screen.dart';
+import '../ledger/payment_form_screen.dart';
 import 'client_form_screen.dart';
 import 'clients_screen.dart';
 
@@ -85,6 +86,24 @@ class ClientDetailScreen extends ConsumerWidget {
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
                             builder: (_) => FiadoFormScreen(clientId: clientId),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                        key: const ValueKey('register-payment'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.turquoise,
+                          foregroundColor: AppColors.ink,
+                        ),
+                        icon: const Icon(Icons.payments),
+                        label: const Text(Strings.registerPayment),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                PaymentFormScreen(clientId: clientId),
                           ),
                         ),
                       ),
