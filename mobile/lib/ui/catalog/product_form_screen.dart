@@ -6,11 +6,13 @@ import '../../data/local/app_database.dart';
 import '../../data/repositories/product_repository.dart';
 import '../../domain/business/amount_mode.dart';
 import '../../domain/catalog/product_validation.dart';
+import '../../domain/catalog/sale_unit.dart';
 import '../../domain/money/money.dart';
 import '../../l10n/strings.dart';
 import '../format/amount_messages.dart';
 import '../format/money_format.dart';
 import 'catalog_screen.dart';
+import 'unit_selector.dart';
 
 /// Crear o editar un producto del catálogo (RF-24, RF-25). Con [existing]
 /// edita ese producto; sin él crea uno nuevo.
@@ -26,6 +28,7 @@ class ProductFormScreen extends ConsumerStatefulWidget {
 class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   late final TextEditingController _name;
   late final TextEditingController _price;
+  late SaleUnit _unit;
   String? _nameError;
   String? _priceError;
   bool _saving = false;
@@ -42,6 +45,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     super.initState();
     final p = widget.existing;
     _name = TextEditingController(text: p?.name ?? '');
+    _unit = p == null ? SaleUnit.defaultUnit : SaleUnit.fromId(p.unit);
     _price = TextEditingController();
     if (p != null) {
       // El modo del negocio se conoce al abrir la pantalla.
@@ -104,6 +108,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             role: user.role,
             name: _name.text,
             price: price,
+            unit: _unit,
           )
         : await repository.update(
             businessId: businessId,
@@ -112,6 +117,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             productId: existing.id,
             name: _name.text,
             price: price,
+            unit: _unit,
           );
     if (!mounted) {
       return;
@@ -179,6 +185,11 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 prefixText: 'L ',
                 errorText: _priceError,
               ),
+            ),
+            const SizedBox(height: 16),
+            UnitSelector(
+              selected: _unit,
+              onChanged: (unit) => setState(() => _unit = unit),
             ),
             const SizedBox(height: 24),
             FilledButton(

@@ -95,6 +95,9 @@ abstract final class Strings {
   static const fromCatalog = 'Del catálogo';
   static const unlinkProduct = 'Quitar vínculo con el catálogo';
 
+  static const fieldUnit = 'Unidad de venta';
+  static const perUnit = 'por';
+
   static const newProduct = 'Nuevo producto';
   static const editProduct = 'Editar producto';
   static const fieldProductName = 'Nombre del producto';
