@@ -81,6 +81,12 @@ abstract final class Strings {
       'Este cliente está archivado: restáuralo antes de fiarle';
   static const fiadoEmpty = 'Agrega al menos un ítem';
 
+  static const newPayment = 'Registrar abono';
+  static const registerPayment = 'Abonar';
+  static const fieldPaymentAmount = 'Monto del abono';
+  static const currentBalance = 'Saldo actual';
+  static const balanceAfter = 'Quedaría';
+
   static const modeItems = 'Con detalle';
   static const modeTotal = 'Solo monto';
   static const fieldTotal = 'Monto total';
