@@ -74,7 +74,7 @@ Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T1
 - [x] **T040b** Cableado de la app: añadir Riverpod (D-11) y los proveedores de la base local, del negocio activo y del usuario activo. RF: —. Dep: T040a, T153. *Hecho cuando:* los ids se generan con `newId()` y un test de widget lee el negocio activo desde un `ProviderScope` con una base en memoria.
 - [x] **T100** Navegación, tema y textos en español. RF: —; RNF-5. Dep: T040b. *Hecho cuando:* ninguna cadena visible está en otro idioma y la navegación llega a cada sección.
 - [ ] **T101** Widget de avatar compuesto (personaje, tono y fondo). RF: 14, 72. Dep: T028, T040b. *Hecho cuando:* test de widget con varias combinaciones.
-- [ ] **T102** Formato de personaje con tono parametrizable y 3 personajes de prueba. RF: 72. Dep: T040b. *Hecho cuando:* los 3 se ven con los 6 tonos y 12 fondos en un test de widget.
+- [x] **T102** Formato de personaje con tono parametrizable y 3 personajes de prueba. RF: 72. Dep: T040b. *Hecho cuando:* los 3 se ven con los 6 tonos y 12 fondos en un test de widget.
 - [ ] **T104** Selector de avatar. RF: 14, 16. Dep: T101, T102. *Hecho cuando:* no se puede continuar sin elegir personaje, tono y fondo.
 - [ ] **T106** Lista de clientes con saldo. RF: 20, 42. Dep: T040a, T040b, T033, T039, T100. *Hecho cuando:* los archivados no aparecen y el saldo a favor se distingue de la deuda.
 - [ ] **T107** Crear y editar cliente con teléfono, dirección, nota y aviso de homónimo. RF: 14–19, 73, 74, 77. Dep: T032, T104, T024. *Hecho cuando:* un homónimo muestra el aviso y solo continúa si se confirma.
