@@ -1510,6 +1510,17 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL CHECK (price > 0)',
   );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'unit\' CHECK (unit IN (\'unit\', \'pound\', \'ounce\', \'kilo\', \'dozen\', \'liter\', \'gallon\', \'box\', \'bag\', \'pack\'))',
+    defaultValue: const CustomExpression('\'unit\''),
+  );
   static const VerificationMeta _archivedMeta = const VerificationMeta(
     'archived',
   );
@@ -1563,6 +1574,7 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     businessId,
     name,
     price,
+    unit,
     archived,
     version,
     createdBy,
@@ -1608,6 +1620,12 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
       );
     } else if (isInserting) {
       context.missing(_priceMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
     }
     if (data.containsKey('archived')) {
       context.handle(
@@ -1658,6 +1676,10 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
         DriftSqlType.int,
         data['${effectivePrefix}price'],
       )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
       archived: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}archived'],
@@ -1695,6 +1717,11 @@ class Product extends DataClass implements Insertable<Product> {
 
   /// Precio en la unidad menor (centavos de lempira); siempre positivo.
   final int price;
+
+  /// Unidad de venta (RF-86, RF-88): id de la lista compartida, `unit` por
+  /// omisión.
+  /// La lista del CHECK debe coincidir con `SaleUnit`; un test lo comprueba.
+  final String unit;
   final bool archived;
   final int version;
   final String createdBy;
@@ -1704,6 +1731,7 @@ class Product extends DataClass implements Insertable<Product> {
     required this.businessId,
     required this.name,
     required this.price,
+    required this.unit,
     required this.archived,
     required this.version,
     required this.createdBy,
@@ -1716,6 +1744,7 @@ class Product extends DataClass implements Insertable<Product> {
     map['business_id'] = Variable<String>(businessId);
     map['name'] = Variable<String>(name);
     map['price'] = Variable<int>(price);
+    map['unit'] = Variable<String>(unit);
     map['archived'] = Variable<bool>(archived);
     map['version'] = Variable<int>(version);
     map['created_by'] = Variable<String>(createdBy);
@@ -1733,6 +1762,7 @@ class Product extends DataClass implements Insertable<Product> {
       businessId: Value(businessId),
       name: Value(name),
       price: Value(price),
+      unit: Value(unit),
       archived: Value(archived),
       version: Value(version),
       createdBy: Value(createdBy),
@@ -1750,6 +1780,7 @@ class Product extends DataClass implements Insertable<Product> {
       businessId: serializer.fromJson<String>(json['businessId']),
       name: serializer.fromJson<String>(json['name']),
       price: serializer.fromJson<int>(json['price']),
+      unit: serializer.fromJson<String>(json['unit']),
       archived: serializer.fromJson<bool>(json['archived']),
       version: serializer.fromJson<int>(json['version']),
       createdBy: serializer.fromJson<String>(json['createdBy']),
@@ -1764,6 +1795,7 @@ class Product extends DataClass implements Insertable<Product> {
       'businessId': serializer.toJson<String>(businessId),
       'name': serializer.toJson<String>(name),
       'price': serializer.toJson<int>(price),
+      'unit': serializer.toJson<String>(unit),
       'archived': serializer.toJson<bool>(archived),
       'version': serializer.toJson<int>(version),
       'createdBy': serializer.toJson<String>(createdBy),
@@ -1776,6 +1808,7 @@ class Product extends DataClass implements Insertable<Product> {
     String? businessId,
     String? name,
     int? price,
+    String? unit,
     bool? archived,
     int? version,
     String? createdBy,
@@ -1785,6 +1818,7 @@ class Product extends DataClass implements Insertable<Product> {
     businessId: businessId ?? this.businessId,
     name: name ?? this.name,
     price: price ?? this.price,
+    unit: unit ?? this.unit,
     archived: archived ?? this.archived,
     version: version ?? this.version,
     createdBy: createdBy ?? this.createdBy,
@@ -1798,6 +1832,7 @@ class Product extends DataClass implements Insertable<Product> {
           : this.businessId,
       name: data.name.present ? data.name.value : this.name,
       price: data.price.present ? data.price.value : this.price,
+      unit: data.unit.present ? data.unit.value : this.unit,
       archived: data.archived.present ? data.archived.value : this.archived,
       version: data.version.present ? data.version.value : this.version,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
@@ -1812,6 +1847,7 @@ class Product extends DataClass implements Insertable<Product> {
           ..write('businessId: $businessId, ')
           ..write('name: $name, ')
           ..write('price: $price, ')
+          ..write('unit: $unit, ')
           ..write('archived: $archived, ')
           ..write('version: $version, ')
           ..write('createdBy: $createdBy, ')
@@ -1826,6 +1862,7 @@ class Product extends DataClass implements Insertable<Product> {
     businessId,
     name,
     price,
+    unit,
     archived,
     version,
     createdBy,
@@ -1839,6 +1876,7 @@ class Product extends DataClass implements Insertable<Product> {
           other.businessId == this.businessId &&
           other.name == this.name &&
           other.price == this.price &&
+          other.unit == this.unit &&
           other.archived == this.archived &&
           other.version == this.version &&
           other.createdBy == this.createdBy &&
@@ -1850,6 +1888,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   final Value<String> businessId;
   final Value<String> name;
   final Value<int> price;
+  final Value<String> unit;
   final Value<bool> archived;
   final Value<int> version;
   final Value<String> createdBy;
@@ -1860,6 +1899,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.businessId = const Value.absent(),
     this.name = const Value.absent(),
     this.price = const Value.absent(),
+    this.unit = const Value.absent(),
     this.archived = const Value.absent(),
     this.version = const Value.absent(),
     this.createdBy = const Value.absent(),
@@ -1871,6 +1911,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     required String businessId,
     required String name,
     required int price,
+    this.unit = const Value.absent(),
     this.archived = const Value.absent(),
     this.version = const Value.absent(),
     required String createdBy,
@@ -1887,6 +1928,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Expression<String>? businessId,
     Expression<String>? name,
     Expression<int>? price,
+    Expression<String>? unit,
     Expression<bool>? archived,
     Expression<int>? version,
     Expression<String>? createdBy,
@@ -1898,6 +1940,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       if (businessId != null) 'business_id': businessId,
       if (name != null) 'name': name,
       if (price != null) 'price': price,
+      if (unit != null) 'unit': unit,
       if (archived != null) 'archived': archived,
       if (version != null) 'version': version,
       if (createdBy != null) 'created_by': createdBy,
@@ -1911,6 +1954,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Value<String>? businessId,
     Value<String>? name,
     Value<int>? price,
+    Value<String>? unit,
     Value<bool>? archived,
     Value<int>? version,
     Value<String>? createdBy,
@@ -1922,6 +1966,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       businessId: businessId ?? this.businessId,
       name: name ?? this.name,
       price: price ?? this.price,
+      unit: unit ?? this.unit,
       archived: archived ?? this.archived,
       version: version ?? this.version,
       createdBy: createdBy ?? this.createdBy,
@@ -1944,6 +1989,9 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     }
     if (price.present) {
       map['price'] = Variable<int>(price.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
     }
     if (archived.present) {
       map['archived'] = Variable<bool>(archived.value);
@@ -1972,6 +2020,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
           ..write('businessId: $businessId, ')
           ..write('name: $name, ')
           ..write('price: $price, ')
+          ..write('unit: $unit, ')
           ..write('archived: $archived, ')
           ..write('version: $version, ')
           ..write('createdBy: $createdBy, ')
@@ -2640,6 +2689,17 @@ class $FiadoItemsTable extends FiadoItems
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL CHECK (quantity > 0)',
   );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'unit\' CHECK (unit IN (\'unit\', \'pound\', \'ounce\', \'kilo\', \'dozen\', \'liter\', \'gallon\', \'box\', \'bag\', \'pack\'))',
+    defaultValue: const CustomExpression('\'unit\''),
+  );
   static const VerificationMeta _unitPriceMeta = const VerificationMeta(
     'unitPrice',
   );
@@ -2672,6 +2732,7 @@ class $FiadoItemsTable extends FiadoItems
     productId,
     description,
     quantity,
+    unit,
     unitPrice,
     subtotal,
   ];
@@ -2733,6 +2794,12 @@ class $FiadoItemsTable extends FiadoItems
     } else if (isInserting) {
       context.missing(_quantityMeta);
     }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
     if (data.containsKey('unit_price')) {
       context.handle(
         _unitPriceMeta,
@@ -2782,6 +2849,10 @@ class $FiadoItemsTable extends FiadoItems
         DriftSqlType.int,
         data['${effectivePrefix}quantity'],
       )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
       unitPrice: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}unit_price'],
@@ -2811,6 +2882,11 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
   /// Cantidad en milésimas.
   final int quantity;
 
+  /// Unidad de venta (RF-86, RF-88): id de la lista compartida, `unit` por
+  /// omisión.
+  /// La lista del CHECK debe coincidir con `SaleUnit`; un test lo comprueba.
+  final String unit;
+
   /// Precio unitario en la unidad menor.
   final int unitPrice;
 
@@ -2823,6 +2899,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
     this.productId,
     required this.description,
     required this.quantity,
+    required this.unit,
     required this.unitPrice,
     required this.subtotal,
   });
@@ -2837,6 +2914,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
     }
     map['description'] = Variable<String>(description);
     map['quantity'] = Variable<int>(quantity);
+    map['unit'] = Variable<String>(unit);
     map['unit_price'] = Variable<int>(unitPrice);
     map['subtotal'] = Variable<int>(subtotal);
     return map;
@@ -2852,6 +2930,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
           : Value(productId),
       description: Value(description),
       quantity: Value(quantity),
+      unit: Value(unit),
       unitPrice: Value(unitPrice),
       subtotal: Value(subtotal),
     );
@@ -2869,6 +2948,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
       productId: serializer.fromJson<String?>(json['productId']),
       description: serializer.fromJson<String>(json['description']),
       quantity: serializer.fromJson<int>(json['quantity']),
+      unit: serializer.fromJson<String>(json['unit']),
       unitPrice: serializer.fromJson<int>(json['unitPrice']),
       subtotal: serializer.fromJson<int>(json['subtotal']),
     );
@@ -2883,6 +2963,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
       'productId': serializer.toJson<String?>(productId),
       'description': serializer.toJson<String>(description),
       'quantity': serializer.toJson<int>(quantity),
+      'unit': serializer.toJson<String>(unit),
       'unitPrice': serializer.toJson<int>(unitPrice),
       'subtotal': serializer.toJson<int>(subtotal),
     };
@@ -2895,6 +2976,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
     Value<String?> productId = const Value.absent(),
     String? description,
     int? quantity,
+    String? unit,
     int? unitPrice,
     int? subtotal,
   }) => FiadoItem(
@@ -2904,6 +2986,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
     productId: productId.present ? productId.value : this.productId,
     description: description ?? this.description,
     quantity: quantity ?? this.quantity,
+    unit: unit ?? this.unit,
     unitPrice: unitPrice ?? this.unitPrice,
     subtotal: subtotal ?? this.subtotal,
   );
@@ -2919,6 +3002,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
           ? data.description.value
           : this.description,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      unit: data.unit.present ? data.unit.value : this.unit,
       unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
       subtotal: data.subtotal.present ? data.subtotal.value : this.subtotal,
     );
@@ -2933,6 +3017,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
           ..write('productId: $productId, ')
           ..write('description: $description, ')
           ..write('quantity: $quantity, ')
+          ..write('unit: $unit, ')
           ..write('unitPrice: $unitPrice, ')
           ..write('subtotal: $subtotal')
           ..write(')'))
@@ -2947,6 +3032,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
     productId,
     description,
     quantity,
+    unit,
     unitPrice,
     subtotal,
   );
@@ -2960,6 +3046,7 @@ class FiadoItem extends DataClass implements Insertable<FiadoItem> {
           other.productId == this.productId &&
           other.description == this.description &&
           other.quantity == this.quantity &&
+          other.unit == this.unit &&
           other.unitPrice == this.unitPrice &&
           other.subtotal == this.subtotal);
 }
@@ -2971,6 +3058,7 @@ class FiadoItemsCompanion extends UpdateCompanion<FiadoItem> {
   final Value<String?> productId;
   final Value<String> description;
   final Value<int> quantity;
+  final Value<String> unit;
   final Value<int> unitPrice;
   final Value<int> subtotal;
   final Value<int> rowid;
@@ -2981,6 +3069,7 @@ class FiadoItemsCompanion extends UpdateCompanion<FiadoItem> {
     this.productId = const Value.absent(),
     this.description = const Value.absent(),
     this.quantity = const Value.absent(),
+    this.unit = const Value.absent(),
     this.unitPrice = const Value.absent(),
     this.subtotal = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2992,6 +3081,7 @@ class FiadoItemsCompanion extends UpdateCompanion<FiadoItem> {
     this.productId = const Value.absent(),
     required String description,
     required int quantity,
+    this.unit = const Value.absent(),
     required int unitPrice,
     required int subtotal,
     this.rowid = const Value.absent(),
@@ -3009,6 +3099,7 @@ class FiadoItemsCompanion extends UpdateCompanion<FiadoItem> {
     Expression<String>? productId,
     Expression<String>? description,
     Expression<int>? quantity,
+    Expression<String>? unit,
     Expression<int>? unitPrice,
     Expression<int>? subtotal,
     Expression<int>? rowid,
@@ -3020,6 +3111,7 @@ class FiadoItemsCompanion extends UpdateCompanion<FiadoItem> {
       if (productId != null) 'product_id': productId,
       if (description != null) 'description': description,
       if (quantity != null) 'quantity': quantity,
+      if (unit != null) 'unit': unit,
       if (unitPrice != null) 'unit_price': unitPrice,
       if (subtotal != null) 'subtotal': subtotal,
       if (rowid != null) 'rowid': rowid,
@@ -3033,6 +3125,7 @@ class FiadoItemsCompanion extends UpdateCompanion<FiadoItem> {
     Value<String?>? productId,
     Value<String>? description,
     Value<int>? quantity,
+    Value<String>? unit,
     Value<int>? unitPrice,
     Value<int>? subtotal,
     Value<int>? rowid,
@@ -3044,6 +3137,7 @@ class FiadoItemsCompanion extends UpdateCompanion<FiadoItem> {
       productId: productId ?? this.productId,
       description: description ?? this.description,
       quantity: quantity ?? this.quantity,
+      unit: unit ?? this.unit,
       unitPrice: unitPrice ?? this.unitPrice,
       subtotal: subtotal ?? this.subtotal,
       rowid: rowid ?? this.rowid,
@@ -3071,6 +3165,9 @@ class FiadoItemsCompanion extends UpdateCompanion<FiadoItem> {
     if (quantity.present) {
       map['quantity'] = Variable<int>(quantity.value);
     }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
     if (unitPrice.present) {
       map['unit_price'] = Variable<int>(unitPrice.value);
     }
@@ -3092,6 +3189,7 @@ class FiadoItemsCompanion extends UpdateCompanion<FiadoItem> {
           ..write('productId: $productId, ')
           ..write('description: $description, ')
           ..write('quantity: $quantity, ')
+          ..write('unit: $unit, ')
           ..write('unitPrice: $unitPrice, ')
           ..write('subtotal: $subtotal, ')
           ..write('rowid: $rowid')
@@ -6330,6 +6428,7 @@ typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
   required String businessId,
   required String name,
   required int price,
+  Value<String> unit,
   Value<bool> archived,
   Value<int> version,
   required String createdBy,
@@ -6341,6 +6440,7 @@ typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<String> businessId,
   Value<String> name,
   Value<int> price,
+  Value<String> unit,
   Value<bool> archived,
   Value<int> version,
   Value<String> createdBy,
@@ -6391,6 +6491,11 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<int> get price => $composableBuilder(
     column: $table.price,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6463,6 +6568,11 @@ class $$ProductsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get archived => $composableBuilder(
     column: $table.archived,
     builder: (column) => ColumnOrderings(column),
@@ -6524,6 +6634,9 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<int> get price =>
       $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
 
   GeneratedColumn<bool> get archived =>
       $composableBuilder(column: $table.archived, builder: (column) => column);
@@ -6593,6 +6706,7 @@ class $$ProductsTableTableManager
                 Value<String> businessId = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<int> price = const Value.absent(),
+                Value<String> unit = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
@@ -6603,6 +6717,7 @@ class $$ProductsTableTableManager
                 businessId: businessId,
                 name: name,
                 price: price,
+                unit: unit,
                 archived: archived,
                 version: version,
                 createdBy: createdBy,
@@ -6615,6 +6730,7 @@ class $$ProductsTableTableManager
                 required String businessId,
                 required String name,
                 required int price,
+                Value<String> unit = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 required String createdBy,
@@ -6625,6 +6741,7 @@ class $$ProductsTableTableManager
                 businessId: businessId,
                 name: name,
                 price: price,
+                unit: unit,
                 archived: archived,
                 version: version,
                 createdBy: createdBy,
@@ -7102,6 +7219,7 @@ typedef $$FiadoItemsTableCreateCompanionBuilder = FiadoItemsCompanion Function({
   Value<String?> productId,
   required String description,
   required int quantity,
+  Value<String> unit,
   required int unitPrice,
   required int subtotal,
   Value<int> rowid,
@@ -7113,6 +7231,7 @@ typedef $$FiadoItemsTableUpdateCompanionBuilder = FiadoItemsCompanion Function({
   Value<String?> productId,
   Value<String> description,
   Value<int> quantity,
+  Value<String> unit,
   Value<int> unitPrice,
   Value<int> subtotal,
   Value<int> rowid,
@@ -7171,6 +7290,11 @@ class $$FiadoItemsTableFilterComposer
 
   ColumnFilters<int> get quantity => $composableBuilder(
     column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7242,6 +7366,11 @@ class $$FiadoItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get unitPrice => $composableBuilder(
     column: $table.unitPrice,
     builder: (column) => ColumnOrderings(column),
@@ -7301,6 +7430,9 @@ class $$FiadoItemsTableAnnotationComposer
 
   GeneratedColumn<int> get quantity =>
       $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
 
   GeneratedColumn<int> get unitPrice =>
       $composableBuilder(column: $table.unitPrice, builder: (column) => column);
@@ -7366,6 +7498,7 @@ class $$FiadoItemsTableTableManager
                 Value<String?> productId = const Value.absent(),
                 Value<String> description = const Value.absent(),
                 Value<int> quantity = const Value.absent(),
+                Value<String> unit = const Value.absent(),
                 Value<int> unitPrice = const Value.absent(),
                 Value<int> subtotal = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7376,6 +7509,7 @@ class $$FiadoItemsTableTableManager
                 productId: productId,
                 description: description,
                 quantity: quantity,
+                unit: unit,
                 unitPrice: unitPrice,
                 subtotal: subtotal,
                 rowid: rowid,
@@ -7388,6 +7522,7 @@ class $$FiadoItemsTableTableManager
                 Value<String?> productId = const Value.absent(),
                 required String description,
                 required int quantity,
+                Value<String> unit = const Value.absent(),
                 required int unitPrice,
                 required int subtotal,
                 Value<int> rowid = const Value.absent(),
@@ -7398,6 +7533,7 @@ class $$FiadoItemsTableTableManager
                 productId: productId,
                 description: description,
                 quantity: quantity,
+                unit: unit,
                 unitPrice: unitPrice,
                 subtotal: subtotal,
                 rowid: rowid,
