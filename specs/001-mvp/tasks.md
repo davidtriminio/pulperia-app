@@ -73,7 +73,7 @@ Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T1
 - [x] **T040a** Sesión simulada solo para desarrollo: un negocio de prueba y un usuario dueño, con los modos de montos y cantidades definidos por constantes. RF: —. Dep: T040. *Hecho cuando:* en depuración la app arranca con ese negocio y usuario activos, y un test comprueba que en modo release no están disponibles. Se elimina en T088.
 - [x] **T040b** Cableado de la app: añadir Riverpod (D-11) y los proveedores de la base local, del negocio activo y del usuario activo. RF: —. Dep: T040a, T153. *Hecho cuando:* los ids se generan con `newId()` y un test de widget lee el negocio activo desde un `ProviderScope` con una base en memoria.
 - [x] **T100** Navegación, tema y textos en español. RF: —; RNF-5. Dep: T040b. *Hecho cuando:* ninguna cadena visible está en otro idioma y la navegación llega a cada sección.
-- [ ] **T101** Widget de avatar compuesto (personaje, tono y fondo). RF: 14, 72. Dep: T028, T040b. *Hecho cuando:* test de widget con varias combinaciones.
+- [x] **T101** Widget de avatar compuesto (personaje, tono y fondo). RF: 14, 72. Dep: T028, T040b. *Hecho cuando:* test de widget con varias combinaciones.
 - [x] **T102** Formato de personaje con tono parametrizable y 3 personajes de prueba. RF: 72. Dep: T040b. *Hecho cuando:* los 3 se ven con los 6 tonos y 12 fondos en un test de widget.
 - [ ] **T104** Selector de avatar. RF: 14, 16. Dep: T101, T102. *Hecho cuando:* no se puede continuar sin elegir personaje, tono y fondo.
 - [ ] **T106** Lista de clientes con saldo. RF: 20, 42. Dep: T040a, T040b, T033, T039, T100. *Hecho cuando:* los archivados no aparecen y el saldo a favor se distingue de la deuda.

@@ -6,6 +6,8 @@ abstract final class Strings {
   static const clients = 'Clientes';
   static const catalog = 'Catálogo';
 
+  static const avatar = 'Avatar';
+
   static const clientsEmpty = 'Aún no hay clientes';
   static const catalogEmpty = 'Aún no hay productos';
 }
