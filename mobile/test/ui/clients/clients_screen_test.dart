@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/app/providers.dart';
@@ -7,11 +8,13 @@ import 'package:pulperia_mobile/data/local/app_database.dart';
 import 'package:pulperia_mobile/dev/dev_session.dart';
 import 'package:pulperia_mobile/l10n/strings.dart';
 import 'package:pulperia_mobile/ui/avatar/avatar_view.dart';
+import 'package:pulperia_mobile/ui/clients/client_form_screen.dart';
 import 'package:pulperia_mobile/ui/clients/clients_screen.dart';
 
 import '../../support/db_fixtures.dart';
 
 void main() {
+  group('crear desde la lista', _fabTests);
   late AppDatabase db;
   late String businessId;
 
@@ -150,5 +153,77 @@ void main() {
 
     expect(find.text('Ana'), findsOne);
     expect(find.text('Ajena'), findsNothing);
+  });
+}
+
+void _fabTests() {
+  late AppDatabase db;
+  late String businessId;
+
+  setUp(() {
+    db = openDb();
+    businessId = devSessionFor(isRelease: false)!.businessId;
+  });
+  tearDown(() => db.close());
+
+  Future<void> pump(WidgetTester tester) async {
+    await tester.runAsync(() async {
+      await seedDevSession(db, devSessionFor(isRelease: false));
+      await insertClient(db, 'c-1', businessId, name: 'Ana');
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: const MaterialApp(
+          locale: Locale('es'),
+          supportedLocales: [Locale('es')],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          home: Scaffold(body: ClientsScreen()),
+        ),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 150)),
+    );
+    await tester.pump();
+  }
+
+  testWidgets('el botón Nuevo cliente abre el formulario', (tester) async {
+    await pump(tester);
+
+    await tester.tap(find.byKey(const ValueKey('new-client')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ClientFormScreen), findsOne);
+  });
+
+  testWidgets('un cliente nuevo aparece en la lista al volver', (tester) async {
+    await pump(tester);
+    await tester.tap(find.byKey(const ValueKey('new-client')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const ValueKey('field-name')), 'Beto');
+    await tester.tap(find.byKey(const ValueKey('avatar-field')));
+    await tester.pumpAndSettle();
+    for (final key in ['pick-char-01', 'pick-skin-1', 'pick-bg-01']) {
+      final finder = find.byKey(ValueKey(key));
+      await tester.ensureVisible(finder);
+      await tester.tap(finder);
+      await tester.pump();
+    }
+    await tester.tap(find.byKey(const ValueKey('avatar-continue')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('client-save')));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await tester.pumpAndSettle();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Beto'), findsOne);
+    expect(find.text('Ana'), findsOne);
   });
 }

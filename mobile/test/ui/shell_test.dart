@@ -63,6 +63,7 @@ void main() {
       Strings.clients,
       Strings.catalog,
       Strings.clientsEmpty,
+      Strings.newClient,
       Strings.catalogEmpty,
       devSessionFor(isRelease: false)!.businessName,
     };
