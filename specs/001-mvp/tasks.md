@@ -1,6 +1,6 @@
 # Tareas 001 — MVP: administrador de deudas (fiados) para pulperías
 
-Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cubre `spec.md` (RF-1 a RF-85, RNF-1 a RNF-8).
+Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cubre `spec.md` (RF-1 a RF-89, RNF-1 a RNF-8).
 
 ## Cómo se trabaja
 - **Una unidad de trabajo es un bloque** de tareas relacionadas, con una rama y un PR. Se trabaja el bloque entero, tarea a tarea, y se para al cerrarlo (en el paso del PR) o antes si algo bloquea: un test que no pasa, una laguna de la spec, una dependencia no aprobada o una tarea de más de 30 minutos.
@@ -67,7 +67,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - [x] **T153** Generador de ids UUID v7 (D-21). RF: —. Dep: D-21. *Hecho cuando:* una función única `newId()` en `mobile/lib/data/` devuelve UUID v7 en minúsculas con el paquete `uuid`, y los tests comprueban formato válido, versión 7 y variante correctas, 100 000 ids sin repetirse y orden creciente por tiempo; y los repositorios existentes reciben el generador por inyección, con generadores deterministas en sus tests.
 
 ## Fase 3b — Tramo de prueba del móvil, sin servidor (para probar la app pronto)
-Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T104), C (T106, T107, T108), D (T109 a T112 y T115) y E (T040c). Lleva a esta altura las pantallas de clientes, fiados, abonos y catálogo, que antes estaban en la Fase 9, para poder usar la app en el emulador, en modo avión, antes de construir la API. Se usa un negocio y un usuario de desarrollo fijos (T040a) que T088 reemplaza por la sesión real. Las tareas T100, T101, T102, T104, T106 a T112 y T115 se movieron aquí sin cambiar su contenido; solo se les añadió `Dep:`.
+Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T104), C (T106, T107, T108), D (T109 a T112 y T115), la Fase 3c (unidades de venta) y E (T040c, que está al final de la Fase 3c). Lleva a esta altura las pantallas de clientes, fiados, abonos y catálogo, que antes estaban en la Fase 9, para poder usar la app en el emulador, en modo avión, antes de construir la API. Se usa un negocio y un usuario de desarrollo fijos (T040a) que T088 reemplaza por la sesión real. Las tareas T100, T101, T102, T104, T106 a T112 y T115 se movieron aquí sin cambiar su contenido; solo se les añadió `Dep:`.
 
 - [x] **T040a** Sesión simulada solo para desarrollo: un negocio de prueba y un usuario dueño, con los modos de montos y cantidades definidos por constantes. RF: —. Dep: T040. *Hecho cuando:* en depuración la app arranca con ese negocio y usuario activos, y un test comprueba que en modo release no están disponibles. Se elimina en T088.
 - [x] **T040b** Cableado de la app: añadir Riverpod (D-11) y los proveedores de la base local, del negocio activo y del usuario activo. RF: —. Dep: T040a, T153. *Hecho cuando:* los ids se generan con `newId()` y un test de widget lee el negocio activo desde un `ProviderScope` con una base en memoria.
@@ -83,14 +83,24 @@ Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T1
 - [x] **T111** Fiado por monto total. RF: 29, 33. Dep: T035, T108. *Hecho cuando:* se registra sin ítems y suma al saldo.
 - [x] **T112** Formulario de abono. RF: 37, 38, 39, 75. Dep: T037, T108. *Hecho cuando:* un abono mayor que la deuda deja saldo a favor y un cliente archivado sí admite abonos.
 - [x] **T115** Catálogo: lista, alta, cambio de precio y archivado. RF: 24–27. Dep: T034, T100. *Hecho cuando:* empleado y dueño pueden administrarlo y no hay opción de borrar.
-- [ ] **T040c** Prueba manual del tramo en el emulador, en modo avión: crear clientes con avatar, fiar con ítems y por total, abonar, ver saldo e historial, y comprobar que todo sigue al reiniciar la app. RF: 14, 28, 29, 37, 40, 41; RNF-1. Dep: T106–T112, T115. *Hecho cuando:* se recorre el flujo sin errores y se anotan los cambios de pantalla que se quieren antes de seguir.
+
+## Fase 3c — Unidades de venta (antes de la prueba manual)
+Añade la unidad de venta (unidad, libra, docena…) a productos e ítems de fiado: RF-86 a RF-89 y D-23. Es solo una etiqueta, con una lista fija compartida; no convierte entre unidades ni cambia el cálculo. La prueba manual T040c se ejecuta al final de esta fase, para recorrer el flujo ya con unidades.
+
+- [ ] **T154** Lista de unidades de venta compartida y su dominio móvil. RF: 86, 89. *Hecho cuando:* `shared/vectors/units.json` define las 10 unidades (unidad, libra, onza, kilo, docena, litro, galón, caja, bolsa, paquete) con identificador estable y nombre, plural y abreviatura en español; el dominio móvil la lee en un test y coincide; un identificador fuera de la lista se rechaza y la unidad por omisión es `unit`.
+- [ ] **T155** Esquema local versión 2 con la unidad en productos e ítems de fiado. RF: 86, 88. Dep: T154. *Hecho cuando:* una base creada con la versión 1, con productos e ítems, migra a la versión 2 sin perder datos y deja `unit` en lo existente; el código de Drift se regenera y las pruebas de esquema pasan.
+- [ ] **T156** Repositorios con unidad: producto (crear y editar) e ítem de fiado. RF: 86, 87, 88. Dep: T155. *Hecho cuando:* cada ítem guarda la unidad que se le indica (la del producto, otra o `unit` si es libre); cambiar la unidad o el precio de un producto, o archivarlo, no altera los ítems ya guardados; una unidad inválida se rechaza; y la operación de la cola lleva la unidad.
+- [ ] **T157** Catálogo: elegir la unidad al crear o editar un producto y mostrarla en la lista. RF: 86. Dep: T156, T115. *Hecho cuando:* un test de widget crea un producto "por libra", lo ve en la lista con su unidad, cambia su unidad y la lista se actualiza.
+- [ ] **T158** Fiado: unidad por ítem, propuesta por el producto y editable solo para ese ítem. RF: 87, 89. Dep: T156, T109, T110. *Hecho cuando:* al elegir un producto el ítem propone su unidad, se puede cambiar sin tocar el producto, un ítem libre usa `unit` por omisión y el subtotal no cambia al cambiar la unidad.
+- [ ] **T159** Historial y detalle del cliente muestran la unidad de cada ítem. RF: 88, 89. Dep: T156, T108. *Hecho cuando:* el detalle muestra "2.5 libra × L 25.00" (con la unidad en singular o plural según la cantidad) y los ítems anteriores a la migración muestran "unidad".
+- [ ] **T040c** Prueba manual del tramo en el emulador, en modo avión: crear clientes con avatar, crear productos con unidad, fiar con ítems (con unidades) y por total, abonar, ver saldo e historial, y comprobar que todo sigue al reiniciar la app. RF: 14, 28, 29, 37, 40, 41, 86, 88; RNF-1. Dep: T106–T112, T115, T154–T159. *Hecho cuando:* se recorre el flujo sin errores y se anotan los cambios de pantalla que se quieren antes de seguir.
 
 ## Fase 4 — Dominio de la API (.NET, sin EF ni HTTP)
 - [ ] **T041** Dinero y cantidad en unidad menor y milésimas. RF: 84; RNF-2. Dep: T013. *Hecho cuando:* pasan los vectores y no hay `double` ni `float` en el dominio.
 - [ ] **T042** Subtotales con ambos modos. RF: 34, 83. Dep: T006, T007. *Hecho cuando:* pasan los vectores de T006 y T007.
 - [ ] **T043** Validación de fiado y abono. RF: 28, 29, 32, 33, 35, 36, 37, 38. *Hecho cuando:* los casos coinciden con los del móvil (T020, T021).
 - [ ] **T044** Cálculo de saldo. RF: 39, 40, 42, 44, 47. Dep: T008. *Hecho cuando:* pasan los vectores de saldo.
-- [ ] **T045** Validación de cliente y producto. RF: 15, 16, 24, 74, 77. Dep: T009, T011, T012. *Hecho cuando:* pasan los vectores correspondientes.
+- [ ] **T045** Validación de cliente y producto. RF: 15, 16, 24, 74, 77, 86. Dep: T009, T011, T012, T154. *Hecho cuando:* pasan los vectores correspondientes y una unidad fuera de la lista compartida se rechaza.
 - [ ] **T046** Permisos por rol. RF: 13, 21, 45, 48. *Hecho cuando:* la matriz coincide con la del móvil (T025).
 - [ ] **T047** Resumen del negocio. RF: 63, 64, 65. Dep: T010. *Hecho cuando:* pasan los vectores de resumen.
 - [ ] **T048** Reglas de ajustes del negocio. RF: 7, 8, 9. Dep: T013. *Hecho cuando:* pasan los vectores de transiciones.
@@ -104,8 +114,8 @@ Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T1
 - [ ] **T054** Persistencia de `change_log`, `processed_ops`, contador por negocio y `admin_audit`. RF: 53, 81. *Hecho cuando:* integración contra PostgreSQL real.
 - [ ] **T055** Aislamiento por `business_id`. RF: 50; RNF-6. *Hecho cuando:* una prueba con dos negocios demuestra que ninguna consulta devuelve datos del otro.
 - [ ] **T056** Aplicar operaciones de cliente (crear, editar con versión, archivar, restaurar). RF: 14–23, 55, 73. Dep: T045, T052. *Hecho cuando:* una edición con versión desfasada se rechaza con código de conflicto.
-- [ ] **T057** Aplicar operaciones de producto (crear, cambiar precio, archivar). RF: 24, 25, 26, 27. *Hecho cuando:* no existe operación de borrar producto.
-- [ ] **T058** Aplicar la creación de fiado. RF: 28–36, 49, 83, 84, 85. Dep: T043, T053. *Hecho cuando:* cada fiado guarda el usuario que lo registró y un fiado a un cliente archivado se acepta si lo originó un dispositivo que no conocía el archivado.
+- [ ] **T057** Aplicar operaciones de producto (crear, cambiar precio, archivar). RF: 24, 25, 26, 27, 86. *Hecho cuando:* no existe operación de borrar producto.
+- [ ] **T058** Aplicar la creación de fiado. RF: 28–36, 49, 83, 84, 85, 87, 88. Dep: T043, T053. *Hecho cuando:* cada fiado guarda el usuario que lo registró y un fiado a un cliente archivado se acepta si lo originó un dispositivo que no conocía el archivado.
 - [ ] **T059** Aplicar la creación de abono. RF: 37, 38, 39, 49, 75. *Hecho cuando:* un abono mayor que la deuda se acepta y deja saldo a favor, y cada abono guarda el usuario que lo registró.
 - [ ] **T060** Aplicar anulaciones de fiado y abono, idempotentes. RF: 43, 44, 46, 47, 49. *Hecho cuando:* cada anulación guarda usuario y fecha, y anular dos veces el mismo movimiento no cambia nada ni falla.
 - [ ] **T061** Comprobar permisos de rol en cada operación. RF: 13, 21, 45, 48. Dep: T046. *Hecho cuando:* un empleado que intenta anular o archivar recibe rechazo.
@@ -176,10 +186,10 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [ ] **T126** Componente de avatar con la paleta compartida. RF: 14, 72. *Hecho cuando:* test con varias combinaciones.
 - [ ] **T127** Lista de clientes y crear/editar con aviso de homónimo. RF: 14–19, 73, 74, 77. *Hecho cuando:* mismas reglas que el móvil.
 - [ ] **T128** Detalle de cliente con historial. RF: 41, 42. *Hecho cuando:* los anulados aparecen marcados.
-- [ ] **T129** Registrar fiado y abono. RF: 28–39, 75, 83, 84. *Hecho cuando:* el subtotal redondeado coincide con los vectores.
+- [ ] **T129** Registrar fiado y abono. RF: 28–39, 75, 83, 84, 87, 88, 89. *Hecho cuando:* el subtotal redondeado coincide con los vectores.
 - [ ] **T130** Anular movimientos (solo dueño). RF: 43, 44, 45. *Hecho cuando:* el empleado no ve la acción.
 - [ ] **T131** Archivar, restaurar y vista de archivados. RF: 20–23, 76. *Hecho cuando:* solo el dueño archiva y restaura.
-- [ ] **T132** Catálogo. RF: 24–27. *Hecho cuando:* alta, precio y archivado funcionan sin opción de borrar.
+- [ ] **T132** Catálogo. RF: 24–27, 86. *Hecho cuando:* alta, precio y archivado funcionan sin opción de borrar.
 - [ ] **T133** Resumen. RF: 63, 64, 65. *Hecho cuando:* coincide con el resultado del móvil para los mismos datos.
 - [ ] **T134** Equipo y ajustes del negocio. RF: 7–13, 67–71, 80. *Hecho cuando:* solo los dueños acceden y el empleado recibe rechazo.
 - [ ] **T135** Efecto de los cambios hechos en la web sobre los móviles. RF: 62. *Hecho cuando:* una prueba entre web simulada y móvil simulado muestra el cambio tras sincronizar.
@@ -193,7 +203,7 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [ ] **T141** Documentar el comando de restablecimiento de contraseña. RF: 81. *Hecho cuando:* un tercero lo ejecuta siguiendo solo la documentación.
 
 ## Fase 12 — Validación
-- [ ] **T142** Recorrido RF por RF: qué test cubre cada uno y su resultado. RF: 1–85. *Hecho cuando:* existe una tabla con los 85 RF y los 8 RNF, cada uno con test o demo y resultado.
+- [ ] **T142** Recorrido RF por RF: qué test cubre cada uno y su resultado. RF: 1–89. *Hecho cuando:* existe una tabla con los 89 RF y los 8 RNF, cada uno con test o demo y resultado.
 - [ ] **T143** Demo: flujo principal en modo avión. RNF-1. *Hecho cuando:* se completa sin errores en un teléfono o emulador sin red.
 - [ ] **T144** Demo: dos dispositivos con fiados concurrentes. RF: 54. *Hecho cuando:* el saldo coincide en los dos.
 - [ ] **T145** Demo: recuperación en dispositivo nuevo. RF: 58. *Hecho cuando:* se ven todos los datos del negocio.
