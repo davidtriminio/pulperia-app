@@ -80,6 +80,10 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - RF-25: CUANDO un usuario cambia el precio de un producto del catálogo, EL SISTEMA no modificará ningún ítem de fiado ya registrado.
 - RF-26: CUANDO un usuario archiva un producto, EL SISTEMA dejará de ofrecerlo al registrar fiados y conservará su nombre y precio en los ítems ya registrados.
 - RF-27: EL SISTEMA no permitirá borrar un producto del catálogo.
+- RF-86: EL SISTEMA ofrecerá una lista fija de unidades de venta (unidad, libra, onza, kilo, docena, litro, galón, caja, bolsa y paquete), y cada producto del catálogo tendrá una; la unidad por omisión es "unidad".
+- RF-87: CUANDO el usuario elige un producto del catálogo para un ítem, EL SISTEMA propondrá la unidad del producto y permitirá cambiarla solo para ese ítem; un ítem que no pertenece al catálogo también lleva una unidad, "unidad" por omisión.
+- RF-88: CUANDO se registra un ítem de fiado, EL SISTEMA guardará su unidad junto con la cantidad y el precio unitario de ese momento, de modo que cambiar la unidad de un producto o archivarlo no altere los ítems ya registrados.
+- RF-89: EL SISTEMA tratará la unidad solo como una etiqueta: el precio unitario es por esa unidad y la cantidad se expresa en ella, sin convertir entre unidades y sin cambiar el cálculo del subtotal ni las reglas de cantidad del negocio (RF-35, RF-84).
 
 ### Fiados
 - RF-28: CUANDO un usuario registra un fiado con uno o más ítems (descripción, cantidad y precio unitario), EL SISTEMA guardará cada ítem con la cantidad y el precio unitario vigentes en ese momento.
@@ -153,7 +157,8 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - Abono sobre un fiado anulado en otro dispositivo: se conserva y queda saldo a favor (RF-47).
 - Abono mayor que la deuda: saldo a favor, no error (RF-39).
 - Reintento de sincronización tras corte a la mitad: sin duplicados (RF-53).
-- Cambio de precio en el catálogo tras fiar: no altera lo ya registrado (RF-25).
+- Cambio de precio o de unidad en el catálogo tras fiar: no altera lo ya registrado (RF-25, RF-88).
+- Un producto vendido por docena con cantidad "2": son 2 docenas al precio de la docena; el sistema no la convierte en 24 unidades (RF-89).
 - Empleado removido con cambios sin sincronizar: se aceptan sin límite de tiempo y luego pierde el acceso; si nunca se conecta, sus datos locales permanecen en su teléfono (RF-12).
 - Cliente archivado en un dispositivo mientras otro, sin conexión, le registra un fiado: el fiado se acepta y el cliente sigue archivado (RF-85).
 - Cantidad con más de 3 decimales: se rechaza (RF-84).
@@ -171,6 +176,7 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - Límite de crédito por cliente, con aviso o bloqueo.
 - Recordatorios o cobros por WhatsApp, SMS u otros canales.
 - Inventario o control de stock.
+- Conversión entre unidades de medida (por ejemplo, docena a unidades) y existencias por unidad.
 - Fechas de vencimiento o promesas de pago por deuda.
 - Intereses, recargos o mora.
 - Aplicar un abono a ítems o fiados específicos.
