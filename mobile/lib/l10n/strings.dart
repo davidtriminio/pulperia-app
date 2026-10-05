@@ -15,6 +15,11 @@ abstract final class Strings {
   static const avatarMissingBackground = 'Falta elegir el fondo';
   static const continueAction = 'Continuar';
 
+  static const balanceDebt = 'Debe';
+  static const balanceCredit = 'A favor';
+  static const balanceSettled = 'Al día';
+  static const loadError = 'No se pudo cargar la información';
+
   static const clientsEmpty = 'Aún no hay clientes';
   static const catalogEmpty = 'Aún no hay productos';
 }

@@ -1,0 +1,154 @@
+import 'package:drift/drift.dart' show Value;
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:pulperia_mobile/app/providers.dart';
+import 'package:pulperia_mobile/data/local/app_database.dart';
+import 'package:pulperia_mobile/dev/dev_session.dart';
+import 'package:pulperia_mobile/l10n/strings.dart';
+import 'package:pulperia_mobile/ui/avatar/avatar_view.dart';
+import 'package:pulperia_mobile/ui/clients/clients_screen.dart';
+
+import '../../support/db_fixtures.dart';
+
+void main() {
+  late AppDatabase db;
+  late String businessId;
+
+  setUp(() {
+    db = openDb();
+    businessId = devSessionFor(isRelease: false)!.businessId;
+  });
+  tearDown(() => db.close());
+
+  Future<void> pumpList(
+    WidgetTester tester, {
+    Future<void> Function()? seed,
+  }) async {
+    await tester.runAsync(() async {
+      await seedDevSession(db, devSessionFor(isRelease: false));
+      await seed?.call();
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: const MaterialApp(home: Scaffold(body: ClientsScreen())),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 150)),
+    );
+    await tester.pump();
+  }
+
+  testWidgets('sin clientes muestra el mensaje de lista vacía', (tester) async {
+    await pumpList(tester);
+
+    expect(find.text(Strings.clientsEmpty), findsOne);
+  });
+
+  testWidgets('lista los clientes con avatar, en orden alfabético', (
+    tester,
+  ) async {
+    await pumpList(
+      tester,
+      seed: () async {
+        await insertClient(db, 'c-2', businessId, name: 'beto');
+        await insertClient(db, 'c-1', businessId, name: 'Ana');
+      },
+    );
+
+    expect(find.byType(AvatarView), findsNWidgets(2));
+    expect(
+      tester.getTopLeft(find.text('Ana')).dy,
+      lessThan(tester.getTopLeft(find.text('beto')).dy),
+    );
+    expect(find.text(Strings.clientsEmpty), findsNothing);
+  });
+
+  testWidgets('los clientes archivados no aparecen', (tester) async {
+    await pumpList(
+      tester,
+      seed: () async {
+        await insertClient(db, 'c-1', businessId, name: 'Ana');
+        await insertClient(db, 'c-2', businessId, name: 'Carla');
+        await (db.update(db.clients)..where((c) => c.id.equals('c-2'))).write(
+          const ClientsCompanion(archived: Value(true)),
+        );
+      },
+    );
+
+    expect(find.text('Ana'), findsOne);
+    expect(find.text('Carla'), findsNothing);
+  });
+
+  testWidgets('distingue deuda, saldo a favor y saldado', (tester) async {
+    await pumpList(
+      tester,
+      seed: () async {
+        await insertClient(db, 'c-1', businessId, name: 'Ana');
+        await insertClient(db, 'c-2', businessId, name: 'Beto');
+        await insertClient(db, 'c-3', businessId, name: 'Carlos');
+        await insertFiado(db, 'f-1', businessId, 'c-1', total: 15050);
+        await insertPayment(db, 'p-1', businessId, 'c-2', amount: 3000);
+      },
+    );
+
+    expect(find.text('${Strings.balanceDebt} L 150.50'), findsOne);
+    expect(find.text('${Strings.balanceCredit} L 30.00'), findsOne);
+    expect(find.text(Strings.balanceSettled), findsOne);
+  });
+
+  testWidgets('la deuda y el saldo a favor tienen colores distintos', (
+    tester,
+  ) async {
+    await pumpList(
+      tester,
+      seed: () async {
+        await insertClient(db, 'c-1', businessId, name: 'Ana');
+        await insertClient(db, 'c-2', businessId, name: 'Beto');
+        await insertFiado(db, 'f-1', businessId, 'c-1', total: 1000);
+        await insertPayment(db, 'p-1', businessId, 'c-2', amount: 1000);
+      },
+    );
+
+    Color? colorOf(String text) =>
+        tester.widget<Text>(find.text(text)).style?.color;
+    final debt = colorOf('${Strings.balanceDebt} L 10.00');
+    final credit = colorOf('${Strings.balanceCredit} L 10.00');
+
+    expect(debt, isNotNull);
+    expect(credit, isNotNull);
+    expect(debt, isNot(credit));
+  });
+
+  testWidgets('un abono que supera la deuda se ve como saldo a favor', (
+    tester,
+  ) async {
+    await pumpList(
+      tester,
+      seed: () async {
+        await insertClient(db, 'c-1', businessId, name: 'Ana');
+        await insertFiado(db, 'f-1', businessId, 'c-1', total: 1000);
+        await insertPayment(db, 'p-1', businessId, 'c-1', amount: 1500);
+      },
+    );
+
+    expect(find.text('${Strings.balanceCredit} L 5.00'), findsOne);
+    expect(find.textContaining(Strings.balanceDebt), findsNothing);
+  });
+
+  testWidgets('no muestra clientes de otro negocio', (tester) async {
+    await pumpList(
+      tester,
+      seed: () async {
+        await insertBusiness(db, 'b-otro');
+        await insertClient(db, 'c-1', businessId, name: 'Ana');
+        await insertClient(db, 'c-9', 'b-otro', name: 'Ajena');
+      },
+    );
+
+    expect(find.text('Ana'), findsOne);
+    expect(find.text('Ajena'), findsNothing);
+  });
+}
