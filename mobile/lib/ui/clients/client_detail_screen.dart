@@ -6,6 +6,7 @@ import '../../data/local/app_database.dart';
 import '../../data/repositories/ledger_queries.dart';
 import '../../domain/avatar/avatar.dart';
 import '../../domain/business/amount_mode.dart';
+import '../../domain/catalog/sale_unit.dart';
 import '../../domain/ledger/balance.dart';
 import '../../domain/money/money.dart';
 import '../../domain/quantity/quantity.dart';
@@ -467,7 +468,8 @@ class _ItemRow extends StatelessWidget {
               children: [
                 Text(item.description),
                 Text(
-                  '${formatQuantity(Quantity(item.quantity))} × '
+                  '${formatQuantity(Quantity(item.quantity))} '
+                  '${SaleUnit.fromId(item.unit).nameFor(Quantity(item.quantity))} × '
                   '${formatMoney(Money(item.unitPrice), mode)}',
                   style: theme.textTheme.bodySmall,
                 ),

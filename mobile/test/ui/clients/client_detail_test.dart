@@ -197,7 +197,7 @@ void main() {
     );
 
     expect(find.text('Arroz'), findsOne);
-    expect(find.text('2.5 × L 25.00'), findsOne);
+    expect(find.text('2.5 unidades × L 25.00'), findsOne);
     expect(find.text('L 62.50'), findsWidgets);
   });
 
