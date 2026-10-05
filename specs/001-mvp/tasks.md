@@ -12,7 +12,6 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - Los vectores de `shared/` se leen desde los tests de cada plataforma; ninguna plataforma redefine esos casos.
 
 ## Bloqueos externos
-- **T103**: necesita las 24 ilustraciones de personajes. Es trabajo gráfico, no de código.
 - **T140**: necesita que decidas dónde se guardan las copias fuera del servidor.
 
 ## Fase 0 — Andamiaje
@@ -158,7 +157,7 @@ Orden de ejecución por bloques: A (T153, T040a, T040b), B (T100, T101, T102, T1
 ## Fase 9 — Interfaz del móvil (resto)
 Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 
-- [ ] **T103** Incorporar los 24 personajes finales. RF: 72. Dep: T102 e ilustraciones. *Hecho cuando:* existen los 24 y el test confirma que cada identificador de la paleta tiene su recurso.
+- [x] **T103** Incorporar los 24 personajes finales, dibujados en código como los de T102. RF: 72. Dep: T102. *Hecho cuando:* existen los 24 y el test confirma que cada identificador de la paleta tiene su recurso.
 - [ ] **T105** Pantallas de registro, inicio de sesión y elección de negocio. RF: 1–6, 78, 79. Dep: T088, T089. *Hecho cuando:* un usuario se registra, entra y elige negocio con mensajes de error en español.
 - [ ] **T113** Acción de anular, visible solo para el dueño. RF: 43, 44, 45. *Hecho cuando:* el empleado no ve la acción y el dueño anula con confirmación.
 - [ ] **T114** Archivar y restaurar cliente y vista de archivados. RF: 20–23, 76. *Hecho cuando:* solo el dueño ve las acciones y fiar a un archivado muestra que debe restaurarse primero.

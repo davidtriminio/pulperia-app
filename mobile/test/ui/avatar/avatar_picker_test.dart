@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/domain/avatar/avatar.dart';
 import 'package:pulperia_mobile/l10n/strings.dart';
+import 'package:pulperia_mobile/ui/avatar/avatar_characters.dart';
 import 'package:pulperia_mobile/ui/avatar/avatar_picker.dart';
+import 'package:pulperia_mobile/ui/avatar/hex_color.dart';
 
 void main() {
   Avatar? confirmed;
@@ -45,6 +47,32 @@ void main() {
     for (final b in AvatarPalette.backgrounds) {
       expect(find.byKey(ValueKey('pick-${b.id}')), findsOne);
     }
+  });
+
+  testWidgets('sin tono elegido las miniaturas usan uno por defecto, no gris', (
+    tester,
+  ) async {
+    await pumpPicker(tester);
+
+    AvatarCharacterPainter painterOf(String key) =>
+        tester
+                .widget<CustomPaint>(
+                  find.descendant(
+                    of: find.byKey(ValueKey(key)),
+                    matching: find.byType(CustomPaint),
+                  ),
+                )
+                .painter!
+            as AvatarCharacterPainter;
+
+    final fallbackSkin = hexColor(AvatarPalette.skinTones[1].hex);
+    expect(painterOf('pick-char-05').skin, fallbackSkin);
+    expect(painterOf('pick-char-24').skin, fallbackSkin);
+
+    await choose(tester, 'pick-skin-5');
+    final chosen = hexColor(AvatarPalette.skinTones[4].hex);
+    expect(painterOf('pick-char-05').skin, chosen);
+    expect(painterOf('pick-char-24').skin, chosen);
   });
 
   testWidgets('sin elegir nada no se puede continuar y indica qué falta', (
