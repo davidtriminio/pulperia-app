@@ -89,6 +89,7 @@ abstract final class Strings {
   static const fiadoEmpty = 'Agrega al menos un ítem';
 
   static const newPayment = 'Registrar abono';
+  static const payFull = 'Saldo completo';
   static const registerPayment = 'Abonar';
   static const fieldPaymentAmount = 'Monto del abono';
   static const currentBalance = 'Saldo actual';

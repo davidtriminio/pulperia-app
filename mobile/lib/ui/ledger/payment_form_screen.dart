@@ -13,6 +13,7 @@ import '../input_limits.dart';
 import '../format/amount_messages.dart';
 import '../format/money_format.dart';
 import '../theme.dart';
+import '../widgets/quick_amounts.dart';
 
 /// Registrar un abono general a un cliente (RF-37): se resta de su saldo sin
 /// asociarlo a ningún ítem. Un abono mayor que la deuda se acepta y deja saldo
@@ -48,6 +49,14 @@ class _PaymentFormScreenState extends ConsumerState<PaymentFormScreen> {
   Money? get _typedAmount {
     final parsed = Money.parse(_amount.text.trim(), _mode);
     return parsed is MoneyParsed ? parsed.money : null;
+  }
+
+  /// Rellena el campo con un monto rápido; el teclado sigue disponible.
+  void _fill(Money amount) {
+    setState(() {
+      _error = null;
+      _amount.text = plainAmount(amount, _mode);
+    });
   }
 
   Future<void> _save() async {
@@ -182,6 +191,35 @@ class _PaymentFormScreenState extends ConsumerState<PaymentFormScreen> {
               errorText: _error,
               errorMaxLines: 3,
             ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (current != null && current.amount.isPositive)
+                ActionChip(
+                  key: const ValueKey('pay-full'),
+                  avatar: const Icon(Icons.done_all, size: 18),
+                  label: const Text(Strings.payFull),
+                  labelStyle: const TextStyle(
+                    color: AppColors.navy,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  onPressed: () => _fill(current.debt),
+                ),
+              for (final lempiras in quickAmountLempiras)
+                ActionChip(
+                  key: ValueKey('quick-$lempiras'),
+                  label: Text(formatMoney(Money(lempiras * 100), mode)),
+                  labelStyle: const TextStyle(
+                    color: AppColors.navy,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  onPressed: () => _fill(Money(lempiras * 100)),
+                ),
+            ],
           ),
           const SizedBox(height: 24),
           FilledButton(

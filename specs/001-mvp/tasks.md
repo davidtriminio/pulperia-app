@@ -103,7 +103,7 @@ Rediseña el registro de fiados y abonos para usar menos toques, a partir de lo 
 - [x] **T162** Carrito con filas compactas y edición al tocar la fila. RF: 28, 30, 33, 87, 89. Dep: T160, T161. *Hecho cuando:* cada fila muestra nombre, − cantidad +, unidad y subtotal; tocar la fila abre la edición de precio, unidad, descripción y cantidad exacta; los errores salen en español por campo; y registrar guarda el fiado con sus ítems.
 - [x] **T163** Ítem libre ("Otro") desde la misma pantalla. RF: 31, 87. Dep: T162. *Hecho cuando:* se agrega un ítem sin producto con descripción, precio y unidad "unidad" por omisión, y se guarda sin `productId`.
 - [x] **T164** "Solo monto" con montos rápidos y campo manual. RF: 29, 33. Dep: T111. *Hecho cuando:* tocar un monto rápido rellena el campo, el campo sigue editable a mano y los errores de monto siguen saliendo en español.
-- [ ] **T165** Abono con "Saldo completo", montos rápidos y campo manual. RF: 37, 38, 39. Dep: T112. *Hecho cuando:* "Saldo completo" rellena justo la deuda del cliente (y no aparece si no debe nada), los montos rápidos rellenan el campo, y el campo sigue editable a mano.
+- [x] **T165** Abono con "Saldo completo", montos rápidos y campo manual. RF: 37, 38, 39. Dep: T112. *Hecho cuando:* "Saldo completo" rellena justo la deuda del cliente (y no aparece si no debe nada), los montos rápidos rellenan el campo, y el campo sigue editable a mano.
 
 ## Fase 4 — Dominio de la API (.NET, sin EF ni HTTP)
 - [ ] **T041** Dinero y cantidad en unidad menor y milésimas. RF: 84; RNF-2. Dep: T013. *Hecho cuando:* pasan los vectores y no hay `double` ni `float` en el dominio.
