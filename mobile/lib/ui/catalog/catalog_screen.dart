@@ -18,6 +18,17 @@ final activeProductsProvider = FutureProvider<List<Product>>((ref) {
   return repository.activeProducts(businessId);
 });
 
+/// Los productos que se ofrecen de entrada al fiar: los más fiados del
+/// negocio, completados con los más recientes (máximo 8). Se recalcula cada
+/// vez que se abre la pantalla de fiar.
+final frequentProductsProvider = FutureProvider.autoDispose<List<Product>>((
+  ref,
+) {
+  final repository = ref.watch(productRepositoryProvider);
+  final businessId = ref.watch(activeBusinessIdProvider);
+  return repository.frequentProducts(businessId);
+});
+
 /// Catálogo: lista, alta, cambio de precio y archivado (RF-24 a RF-27). Un
 /// producto no se borra nunca: solo se archiva.
 class CatalogScreen extends ConsumerWidget {
