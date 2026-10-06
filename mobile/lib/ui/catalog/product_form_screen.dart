@@ -9,6 +9,7 @@ import '../../domain/catalog/product_validation.dart';
 import '../../domain/catalog/sale_unit.dart';
 import '../../domain/money/money.dart';
 import '../../l10n/strings.dart';
+import '../input_limits.dart';
 import '../format/amount_messages.dart';
 import '../format/money_format.dart';
 import 'catalog_screen.dart';
@@ -166,6 +167,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           children: [
             TextField(
               key: const ValueKey('field-product-name'),
+              inputFormatters: InputLimits.text(InputLimits.productName),
               controller: _name,
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
@@ -176,6 +178,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             const SizedBox(height: 12),
             TextField(
               key: const ValueKey('field-product-price'),
+              inputFormatters: InputLimits.text(InputLimits.amount),
               controller: _price,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,

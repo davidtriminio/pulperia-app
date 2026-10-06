@@ -12,6 +12,7 @@ import '../../domain/quantity/quantity.dart';
 import '../../l10n/strings.dart';
 import '../clients/client_detail_screen.dart';
 import '../clients/clients_screen.dart';
+import '../input_limits.dart';
 import '../format/amount_messages.dart';
 import '../format/money_format.dart';
 import '../format/quantity_messages.dart';
@@ -331,6 +332,7 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
                 padding: const EdgeInsets.all(14),
                 child: TextField(
                   key: const ValueKey('fiado-total-input'),
+                  inputFormatters: InputLimits.text(InputLimits.amount),
                   controller: _totalInput,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -507,6 +509,7 @@ class _ItemCard extends StatelessWidget {
               ),
             TextField(
               key: ValueKey('item-description-$index'),
+              inputFormatters: InputLimits.text(InputLimits.itemDescription),
               controller: editor.description,
               textCapitalization: TextCapitalization.sentences,
               onChanged: (_) => onChanged(),
@@ -558,6 +561,7 @@ class _ItemCard extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     key: ValueKey('item-quantity-$index'),
+                    inputFormatters: InputLimits.text(InputLimits.quantity),
                     controller: editor.quantity,
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -575,6 +579,7 @@ class _ItemCard extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     key: ValueKey('item-price-$index'),
+                    inputFormatters: InputLimits.text(InputLimits.amount),
                     controller: editor.price,
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
