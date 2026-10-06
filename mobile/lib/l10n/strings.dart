@@ -100,6 +100,7 @@ abstract final class Strings {
   static const cartEmptyHint = 'Toca un producto para agregarlo';
   static const freeItem = 'Ítem libre';
   static const editItem = 'Editar ítem';
+  static const addFreeItem = 'Otro (ítem libre)';
   static const priceMissing = 'Falta el precio';
   static const lessOne = 'Quitar uno';
   static const moreOne = 'Agregar uno';

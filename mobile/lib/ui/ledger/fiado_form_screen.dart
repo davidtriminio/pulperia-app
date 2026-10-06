@@ -76,6 +76,19 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
     super.dispose();
   }
 
+  /// Agrega un ítem libre (RF-31) y abre su edición para pedir el precio.
+  void _addFree() {
+    _cart.addFree();
+    final line = _cart.lines.last;
+    showLineEditSheet(
+      context,
+      cart: _cart,
+      line: line,
+      amountMode: _amountMode,
+      quantityMode: _quantityMode,
+    );
+  }
+
   void _onCartChanged() {
     if (mounted) {
       setState(() => _formError = null);
@@ -249,6 +262,13 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
                 cart: _cart,
                 mode: mode,
                 onTap: _cart.addProduct,
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                key: const ValueKey('add-free'),
+                onPressed: _addFree,
+                icon: const Icon(Icons.add),
+                label: const Text(Strings.addFreeItem),
               ),
               const SizedBox(height: 20),
               Text(
