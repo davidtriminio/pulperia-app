@@ -299,6 +299,13 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
               cart: _cart,
               mode: mode,
               onTap: _cart.addProduct,
+              frequentOnly: true,
+              onSeeAll: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                showDragHandle: true,
+                builder: (_) => _AllProductsSheet(cart: _cart, mode: mode),
+              ),
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
@@ -352,44 +359,63 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
 /// El catálogo como una cuadrícula de dos columnas: un toque agrega el
 /// producto al carrito y otro toque suma 1 (RF-30). Los archivados no se
 /// ofrecen (RF-26).
+///
+/// Con [frequentOnly] y sin búsqueda solo se muestran los productos
+/// frecuentes y, si hay más, un botón "Ver todos" ([onSeeAll]); al buscar se
+/// filtra todo el catálogo.
 class _ProductGrid extends ConsumerWidget {
   const _ProductGrid({
     required this.query,
     required this.cart,
     required this.mode,
     required this.onTap,
+    this.frequentOnly = false,
+    this.onSeeAll,
   });
 
   final String query;
   final FiadoCart cart;
   final AmountMode mode;
   final ValueChanged<Product> onTap;
+  final bool frequentOnly;
+  final VoidCallback? onSeeAll;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final products = ref.watch(activeProductsProvider);
-    return products.when(
-      loading: () => const SizedBox(height: 80),
-      error: (error, _) => const Center(child: Text(Strings.loadError)),
-      data: (all) {
-        if (all.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: Text(Strings.catalogEmpty)),
-          );
-        }
-        final needle = query.trim().toLowerCase();
-        final shown = [
-          for (final p in all)
-            if (needle.isEmpty || p.name.toLowerCase().contains(needle)) p,
-        ];
-        if (shown.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: Text(Strings.noProductsFound)),
-          );
-        }
-        return LayoutBuilder(
+    final needle = query.trim().toLowerCase();
+    final limited = frequentOnly && needle.isEmpty;
+    final frequent = limited ? ref.watch(frequentProductsProvider) : null;
+    final loadError = products.hasError || (frequent?.hasError ?? false);
+    if (loadError) {
+      return const Center(child: Text(Strings.loadError));
+    }
+    final all = products.asData?.value;
+    if (all == null || (limited && frequent!.asData == null)) {
+      return const SizedBox(height: 80);
+    }
+    if (all.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: Text(Strings.catalogEmpty)),
+      );
+    }
+    final shown = limited
+        ? frequent!.asData!.value
+        : [
+            for (final p in all)
+              if (needle.isEmpty || p.name.toLowerCase().contains(needle)) p,
+          ];
+    if (shown.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: Text(Strings.noProductsFound)),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LayoutBuilder(
           builder: (context, constraints) {
             const gap = 10.0;
             final width = (constraints.maxWidth - gap) / 2;
@@ -413,8 +439,106 @@ class _ProductGrid extends ConsumerWidget {
               ],
             );
           },
-        );
-      },
+        ),
+        if (limited && onSeeAll != null && all.length > shown.length)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: TextButton.icon(
+              key: const ValueKey('see-all'),
+              onPressed: onSeeAll,
+              icon: const Icon(Icons.grid_view_rounded),
+              label: Text('${Strings.seeAllProducts} (${all.length})'),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Hoja con el catálogo completo y su propia búsqueda. Un toque agrega al
+/// carrito y la hoja sigue abierta para agregar más; "Listo" la cierra.
+class _AllProductsSheet extends StatefulWidget {
+  const _AllProductsSheet({required this.cart, required this.mode});
+
+  final FiadoCart cart;
+  final AmountMode mode;
+
+  @override
+  State<_AllProductsSheet> createState() => _AllProductsSheetState();
+}
+
+class _AllProductsSheetState extends State<_AllProductsSheet> {
+  final TextEditingController _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final height = MediaQuery.sizeOf(context).height;
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SizedBox(
+        key: const ValueKey('all-sheet'),
+        height: height * 0.85,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Text(
+                Strings.allProducts,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                key: const ValueKey('all-search'),
+                controller: _search,
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(
+                  hintText: Strings.searchProducts,
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                // Se redibuja al cambiar el carrito para actualizar los
+                // contadores de cada producto.
+                child: ListenableBuilder(
+                  listenable: widget.cart,
+                  builder: (context, _) => _ProductGrid(
+                    query: _search.text,
+                    cart: widget.cart,
+                    mode: widget.mode,
+                    onTap: widget.cart.addProduct,
+                  ),
+                ),
+              ),
+            ),
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: FilledButton(
+                  key: const ValueKey('all-done'),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(Strings.doneAction),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
