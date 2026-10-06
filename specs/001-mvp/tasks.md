@@ -105,6 +105,14 @@ Rediseña el registro de fiados y abonos para usar menos toques, a partir de lo 
 - [x] **T164** "Solo monto" con montos rápidos y campo manual. RF: 29, 33. Dep: T111. *Hecho cuando:* tocar un monto rápido rellena el campo, el campo sigue editable a mano y los errores de monto siguen saliendo en español.
 - [x] **T165** Abono con "Saldo completo", montos rápidos y campo manual. RF: 37, 38, 39. Dep: T112. *Hecho cuando:* "Saldo completo" rellena justo la deuda del cliente (y no aparece si no debe nada), los montos rápidos rellenan el campo, y el campo sigue editable a mano.
 
+## Fase 3e — Ajustes de fiar rápido (feedback sobre la Fase 3d)
+Solo interfaz: no cambia ningún RF ni las reglas del dominio. Barras inferiores fijas con el total y "Registrar", y un catálogo de entrada limitado (8 productos frecuentes) con "Ver todos". Se conserva el un-toque-agrega, la búsqueda, los montos rápidos que solo rellenan el campo y el teclado manual. En el detalle del cliente, "Fiar" y "Abonar" ya estaban fijos.
+
+- [ ] **T166** Barra inferior fija en el formulario de fiado (total y "Registrar"). RF: 28, 29, 34. Dep: T162, T164. *Hecho cuando:* un test de widget comprueba que la barra sigue visible con muchas líneas en el carrito y con el teclado abierto, que el total se actualiza y que el error del formulario sale sobre la barra; y que en el detalle del cliente "Fiar" y "Abonar" siguen visibles con historial largo.
+- [ ] **T167** Barra inferior fija en el formulario de abono (monto y "Registrar abono"). RF: 37, 39. Dep: T165. *Hecho cuando:* un test comprueba que el botón sigue visible con el teclado abierto y que la vista previa del saldo se conserva.
+- [ ] **T168** Consulta de productos frecuentes del negocio: los más fiados (sin contar movimientos anulados ni productos archivados), completados con los más recientes si hay pocos, con tope de 8. RF: 26, 30. Dep: T109, T115. *Hecho cuando:* tests del repositorio comprueban el orden por veces fiado, que se excluyen anulados y archivados, que se completa con recientes y que se respeta el tope.
+- [ ] **T169** Pantalla de fiar con frecuentes y "Ver todos" (hoja con búsqueda y lista completa). RF: 26, 30. Dep: T161, T168. *Hecho cuando:* tests de widget comprueban que de entrada hay como máximo 8 productos, que "Ver todos" abre el catálogo completo y que un toque ahí agrega, que la búsqueda de la pantalla encuentra productos fuera de los frecuentes, que no aparecen archivados y que un toque agrega y otro suma 1.
+
 ## Fase 4 — Dominio de la API (.NET, sin EF ni HTTP)
 - [ ] **T041** Dinero y cantidad en unidad menor y milésimas. RF: 84; RNF-2. Dep: T013. *Hecho cuando:* pasan los vectores y no hay `double` ni `float` en el dominio.
 - [ ] **T042** Subtotales con ambos modos. RF: 34, 83. Dep: T006, T007. *Hecho cuando:* pasan los vectores de T006 y T007.
