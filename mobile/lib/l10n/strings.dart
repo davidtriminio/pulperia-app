@@ -161,5 +161,10 @@ abstract final class Strings {
   static const productNotFound = 'El producto ya no existe';
 
   static const clientsEmpty = 'Aún no hay clientes';
+  static const summary = 'Resumen';
+  static const summaryDebtTotal = 'Total que te deben';
+  static const summaryCreditTotal = 'Saldo a favor de clientes';
+  static const summaryTopDebtors = 'Mayores deudores';
+  static const summaryNoDebtors = 'Nadie debe nada por ahora';
   static const catalogEmpty = 'Aún no hay productos';
 }

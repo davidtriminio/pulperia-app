@@ -64,13 +64,19 @@ void main() {
       Strings.catalog,
       Strings.clientsEmpty,
       Strings.archivedClientsAction,
+      Strings.summary,
+      Strings.summaryDebtTotal,
+      Strings.summaryCreditTotal,
+      Strings.summaryTopDebtors,
+      Strings.summaryNoDebtors,
+      'L 0.00',
       Strings.newClient,
       Strings.newProduct,
       Strings.catalogEmpty,
       devSessionFor(isRelease: false)!.businessName,
     };
 
-    for (final key in const ['nav-clients', 'nav-catalog']) {
+    for (final key in const ['nav-clients', 'nav-summary', 'nav-catalog']) {
       await tester.tap(find.byKey(ValueKey(key)));
       await tester.pump();
       for (final text in visibleTexts(tester)) {
