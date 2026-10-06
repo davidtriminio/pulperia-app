@@ -5,6 +5,7 @@ import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/fiado_repository.dart';
 import '../../domain/business/amount_mode.dart';
+import '../../domain/business/quantity_mode.dart';
 import '../../domain/catalog/sale_unit.dart';
 import '../../domain/ledger/fiado_validation.dart';
 import '../../domain/money/money.dart';
@@ -20,6 +21,7 @@ import '../input_limits.dart';
 import '../theme.dart';
 import 'fiado_cart.dart';
 import 'fiado_messages.dart';
+import 'line_edit_sheet.dart';
 
 /// Registrar un fiado a un cliente (RF-28, RF-29, RF-33).
 ///
@@ -50,6 +52,12 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
       .maybeWhen(
         data: (b) => AmountMode.fromId(b.amountMode),
         orElse: () => AmountMode.twoDecimals,
+      );
+  QuantityMode get _quantityMode => ref
+      .read(activeBusinessProvider)
+      .maybeWhen(
+        data: (b) => QuantityMode.fromId(b.quantityMode),
+        orElse: () => QuantityMode.fractional,
       );
 
   @override
@@ -264,7 +272,18 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
                 for (final line in _cart.lines)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: _CartRow(line: line, cart: _cart, mode: mode),
+                    child: _CartRow(
+                      line: line,
+                      cart: _cart,
+                      mode: mode,
+                      onEdit: () => showLineEditSheet(
+                        context,
+                        cart: _cart,
+                        line: line,
+                        amountMode: mode,
+                        quantityMode: _quantityMode,
+                      ),
+                    ),
                   ),
             ],
             const SizedBox(height: 8),
@@ -478,11 +497,19 @@ class _ProductTile extends StatelessWidget {
 
 /// Una línea del carrito: nombre, − cantidad +, y su subtotal.
 class _CartRow extends StatelessWidget {
-  const _CartRow({required this.line, required this.cart, required this.mode});
+  const _CartRow({
+    required this.line,
+    required this.cart,
+    required this.mode,
+    required this.onEdit,
+  });
 
   final CartLine line;
   final FiadoCart cart;
   final AmountMode mode;
+
+  /// Abre la edición de precio, unidad, descripción y cantidad exacta.
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -497,28 +524,64 @@ class _CartRow extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    line.description.isEmpty
-                        ? Strings.freeItem
-                        : line.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  if (line.unitPrice != null)
-                    Text(
-                      '${formatMoney(line.unitPrice!, mode)} '
-                      '${Strings.perUnit} ${line.unit.singular}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.outline,
+              child: InkWell(
+                key: ValueKey('line-edit-${line.id}'),
+                borderRadius: BorderRadius.circular(8),
+                onTap: onEdit,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              line.description.isEmpty
+                                  ? Strings.freeItem
+                                  : line.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.edit_outlined,
+                            size: 14,
+                            color: theme.colorScheme.outline,
+                          ),
+                        ],
                       ),
-                    ),
-                ],
+                      if (line.unitPrice != null)
+                        Text(
+                          '${formatMoney(line.unitPrice!, mode)} '
+                          '${Strings.perUnit} ${line.unit.singular}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                          ),
+                        )
+                      else
+                        Text(
+                          Strings.priceMissing,
+                          key: ValueKey('line-missing-price-${line.id}'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
+                        ),
+                      if (line.unitPrice != null && subtotal == null)
+                        Text(
+                          Strings.subtotalZero,
+                          key: ValueKey('line-zero-${line.id}'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
             Column(
