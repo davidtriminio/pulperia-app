@@ -5,61 +5,28 @@ import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/fiado_repository.dart';
 import '../../domain/business/amount_mode.dart';
-import '../../domain/business/quantity_mode.dart';
+import '../../domain/catalog/sale_unit.dart';
 import '../../domain/ledger/fiado_validation.dart';
 import '../../domain/money/money.dart';
 import '../../domain/quantity/quantity.dart';
 import '../../l10n/strings.dart';
+import '../catalog/catalog_screen.dart';
 import '../clients/client_detail_screen.dart';
 import '../clients/clients_screen.dart';
-import '../input_limits.dart';
 import '../format/amount_messages.dart';
 import '../format/money_format.dart';
-import '../format/quantity_messages.dart';
+import '../format/quantity_format.dart';
+import '../input_limits.dart';
 import '../theme.dart';
-import '../../domain/catalog/sale_unit.dart';
-import '../catalog/catalog_screen.dart';
-import '../catalog/unit_selector.dart';
-import 'subtotal_preview.dart';
+import 'fiado_cart.dart';
+import 'fiado_messages.dart';
 
-/// Un ítem en edición: sus campos de texto y los errores que se le muestran.
-class _ItemEditor {
-  _ItemEditor()
-    : description = TextEditingController(),
-      quantity = TextEditingController(text: '1'),
-      price = TextEditingController();
-
-  final TextEditingController description;
-  final TextEditingController quantity;
-  final TextEditingController price;
-
-  /// Producto del catálogo del que se copió el ítem; null si es libre (RF-31).
-  String? productId;
-  String? productName;
-
-  /// Unidad de venta del ítem (RF-87): la del producto al elegirlo, editable.
-  SaleUnit unit = SaleUnit.defaultUnit;
-
-  String? quantityError;
-  String? priceError;
-  String? subtotalError;
-
-  void clearErrors() {
-    quantityError = null;
-    priceError = null;
-    subtotalError = null;
-  }
-
-  void dispose() {
-    description.dispose();
-    quantity.dispose();
-    price.dispose();
-  }
-}
-
-/// Registrar un fiado a un cliente con el detalle de lo que se llevó (RF-28,
-/// RF-33). El subtotal de cada ítem y el total se muestran ya redondeados
-/// según los ajustes del negocio (RF-34, RF-83).
+/// Registrar un fiado a un cliente (RF-28, RF-29, RF-33).
+///
+/// Con detalle: el catálogo se muestra como una cuadrícula con búsqueda; un
+/// toque agrega el producto con cantidad 1 y otro toque suma 1. Abajo queda el
+/// carrito. El subtotal y el total salen ya redondeados según los ajustes del
+/// negocio (RF-34, RF-83).
 class FiadoFormScreen extends ConsumerStatefulWidget {
   const FiadoFormScreen({super.key, required this.clientId});
 
@@ -70,9 +37,10 @@ class FiadoFormScreen extends ConsumerStatefulWidget {
 }
 
 class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
-  final List<_ItemEditor> _items = [_ItemEditor()];
-  bool _totalOnly = false;
+  final FiadoCart _cart = FiadoCart();
+  final TextEditingController _search = TextEditingController();
   final TextEditingController _totalInput = TextEditingController();
+  bool _totalOnly = false;
   String? _totalError;
   String? _formError;
   bool _saving = false;
@@ -84,114 +52,26 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
         orElse: () => AmountMode.twoDecimals,
       );
 
-  QuantityMode get _quantityMode => ref
-      .read(activeBusinessProvider)
-      .maybeWhen(
-        data: (b) => QuantityMode.fromId(b.quantityMode),
-        orElse: () => QuantityMode.fractional,
-      );
+  @override
+  void initState() {
+    super.initState();
+    _cart.addListener(_onCartChanged);
+  }
 
   @override
   void dispose() {
+    _cart
+      ..removeListener(_onCartChanged)
+      ..dispose();
+    _search.dispose();
     _totalInput.dispose();
-    for (final item in _items) {
-      item.dispose();
-    }
     super.dispose();
   }
 
-  Money? _subtotalOf(_ItemEditor item) => previewSubtotal(
-    quantity: item.quantity.text,
-    unitPrice: item.price.text,
-    amountMode: _amountMode,
-    quantityMode: _quantityMode,
-  );
-
-  void _addItem() => setState(() => _items.add(_ItemEditor()));
-
-  Future<void> _pickProduct(_ItemEditor item) async {
-    final product = await showModalBottomSheet<Product>(
-      context: context,
-      showDragHandle: true,
-      builder: (_) => _ProductPicker(mode: _amountMode),
-    );
-    if (product == null) {
-      return;
+  void _onCartChanged() {
+    if (mounted) {
+      setState(() => _formError = null);
     }
-    // Se propone el precio del catálogo; el usuario puede cambiarlo solo para
-    // este ítem (RF-30): el producto del catálogo no se toca.
-    setState(() {
-      item.productId = product.id;
-      item.productName = product.name;
-      item.unit = SaleUnit.fromId(product.unit);
-      item.description.text = product.name;
-      item.price.text = plainAmount(Money(product.price), _amountMode);
-    });
-  }
-
-  void _unlinkProduct(_ItemEditor item) => setState(() {
-    item.productId = null;
-    item.productName = null;
-  });
-
-  void _removeItem(int index) => setState(() {
-    _items.removeAt(index).dispose();
-  });
-
-  /// Lee los campos de cada ítem. Devuelve null y deja los errores en pantalla
-  /// si alguno no es válido.
-  List<FiadoItemDraft>? _readItems() {
-    final drafts = <FiadoItemDraft>[];
-    var ok = true;
-    for (final item in _items) {
-      item.clearErrors();
-      Quantity? quantity;
-      Money? price;
-
-      final quantityText = item.quantity.text.trim();
-      if (quantityText.isEmpty) {
-        item.quantityError = Strings.quantityRequired;
-      } else {
-        switch (Quantity.parse(quantityText, _quantityMode)) {
-          case QuantityParsed(quantity: final q):
-            quantity = q;
-          case QuantityRejected(:final error):
-            item.quantityError = quantityErrorMessage(error);
-        }
-      }
-
-      final priceText = item.price.text.trim();
-      if (priceText.isEmpty) {
-        item.priceError = Strings.priceRequired;
-      } else {
-        switch (Money.parse(priceText, _amountMode)) {
-          case MoneyParsed(:final money):
-            price = money;
-          case MoneyRejected(:final error):
-            item.priceError = amountErrorMessage(error);
-        }
-      }
-
-      if (quantity == null || price == null) {
-        ok = false;
-        continue;
-      }
-      drafts.add(
-        FiadoItemDraft(
-          description: item.description.text.trim(),
-          productId: item.productId,
-          unit: item.unit,
-          quantity: quantity,
-          unitPrice: price,
-        ),
-      );
-    }
-    return ok ? drafts : null;
-  }
-
-  FiadoDraft? _readItemsDraft() {
-    final drafts = _readItems();
-    return drafts == null ? null : FiadoWithItems(drafts);
   }
 
   /// Lee el monto total del fiado sin detalle (RF-29). Devuelve null y deja el
@@ -214,12 +94,27 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
     return amount == null ? null : FiadoTotalOnly(amount);
   }
 
+  /// Los ítems del carrito, o null si no se pueden guardar (y deja el motivo
+  /// en pantalla).
+  FiadoDraft? _readCart() {
+    if (_cart.isEmpty) {
+      _formError = Strings.fiadoEmpty;
+      return null;
+    }
+    final drafts = _cart.toDrafts();
+    if (drafts == null) {
+      _formError = Strings.fiadoMissingPrice;
+      return null;
+    }
+    return FiadoWithItems(drafts);
+  }
+
   Future<void> _save() async {
     if (_saving) {
       return;
     }
-    final FiadoDraft? draft = _totalOnly ? _readTotal() : _readItemsDraft();
     setState(() => _formError = null);
+    final draft = _totalOnly ? _readTotal() : _readCart();
     if (draft == null) {
       setState(() {});
       return;
@@ -248,24 +143,7 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
       case FiadoRejected(:final issues):
         setState(() {
           _saving = false;
-          for (final issue in issues) {
-            final index = issue.itemIndex;
-            if (index == null) {
-              _formError = Strings.fiadoEmpty;
-              continue;
-            }
-            final item = _items[index];
-            switch (issue.field) {
-              case FiadoField.subtotal:
-                item.subtotalError = Strings.subtotalZero;
-              case FiadoField.quantity:
-                item.quantityError = Strings.quantityInvalid;
-              case FiadoField.unitPrice:
-                item.priceError = Strings.amountInvalid;
-              case FiadoField.fiado || FiadoField.total:
-                _formError = Strings.fiadoEmpty;
-            }
-          }
+          _formError = fiadoIssueMessage(issues.first);
         });
       case FiadoClientArchived():
         setState(() {
@@ -299,327 +177,137 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
         total = parsed.money;
       }
     } else {
-      for (final item in _items) {
-        total = total + (_subtotalOf(item) ?? Money.zero);
-      }
+      total = _cart.total(mode);
     }
 
     return Scaffold(
       appBar: AppBar(title: const Text(Strings.newFiado)),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-        children: [
-          SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(
-                value: false,
-                label: Text(Strings.modeItems, key: ValueKey('mode-items')),
-              ),
-              ButtonSegment(
-                value: true,
-                label: Text(Strings.modeTotal, key: ValueKey('mode-total')),
-              ),
-            ],
-            selected: {_totalOnly},
-            showSelectedIcon: false,
-            onSelectionChanged: (value) =>
-                setState(() => _totalOnly = value.first),
-          ),
-          const SizedBox(height: 12),
-          if (_totalOnly)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: TextField(
-                  key: const ValueKey('fiado-total-input'),
-                  inputFormatters: InputLimits.text(InputLimits.amount),
-                  controller: _totalInput,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  onChanged: (_) => setState(() => _totalError = null),
-                  decoration: InputDecoration(
-                    labelText: Strings.fieldTotal,
-                    prefixText: 'L ',
-                    errorText: _totalError,
-                    errorMaxLines: 3,
-                  ),
-                ),
-              ),
-            )
-          else ...[
-            for (var i = 0; i < _items.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _ItemCard(
-                  index: i,
-                  editor: _items[i],
-                  subtotal: _subtotalOf(_items[i]),
-                  mode: mode,
-                  canRemove: _items.length > 1,
-                  onChanged: () => setState(() {}),
-                  onRemove: () => _removeItem(i),
-                  onPickProduct: () => _pickProduct(_items[i]),
-                  onUnlinkProduct: () => _unlinkProduct(_items[i]),
-                  onChangeUnit: (unit) => setState(() => _items[i].unit = unit),
-                ),
-              ),
-            TextButton.icon(
-              key: const ValueKey('add-item'),
-              onPressed: _addItem,
-              icon: const Icon(Icons.add),
-              label: const Text(Strings.addItem),
-            ),
-          ],
-          const SizedBox(height: 8),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    Strings.totalLabel,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    formatMoney(total, mode),
-                    key: const ValueKey('fiado-total'),
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.navy,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (_formError != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                _formError!,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            ),
-          const SizedBox(height: 16),
-          FilledButton(
-            key: const ValueKey('fiado-save'),
-            onPressed: _saving ? null : _save,
-            child: const Text(Strings.newFiado),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ItemCard extends StatelessWidget {
-  const _ItemCard({
-    required this.index,
-    required this.editor,
-    required this.subtotal,
-    required this.mode,
-    required this.canRemove,
-    required this.onChanged,
-    required this.onRemove,
-    required this.onPickProduct,
-    required this.onUnlinkProduct,
-    required this.onChangeUnit,
-  });
-
-  final int index;
-  final _ItemEditor editor;
-  final Money? subtotal;
-  final AmountMode mode;
-  final bool canRemove;
-  final VoidCallback onChanged;
-  final VoidCallback onRemove;
-  final VoidCallback onPickProduct;
-  final VoidCallback onUnlinkProduct;
-  final ValueChanged<SaleUnit> onChangeUnit;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Text(
-                  '${Strings.itemNumber} ${index + 1}',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(
+                  value: false,
+                  label: Text(Strings.modeItems, key: ValueKey('mode-items')),
                 ),
-                const Spacer(),
-                if (canRemove)
-                  IconButton(
-                    key: ValueKey('remove-item-$index'),
-                    tooltip: Strings.removeItem,
-                    icon: const Icon(Icons.close),
-                    onPressed: onRemove,
-                  ),
+                ButtonSegment(
+                  value: true,
+                  label: Text(Strings.modeTotal, key: ValueKey('mode-total')),
+                ),
               ],
+              selected: {_totalOnly},
+              showSelectedIcon: false,
+              onSelectionChanged: (value) =>
+                  setState(() => _totalOnly = value.first),
             ),
-            const SizedBox(height: 8),
-            if (editor.productId == null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  key: ValueKey('pick-product-$index'),
-                  onPressed: onPickProduct,
-                  icon: const Icon(Icons.inventory_2_outlined, size: 18),
-                  label: const Text(Strings.pickFromCatalog),
+            const SizedBox(height: 12),
+            if (_totalOnly)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: TextField(
+                    key: const ValueKey('fiado-total-input'),
+                    inputFormatters: InputLimits.text(InputLimits.amount),
+                    controller: _totalInput,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (_) => setState(() => _totalError = null),
+                    decoration: InputDecoration(
+                      labelText: Strings.fieldTotal,
+                      prefixText: 'L ',
+                      errorText: _totalError,
+                      errorMaxLines: 3,
+                    ),
+                  ),
                 ),
               )
-            else
-              Container(
-                key: ValueKey('item-product-$index'),
-                padding: const EdgeInsets.only(left: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.turquoise.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.inventory_2_outlined, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${Strings.fromCatalog}: ${editor.productName}',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    IconButton(
-                      key: ValueKey('unlink-product-$index'),
-                      tooltip: Strings.unlinkProduct,
-                      icon: const Icon(Icons.link_off, size: 18),
-                      onPressed: onUnlinkProduct,
-                    ),
-                  ],
+            else ...[
+              TextField(
+                key: const ValueKey('product-search'),
+                controller: _search,
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(
+                  hintText: Strings.searchProducts,
+                  prefixIcon: Icon(Icons.search),
                 ),
               ),
-            TextField(
-              key: ValueKey('item-description-$index'),
-              inputFormatters: InputLimits.text(InputLimits.itemDescription),
-              controller: editor.description,
-              textCapitalization: TextCapitalization.sentences,
-              onChanged: (_) => onChanged(),
-              decoration: const InputDecoration(
-                labelText: Strings.fieldDescription,
+              const SizedBox(height: 12),
+              _ProductGrid(
+                query: _search.text,
+                cart: _cart,
+                mode: mode,
+                onTap: _cart.addProduct,
               ),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                key: ValueKey('item-unit-$index'),
-                onPressed: () async {
-                  final picked = await showModalBottomSheet<SaleUnit>(
-                    context: context,
-                    showDragHandle: true,
-                    builder: (context) => SafeArea(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            for (final unit in SaleUnit.values)
-                              ListTile(
-                                key: ValueKey('unit-option-${unit.id}'),
-                                title: Text(capitalize(unit.singular)),
-                                trailing: unit == editor.unit
-                                    ? const Icon(Icons.check)
-                                    : null,
-                                onTap: () => Navigator.of(context).pop(unit),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                  if (picked != null) {
-                    onChangeUnit(picked);
-                  }
-                },
-                icon: const Icon(Icons.straighten, size: 18),
-                label: Text(
-                  capitalize(editor.unit.singular),
-                  key: ValueKey('item-unit-label-$index'),
+              const SizedBox(height: 20),
+              Text(
+                Strings.cartTitle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    key: ValueKey('item-quantity-$index'),
-                    inputFormatters: InputLimits.text(InputLimits.quantity),
-                    controller: editor.quantity,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onChanged: (_) => onChanged(),
-                    decoration: InputDecoration(
-                      labelText: Strings.fieldQuantity,
-                      suffixText: editor.unit.abbreviation,
-                      errorText: editor.quantityError,
-                      errorMaxLines: 3,
+              const SizedBox(height: 8),
+              if (_cart.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: Text(
+                      Strings.cartEmptyHint,
+                      style: TextStyle(color: theme.colorScheme.outline),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    key: ValueKey('item-price-$index'),
-                    inputFormatters: InputLimits.text(InputLimits.amount),
-                    controller: editor.price,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onChanged: (_) => onChanged(),
-                    decoration: InputDecoration(
-                      labelText: Strings.fieldUnitPrice,
-                      prefixText: 'L ',
-                      errorText: editor.priceError,
-                      errorMaxLines: 3,
-                    ),
+                )
+              else
+                for (final line in _cart.lines)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _CartRow(line: line, cart: _cart, mode: mode),
                   ),
-                ),
-              ],
-            ),
-            if (subtotal != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
+            ],
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(Strings.subtotalLabel),
                     Text(
-                      formatMoney(subtotal!, mode),
-                      key: ValueKey('item-subtotal-$index'),
+                      Strings.totalLabel,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                    Text(
+                      formatMoney(total, mode),
+                      key: const ValueKey('fiado-total'),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.navy,
+                      ),
+                    ),
                   ],
                 ),
               ),
-            if (editor.subtotalError != null)
+            ),
+            if (_formError != null)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  editor.subtotalError!,
+                  _formError!,
+                  key: const ValueKey('fiado-form-error'),
+                  textAlign: TextAlign.center,
                   style: TextStyle(color: theme.colorScheme.error),
                 ),
               ),
+            const SizedBox(height: 16),
+            FilledButton(
+              key: const ValueKey('fiado-save'),
+              onPressed: _saving ? null : _save,
+              child: const Text(Strings.newFiado),
+            ),
           ],
         ),
       ),
@@ -627,50 +315,257 @@ class _ItemCard extends StatelessWidget {
   }
 }
 
-/// Hoja inferior con los productos activos del catálogo (RF-26): al tocar uno
-/// se devuelve para copiar su nombre y su precio al ítem.
-class _ProductPicker extends ConsumerWidget {
-  const _ProductPicker({required this.mode});
+/// El catálogo como una cuadrícula de dos columnas: un toque agrega el
+/// producto al carrito y otro toque suma 1 (RF-30). Los archivados no se
+/// ofrecen (RF-26).
+class _ProductGrid extends ConsumerWidget {
+  const _ProductGrid({
+    required this.query,
+    required this.cart,
+    required this.mode,
+    required this.onTap,
+  });
 
+  final String query;
+  final FiadoCart cart;
   final AmountMode mode;
+  final ValueChanged<Product> onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final products = ref.watch(activeProductsProvider);
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.6,
-        ),
-        child: products.when(
-          loading: () => const SizedBox(height: 120),
-          error: (error, _) => const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: Text(Strings.loadError)),
-          ),
-          data: (items) {
-            if (items.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: Text(Strings.catalogEmpty)),
-              );
-            }
-            return ListView(
-              shrinkWrap: true,
+    return products.when(
+      loading: () => const SizedBox(height: 80),
+      error: (error, _) => const Center(child: Text(Strings.loadError)),
+      data: (all) {
+        if (all.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: Text(Strings.catalogEmpty)),
+          );
+        }
+        final needle = query.trim().toLowerCase();
+        final shown = [
+          for (final p in all)
+            if (needle.isEmpty || p.name.toLowerCase().contains(needle)) p,
+        ];
+        if (shown.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: Text(Strings.noProductsFound)),
+          );
+        }
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            const gap = 10.0;
+            final width = (constraints.maxWidth - gap) / 2;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
               children: [
-                for (final product in items)
-                  ListTile(
-                    key: ValueKey('product-option-${product.id}'),
-                    title: Text(product.name),
-                    trailing: Text(
-                      formatMoney(Money(product.price), mode),
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                for (final product in shown)
+                  SizedBox(
+                    width: width,
+                    child: _ProductTile(
+                      product: product,
+                      inCart: cart.lines
+                          .where((l) => l.productId == product.id)
+                          .map((l) => l.quantity)
+                          .firstOrNull,
+                      mode: mode,
+                      onTap: () => onTap(product),
                     ),
-                    onTap: () => Navigator.of(context).pop(product),
                   ),
               ],
             );
           },
+        );
+      },
+    );
+  }
+}
+
+class _ProductTile extends StatelessWidget {
+  const _ProductTile({
+    required this.product,
+    required this.inCart,
+    required this.mode,
+    required this.onTap,
+  });
+
+  final Product product;
+  final Quantity? inCart;
+  final AmountMode mode;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final unit = SaleUnit.fromId(product.unit);
+    final selected = inCart != null;
+    return Material(
+      color: selected
+          ? AppColors.turquoise.withValues(alpha: 0.18)
+          : Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        key: ValueKey('product-tile-${product.id}'),
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected ? AppColors.turquoise : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      formatMoney(Money(product.price), mode),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: AppColors.navy,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      '${Strings.perUnit} ${unit.singular}',
+                      key: ValueKey('product-unit-${product.id}'),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (selected)
+                CircleAvatar(
+                  radius: 13,
+                  backgroundColor: AppColors.navy,
+                  child: Text(
+                    formatQuantity(inCart!),
+                    key: ValueKey('product-count-${product.id}'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Una línea del carrito: nombre, − cantidad +, y su subtotal.
+class _CartRow extends StatelessWidget {
+  const _CartRow({required this.line, required this.cart, required this.mode});
+
+  final CartLine line;
+  final FiadoCart cart;
+  final AmountMode mode;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final subtotal = cart.subtotalOf(line, mode);
+    final removes = line.quantity.milli <= 1000;
+
+    return Card(
+      key: ValueKey('cart-line-${line.id}'),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    line.description.isEmpty
+                        ? Strings.freeItem
+                        : line.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (line.unitPrice != null)
+                    Text(
+                      '${formatMoney(line.unitPrice!, mode)} '
+                      '${Strings.perUnit} ${line.unit.singular}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton.filledTonal(
+                      key: ValueKey('line-minus-${line.id}'),
+                      tooltip: removes ? Strings.removeItem : Strings.lessOne,
+                      icon: Icon(removes ? Icons.delete_outline : Icons.remove),
+                      onPressed: () => cart.decrement(line.id),
+                    ),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 36),
+                      child: Text(
+                        formatQuantity(line.quantity),
+                        key: ValueKey('line-qty-${line.id}'),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    IconButton.filledTonal(
+                      key: ValueKey('line-plus-${line.id}'),
+                      tooltip: Strings.moreOne,
+                      icon: const Icon(Icons.add),
+                      onPressed: () => cart.increment(line.id),
+                    ),
+                  ],
+                ),
+                if (subtotal != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(
+                      formatMoney(subtotal, mode),
+                      key: ValueKey('line-subtotal-${line.id}'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );
