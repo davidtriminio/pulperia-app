@@ -68,14 +68,20 @@ void main() {
     await tester.ensureVisible(field);
     await tester.tap(field);
     await tester.pumpAndSettle();
-    for (final key in ['pick-char-02', 'pick-skin-3', 'pick-bg-11']) {
-      final finder = find.byKey(ValueKey(key));
-      await tester.ensureVisible(finder);
-      await tester.tap(finder);
-      await tester.pump();
+    // Tres pasos: personaje, tono de piel y fondo.
+    final steps = [
+      ['pick-char-02', 'avatar-next'],
+      ['pick-skin-3', 'avatar-next'],
+      ['pick-bg-11', 'avatar-continue'],
+    ];
+    for (final step in steps) {
+      for (final key in step) {
+        final finder = find.byKey(ValueKey(key));
+        await tester.ensureVisible(finder);
+        await tester.tap(finder);
+        await tester.pumpAndSettle();
+      }
     }
-    await tester.tap(find.byKey(const ValueKey('avatar-continue')));
-    await tester.pumpAndSettle();
   }
 
   /// La base corre en un hilo real: se deja avanzar fuera del reloj falso.

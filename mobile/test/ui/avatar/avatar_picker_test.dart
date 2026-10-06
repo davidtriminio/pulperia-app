@@ -5,6 +5,7 @@ import 'package:pulperia_mobile/l10n/strings.dart';
 import 'package:pulperia_mobile/ui/avatar/avatar_characters.dart';
 import 'package:pulperia_mobile/ui/avatar/avatar_picker.dart';
 import 'package:pulperia_mobile/ui/avatar/hex_color.dart';
+import 'package:pulperia_mobile/ui/theme.dart';
 
 void main() {
   Avatar? confirmed;
@@ -13,6 +14,7 @@ void main() {
     confirmed = null;
     await tester.pumpWidget(
       MaterialApp(
+        theme: buildTheme(),
         home: Scaffold(
           body: AvatarPicker(
             initial: initial,
@@ -23,151 +25,254 @@ void main() {
     );
   }
 
-  Future<void> choose(WidgetTester tester, String key) async {
+  Future<void> tapKey(WidgetTester tester, String key) async {
     final finder = find.byKey(ValueKey(key));
     await tester.ensureVisible(finder);
     await tester.tap(finder);
-    await tester.pump();
+    await tester.pumpAndSettle();
   }
 
-  Finder continueButton() => find.byKey(const ValueKey('avatar-continue'));
+  bool enabled(WidgetTester tester, String key) {
+    final widget = tester.widget(find.byKey(ValueKey(key)));
+    return switch (widget) {
+      FilledButton(:final onPressed) => onPressed != null,
+      _ => throw StateError('no es un botón relleno'),
+    };
+  }
 
-  bool enabled(WidgetTester tester) =>
-      tester.widget<FilledButton>(continueButton()).onPressed != null;
+  AvatarCharacterPainter painterIn(WidgetTester tester, String key) =>
+      tester
+              .widget<CustomPaint>(
+                find.descendant(
+                  of: find.byKey(ValueKey(key)),
+                  matching: find.byType(CustomPaint),
+                ),
+              )
+              .painter!
+          as AvatarCharacterPainter;
 
-  testWidgets('ofrece 24 personajes, 6 tonos y 12 fondos', (tester) async {
-    await pumpPicker(tester);
+  bool selected(WidgetTester tester, String key) =>
+      find.byKey(ValueKey('selected-$key')).evaluate().isNotEmpty;
 
-    for (final id in AvatarPalette.characterIds) {
-      expect(find.byKey(ValueKey('pick-$id')), findsOne);
-    }
-    for (final s in AvatarPalette.skinTones) {
-      expect(find.byKey(ValueKey('pick-${s.id}')), findsOne);
-    }
-    for (final b in AvatarPalette.backgrounds) {
-      expect(find.byKey(ValueKey('pick-${b.id}')), findsOne);
-    }
-  });
-
-  testWidgets('sin tono elegido las miniaturas usan uno por defecto, no gris', (
-    tester,
-  ) async {
-    await pumpPicker(tester);
-
-    AvatarCharacterPainter painterOf(String key) =>
-        tester
-                .widget<CustomPaint>(
-                  find.descendant(
-                    of: find.byKey(ValueKey(key)),
-                    matching: find.byType(CustomPaint),
-                  ),
-                )
-                .painter!
-            as AvatarCharacterPainter;
-
-    final fallbackSkin = hexColor(AvatarPalette.skinTones[1].hex);
-    expect(painterOf('pick-char-05').skin, fallbackSkin);
-    expect(painterOf('pick-char-24').skin, fallbackSkin);
-
-    await choose(tester, 'pick-skin-5');
-    final chosen = hexColor(AvatarPalette.skinTones[4].hex);
-    expect(painterOf('pick-char-05').skin, chosen);
-    expect(painterOf('pick-char-24').skin, chosen);
-  });
-
-  testWidgets('sin elegir nada no se puede continuar y indica qué falta', (
-    tester,
-  ) async {
-    await pumpPicker(tester);
-
-    expect(enabled(tester), isFalse);
-    expect(find.text(Strings.avatarMissingCharacter), findsOne);
-    expect(find.text(Strings.avatarMissingSkin), findsOne);
-    expect(find.text(Strings.avatarMissingBackground), findsOne);
-  });
-
-  testWidgets('con solo dos de las tres cosas elegidas sigue bloqueado', (
-    tester,
-  ) async {
-    await pumpPicker(tester);
-
-    await choose(tester, 'pick-char-02');
-    await choose(tester, 'pick-skin-3');
-
-    expect(enabled(tester), isFalse);
-    expect(find.text(Strings.avatarMissingCharacter), findsNothing);
-    expect(find.text(Strings.avatarMissingSkin), findsNothing);
-    expect(find.text(Strings.avatarMissingBackground), findsOne);
-  });
-
-  testWidgets('cada una de las tres elecciones es obligatoria', (tester) async {
-    final all = ['pick-char-05', 'pick-skin-2', 'pick-bg-07'];
-    for (var skip = 0; skip < all.length; skip++) {
-      await tester.pumpWidget(const SizedBox()); // descarta el estado previo
+  group('paso 1: personaje', () {
+    testWidgets('empieza en el paso del personaje con los 24 personajes', (
+      tester,
+    ) async {
       await pumpPicker(tester);
-      for (var i = 0; i < all.length; i++) {
-        if (i != skip) {
-          await choose(tester, all[i]);
-        }
+
+      for (final id in AvatarPalette.characterIds) {
+        expect(find.byKey(ValueKey('pick-$id')), findsOne);
       }
-      expect(enabled(tester), isFalse, reason: 'sin ${all[skip]}');
-    }
+      for (final s in AvatarPalette.skinTones) {
+        expect(find.byKey(ValueKey('pick-${s.id}')), findsNothing);
+      }
+      expect(find.byKey(const ValueKey('avatar-back')), findsNothing);
+    });
+
+    testWidgets('muestra los tres pasos con su nombre', (tester) async {
+      await pumpPicker(tester);
+
+      for (var i = 0; i < 3; i++) {
+        expect(find.byKey(ValueKey('avatar-step-$i')), findsOne);
+      }
+      expect(find.text(Strings.avatarStepCharacter), findsWidgets);
+      expect(find.text(Strings.avatarStepSkin), findsWidgets);
+      expect(find.text(Strings.avatarStepBackground), findsWidgets);
+    });
+
+    testWidgets('sin personaje no se puede seguir y se avisa', (tester) async {
+      await pumpPicker(tester);
+
+      expect(enabled(tester, 'avatar-next'), isFalse);
+      expect(find.text(Strings.avatarChooseCharacterHint), findsOne);
+    });
+
+    testWidgets('al elegir un personaje se habilita el siguiente paso', (
+      tester,
+    ) async {
+      await pumpPicker(tester);
+
+      await tapKey(tester, 'pick-char-05');
+
+      expect(enabled(tester, 'avatar-next'), isTrue);
+      expect(find.text(Strings.avatarChooseCharacterHint), findsNothing);
+    });
+
+    testWidgets('solo hay un personaje elegido a la vez', (tester) async {
+      await pumpPicker(tester);
+
+      await tapKey(tester, 'pick-char-05');
+      await tapKey(tester, 'pick-char-07');
+
+      expect(selected(tester, 'pick-char-07'), isTrue);
+      expect(selected(tester, 'pick-char-05'), isFalse);
+    });
   });
 
-  testWidgets('con las tres elegidas continúa con ese avatar', (tester) async {
-    await pumpPicker(tester);
+  group('valores por defecto', () {
+    testWidgets('el tono y el fondo ya vienen elegidos', (tester) async {
+      await pumpPicker(tester);
+      await tapKey(tester, 'pick-char-01');
 
-    await choose(tester, 'pick-char-02');
-    await choose(tester, 'pick-skin-3');
-    await choose(tester, 'pick-bg-11');
+      await tapKey(tester, 'avatar-next');
+      expect(selected(tester, 'pick-${AvatarPalette.skinTones[1].id}'), isTrue);
 
-    expect(enabled(tester), isTrue);
-    await tester.tap(continueButton());
-    expect(
-      confirmed,
-      const Avatar(
-        characterId: 'char-02',
-        skinId: 'skin-3',
-        backgroundId: 'bg-11',
-      ),
-    );
-  });
-
-  testWidgets('se puede cambiar de elección antes de continuar', (
-    tester,
-  ) async {
-    await pumpPicker(tester);
-    await choose(tester, 'pick-char-02');
-    await choose(tester, 'pick-skin-3');
-    await choose(tester, 'pick-bg-11');
-
-    await choose(tester, 'pick-char-03');
-    await choose(tester, 'pick-bg-01');
-    await tester.tap(continueButton());
-
-    expect(
-      confirmed,
-      const Avatar(
-        characterId: 'char-03',
-        skinId: 'skin-3',
-        backgroundId: 'bg-01',
-      ),
-    );
-  });
-
-  testWidgets(
-    'al editar, el avatar actual ya permite continuar y se puede retocar',
-    (tester) async {
-      const current = Avatar(
-        characterId: 'char-01',
-        skinId: 'skin-1',
-        backgroundId: 'bg-01',
+      await tapKey(tester, 'avatar-next');
+      expect(
+        selected(tester, 'pick-${AvatarPalette.backgrounds[7].id}'),
+        isTrue,
       );
+    });
+
+    testWidgets('con solo elegir el personaje se puede terminar', (
+      tester,
+    ) async {
+      await pumpPicker(tester);
+
+      await tapKey(tester, 'pick-char-02');
+      await tapKey(tester, 'avatar-next');
+      await tapKey(tester, 'avatar-next');
+      await tapKey(tester, 'avatar-continue');
+
+      expect(
+        confirmed,
+        Avatar(
+          characterId: 'char-02',
+          skinId: AvatarPalette.skinTones[1].id,
+          backgroundId: AvatarPalette.backgrounds[7].id,
+        ),
+      );
+    });
+
+    testWidgets('sin tono elegido las miniaturas usan el tono por defecto', (
+      tester,
+    ) async {
+      await pumpPicker(tester);
+
+      final fallback = hexColor(AvatarPalette.skinTones[1].hex);
+      expect(painterIn(tester, 'pick-char-05').skin, fallback);
+      expect(painterIn(tester, 'pick-char-24').skin, fallback);
+    });
+  });
+
+  group('paso 2: tono de piel y paso 3: fondo', () {
+    testWidgets('el segundo paso ofrece los 6 tonos', (tester) async {
+      await pumpPicker(tester);
+      await tapKey(tester, 'pick-char-01');
+
+      await tapKey(tester, 'avatar-next');
+
+      for (final s in AvatarPalette.skinTones) {
+        expect(find.byKey(ValueKey('pick-${s.id}')), findsOne);
+      }
+      expect(find.byKey(const ValueKey('pick-char-01')), findsNothing);
+    });
+
+    testWidgets('el tercer paso ofrece los 12 fondos', (tester) async {
+      await pumpPicker(tester);
+      await tapKey(tester, 'pick-char-01');
+      await tapKey(tester, 'avatar-next');
+
+      await tapKey(tester, 'avatar-next');
+
+      for (final b in AvatarPalette.backgrounds) {
+        expect(find.byKey(ValueKey('pick-${b.id}')), findsOne);
+      }
+    });
+
+    testWidgets('el último paso muestra "Listo" en lugar de "Siguiente"', (
+      tester,
+    ) async {
+      await pumpPicker(tester);
+      await tapKey(tester, 'pick-char-01');
+      await tapKey(tester, 'avatar-next');
+      expect(find.byKey(const ValueKey('avatar-continue')), findsNothing);
+
+      await tapKey(tester, 'avatar-next');
+
+      expect(find.byKey(const ValueKey('avatar-next')), findsNothing);
+      expect(find.byKey(const ValueKey('avatar-continue')), findsOne);
+    });
+
+    testWidgets('se puede volver atrás sin perder lo elegido', (tester) async {
+      await pumpPicker(tester);
+      await tapKey(tester, 'pick-char-09');
+      await tapKey(tester, 'avatar-next');
+      await tapKey(tester, 'pick-skin-5');
+
+      await tapKey(tester, 'avatar-back');
+
+      expect(selected(tester, 'pick-char-09'), isTrue);
+      final skin = hexColor(AvatarPalette.skinTones[4].hex);
+      expect(painterIn(tester, 'pick-char-05').skin, skin);
+    });
+  });
+
+  group('vista previa', () {
+    testWidgets('refleja el personaje, el tono y el fondo elegidos', (
+      tester,
+    ) async {
+      await pumpPicker(tester);
+      await tapKey(tester, 'pick-char-03');
+      await tapKey(tester, 'avatar-next');
+      await tapKey(tester, 'pick-skin-4');
+      await tapKey(tester, 'avatar-next');
+      await tapKey(tester, 'pick-bg-11');
+
+      final preview = painterIn(tester, 'avatar-preview');
+      expect(preview.character.id, 'char-03');
+      expect(preview.skin, hexColor(AvatarPalette.skinTones[3].hex));
+    });
+  });
+
+  group('navegar por los pasos de arriba', () {
+    testWidgets('sin personaje no se puede saltar a otro paso', (tester) async {
+      await pumpPicker(tester);
+
+      await tapKey(tester, 'avatar-step-2');
+
+      expect(find.byKey(const ValueKey('pick-char-01')), findsOne);
+      expect(find.byKey(const ValueKey('pick-bg-01')), findsNothing);
+    });
+
+    testWidgets('con personaje sí se puede ir a cualquier paso', (
+      tester,
+    ) async {
+      await pumpPicker(tester);
+      await tapKey(tester, 'pick-char-01');
+
+      await tapKey(tester, 'avatar-step-2');
+      expect(find.byKey(const ValueKey('pick-bg-01')), findsOne);
+
+      await tapKey(tester, 'avatar-step-1');
+      expect(find.byKey(const ValueKey('pick-skin-1')), findsOne);
+    });
+  });
+
+  group('al editar un cliente', () {
+    const current = Avatar(
+      characterId: 'char-01',
+      skinId: 'skin-1',
+      backgroundId: 'bg-01',
+    );
+
+    testWidgets('el avatar actual viene elegido y se puede continuar', (
+      tester,
+    ) async {
       await pumpPicker(tester, initial: current);
 
-      expect(enabled(tester), isTrue);
-      await choose(tester, 'pick-skin-5');
-      await tester.tap(continueButton());
+      expect(selected(tester, 'pick-char-01'), isTrue);
+      expect(enabled(tester, 'avatar-next'), isTrue);
+      expect(find.text(Strings.avatarChooseCharacterHint), findsNothing);
+    });
+
+    testWidgets('se puede retocar solo una parte', (tester) async {
+      await pumpPicker(tester, initial: current);
+
+      await tapKey(tester, 'avatar-next');
+      await tapKey(tester, 'pick-skin-5');
+      await tapKey(tester, 'avatar-next');
+      await tapKey(tester, 'avatar-continue');
 
       expect(
         confirmed,
@@ -177,6 +282,6 @@ void main() {
           backgroundId: 'bg-01',
         ),
       );
-    },
-  );
+    });
+  });
 }
