@@ -10,6 +10,7 @@ import '../../domain/client/homonym.dart';
 import '../../l10n/strings.dart';
 import '../avatar/avatar_picker.dart';
 import '../avatar/avatar_view.dart';
+import '../input_limits.dart';
 import '../theme.dart';
 import 'client_messages.dart';
 import '../widgets/confirm_dialog.dart';
@@ -250,6 +251,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
             const SizedBox(height: 16),
             TextField(
               key: const ValueKey('field-name'),
+              inputFormatters: InputLimits.text(InputLimits.name),
               controller: _name,
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
@@ -260,6 +262,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
             const SizedBox(height: 12),
             TextField(
               key: const ValueKey('field-phone'),
+              inputFormatters: InputLimits.digits(InputLimits.phoneDigits),
               controller: _phone,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
@@ -270,6 +273,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
             const SizedBox(height: 12),
             TextField(
               key: const ValueKey('field-address'),
+              inputFormatters: InputLimits.text(InputLimits.address),
               controller: _address,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
@@ -279,6 +283,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
             const SizedBox(height: 12),
             TextField(
               key: const ValueKey('field-note'),
+              inputFormatters: InputLimits.text(InputLimits.note),
               controller: _note,
               minLines: 2,
               maxLines: 4,
@@ -295,10 +300,10 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
                 child: ValueListenableBuilder<TextEditingValue>(
                   valueListenable: _note,
                   builder: (context, value, _) {
-                    final over = value.text.length > maxNoteLength;
+                    final over = value.text.length >= InputLimits.note;
                     final scheme = Theme.of(context).colorScheme;
                     return Text(
-                      '${value.text.length}/$maxNoteLength',
+                      '${value.text.length}/${InputLimits.note}',
                       key: const ValueKey('note-counter'),
                       style: TextStyle(
                         fontSize: 12,

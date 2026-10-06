@@ -9,6 +9,7 @@ import '../../domain/money/money.dart';
 import '../../l10n/strings.dart';
 import '../clients/client_detail_screen.dart';
 import '../clients/clients_screen.dart';
+import '../input_limits.dart';
 import '../format/amount_messages.dart';
 import '../format/money_format.dart';
 import '../theme.dart';
@@ -169,6 +170,7 @@ class _PaymentFormScreenState extends ConsumerState<PaymentFormScreen> {
           const SizedBox(height: 16),
           TextField(
             key: const ValueKey('payment-input'),
+            inputFormatters: InputLimits.text(InputLimits.amount),
             controller: _amount,
             autofocus: true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),

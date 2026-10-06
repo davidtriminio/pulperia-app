@@ -193,18 +193,18 @@ void main() {
       expect(await clients(tester), isEmpty);
     });
 
-    testWidgets('una nota de 301 caracteres se rechaza con el límite (RF-74)', (
+    testWidgets('una nota de más de 300 caracteres se recorta a 300 (RF-74)', (
       tester,
     ) async {
       await openForm(tester);
 
       await type(tester, 'field-name', 'Ana');
-      await type(tester, 'field-note', 'x' * 301);
+      await type(tester, 'field-note', 'x' * 446);
       await pickAvatar(tester);
       await save(tester);
 
-      expect(find.text(Strings.noteTooLong), findsOne);
-      expect(await clients(tester), isEmpty);
+      expect((await clients(tester)).single.note, 'x' * 300);
+      expect(find.text(Strings.noteTooLong), findsNothing);
     });
 
     testWidgets('una nota de 300 caracteres se acepta', (tester) async {
@@ -229,7 +229,7 @@ void main() {
       await type(tester, 'field-note', 'hola');
       expect(counter(), '4/300');
       await type(tester, 'field-note', 'x' * 301);
-      expect(counter(), '301/300');
+      expect(counter(), '300/300');
       final color = tester
           .widget<Text>(find.byKey(const ValueKey('note-counter')))
           .style
