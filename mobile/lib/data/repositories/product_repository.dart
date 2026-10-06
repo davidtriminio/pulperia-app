@@ -225,6 +225,44 @@ class ProductRepository {
   Future<List<Product>> archivedProducts(String businessId) =>
       _list(businessId, archived: true);
 
+  /// Los productos activos que más se fían en el negocio, para ofrecerlos de
+  /// entrada al fiar. Se ordenan por veces fiado (sin contar movimientos
+  /// anulados), con empate por nombre; si hay menos que [limit], se completa
+  /// con los más recientes. Es solo una vista de lectura: no escribe nada.
+  Future<List<Product>> frequentProducts(
+    String businessId, {
+    int limit = 8,
+  }) async {
+    final rows = await _db
+        .customSelect(
+          'SELECT i.product_id AS product_id, COUNT(*) AS times '
+          'FROM fiado_items i '
+          'JOIN fiados f ON f.id = i.fiado_id AND f.business_id = i.business_id '
+          'WHERE i.business_id = ?1 AND i.product_id IS NOT NULL '
+          'AND f.annulled_at IS NULL '
+          'GROUP BY i.product_id',
+          variables: [Variable.withString(businessId)],
+          readsFrom: {_db.fiadoItems, _db.fiados},
+        )
+        .get();
+    final times = {
+      for (final r in rows) r.read<String>('product_id'): r.read<int>('times'),
+    };
+
+    final active = await activeProducts(businessId);
+    final used = [
+      for (final p in active)
+        if (times.containsKey(p.id)) p,
+    ]..sort((a, b) => times[b.id]!.compareTo(times[a.id]!));
+    // `activeProducts` ya viene ordenada por nombre y el sort es estable, así
+    // que los empates quedan por nombre.
+    final recent = [
+      for (final p in active)
+        if (!times.containsKey(p.id)) p,
+    ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return [...used, ...recent].take(limit).toList();
+  }
+
   /// En orden alfabético sin distinguir mayúsculas; los empates, por id.
   Future<List<Product>> _list(
     String businessId, {
