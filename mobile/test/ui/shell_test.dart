@@ -63,6 +63,7 @@ void main() {
       Strings.clients,
       Strings.catalog,
       Strings.clientsEmpty,
+      Strings.archivedClientsAction,
       Strings.newClient,
       Strings.newProduct,
       Strings.catalogEmpty,

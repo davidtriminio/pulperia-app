@@ -52,6 +52,18 @@ abstract final class Strings {
   static const clientDetail = 'Cliente';
   static const editAction = 'Editar';
   static const archivedBadge = 'Archivado';
+  static const archiveClientTitle = '¿Archivar este cliente?';
+  static const archiveClientBody =
+      'Saldrá de la lista de clientes, aunque tenga saldo pendiente. Su '
+      'historial y su saldo se conservan y puedes restaurarlo cuando quieras.';
+  static const archiveClientConfirm = 'Sí, archivar';
+  static const archiveClientTooltip = 'Archivar cliente';
+  static const restoreClientTooltip = 'Restaurar cliente';
+  static const clientArchivedDone = 'Cliente archivado';
+  static const clientRestoredDone = 'Cliente restaurado';
+  static const archivedClientsAction = 'Archivados';
+  static const archivedClientsTitle = 'Clientes archivados';
+  static const archivedClientsEmpty = 'No hay clientes archivados';
   static const historyTitle = 'Historial';
   static const historyEmpty = 'Aún no hay movimientos';
   static const entryFiado = 'Fiado';
