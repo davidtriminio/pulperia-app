@@ -11,6 +11,7 @@ double _contrast(Color a, Color b) {
 }
 
 void main() {
+  inputVisibilityTests();
   final theme = buildTheme();
   final scheme = theme.colorScheme;
 
@@ -66,5 +67,35 @@ void main() {
     expect(theme.appBarTheme.elevation, 0);
     expect(theme.appBarTheme.scrolledUnderElevation, 0);
     expect(theme.appBarTheme.backgroundColor, AppColors.background);
+  });
+}
+
+void inputVisibilityTests() {
+  final theme = buildTheme();
+  const white = Colors.white;
+
+  group('los campos de texto se distinguen de la tarjeta blanca', () {
+    test('el relleno no es blanco', () {
+      expect(theme.inputDecorationTheme.fillColor, isNot(white));
+      expect(
+        _contrast(theme.inputDecorationTheme.fillColor!, white),
+        greaterThan(1.1),
+      );
+    });
+
+    test('tienen un borde visible sobre blanco', () {
+      final border =
+          theme.inputDecorationTheme.enabledBorder as OutlineInputBorder;
+      expect(border.borderSide.style, BorderStyle.solid);
+      expect(border.borderSide.width, greaterThanOrEqualTo(1));
+      expect(_contrast(border.borderSide.color, white), greaterThan(1.5));
+    });
+
+    test('el campo enfocado resalta con el acento', () {
+      final focused =
+          theme.inputDecorationTheme.focusedBorder as OutlineInputBorder;
+      expect(focused.borderSide.color, AppColors.turquoise);
+      expect(focused.borderSide.width, greaterThanOrEqualTo(2));
+    });
   });
 }
