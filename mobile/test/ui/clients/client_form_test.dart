@@ -8,6 +8,7 @@ import 'package:pulperia_mobile/data/local/app_database.dart';
 import 'package:pulperia_mobile/dev/dev_session.dart';
 import 'package:pulperia_mobile/l10n/strings.dart';
 import 'package:pulperia_mobile/ui/clients/client_form_screen.dart';
+import 'package:pulperia_mobile/ui/widgets/confirm_dialog.dart';
 
 import '../../support/db_fixtures.dart';
 
@@ -271,6 +272,7 @@ void main() {
       await save(tester);
 
       expect(find.text(Strings.homonymTitle), findsOne);
+      expect(find.byType(ConfirmDialog), findsOne);
       expect(await clients(tester), hasLength(1));
       expect(find.byType(ClientFormScreen), findsOne);
     });

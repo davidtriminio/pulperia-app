@@ -8,6 +8,7 @@ import '../../domain/catalog/sale_unit.dart';
 import '../../domain/money/money.dart';
 import '../../l10n/strings.dart';
 import '../format/money_format.dart';
+import '../widgets/confirm_dialog.dart';
 import 'product_form_screen.dart';
 
 /// Productos del catálogo del negocio activo que se pueden ofrecer al fiar.
@@ -74,26 +75,17 @@ class _ProductTile extends ConsumerWidget {
   final AmountMode mode;
 
   Future<void> _archive(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(Strings.archiveProductTitle),
-        content: const Text(Strings.archiveProductBody),
-        actions: [
-          TextButton(
-            key: const ValueKey('archive-cancel'),
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(Strings.cancel),
-          ),
-          FilledButton(
-            key: const ValueKey('archive-confirm'),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(Strings.archiveProduct),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      icon: Icons.archive_outlined,
+      title: Strings.archiveProductTitle,
+      body: Strings.archiveProductBody,
+      confirmLabel: Strings.archiveProduct,
+      cancelLabel: Strings.cancel,
+      confirmKey: const ValueKey('archive-confirm'),
+      cancelKey: const ValueKey('archive-cancel'),
     );
-    if (confirmed != true) {
+    if (!confirmed) {
       return;
     }
     final user = ref.read(activeUserProvider);

@@ -10,6 +10,7 @@ import 'package:pulperia_mobile/domain/access/access.dart';
 import 'package:pulperia_mobile/l10n/strings.dart';
 import 'package:pulperia_mobile/ui/catalog/catalog_screen.dart';
 import 'package:pulperia_mobile/ui/catalog/product_form_screen.dart';
+import 'package:pulperia_mobile/ui/widgets/confirm_dialog.dart';
 
 import '../../support/db_fixtures.dart';
 
@@ -212,6 +213,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('archive-p-1')));
     await tester.pumpAndSettle();
     expect(find.text(Strings.archiveProductTitle), findsOne);
+    expect(find.byType(ConfirmDialog), findsOne);
     await tester.tap(find.byKey(const ValueKey('archive-confirm')));
     await settle(tester);
 

@@ -12,6 +12,7 @@ import '../avatar/avatar_picker.dart';
 import '../avatar/avatar_view.dart';
 import '../theme.dart';
 import 'client_messages.dart';
+import '../widgets/confirm_dialog.dart';
 import 'clients_screen.dart';
 
 /// Crear o editar un cliente (RF-14 a RF-19, RF-73, RF-74, RF-77). Con
@@ -133,26 +134,17 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
       if (!mounted) {
         return;
       }
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text(Strings.homonymTitle),
-          content: const Text(Strings.homonymBody),
-          actions: [
-            TextButton(
-              key: const ValueKey('homonym-cancel'),
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text(Strings.cancel),
-            ),
-            FilledButton(
-              key: const ValueKey('homonym-confirm'),
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text(Strings.homonymConfirm),
-            ),
-          ],
-        ),
+      final confirmed = await showConfirmDialog(
+        context,
+        icon: Icons.people_alt_outlined,
+        title: Strings.homonymTitle,
+        body: Strings.homonymBody,
+        confirmLabel: Strings.homonymConfirm,
+        cancelLabel: Strings.cancel,
+        confirmKey: const ValueKey('homonym-confirm'),
+        cancelKey: const ValueKey('homonym-cancel'),
       );
-      if (confirmed != true) {
+      if (!confirmed) {
         return;
       }
     }

@@ -6,6 +6,11 @@ abstract final class AppColors {
   static const navyDark = Color(0xFF082B43);
   static const turquoise = Color(0xFF1FB5A8);
   static const background = Color(0xFFF2F7F9);
+
+  /// Relleno y borde de los campos de texto: se ven sobre fondo y sobre
+  /// tarjetas blancas.
+  static const fieldFill = Color(0xFFE8F0F4);
+  static const fieldBorder = Color(0xFF9BB0BE);
   static const ink = Color(0xFF0F2433);
 
   /// Lo que el cliente debe.
@@ -36,7 +41,7 @@ ThemeData buildTheme() {
   const radius = BorderRadius.all(Radius.circular(20));
   final inputBorder = OutlineInputBorder(
     borderRadius: const BorderRadius.all(Radius.circular(16)),
-    borderSide: BorderSide.none,
+    borderSide: const BorderSide(color: AppColors.fieldBorder),
   );
 
   return ThemeData(
@@ -60,7 +65,7 @@ ThemeData buildTheme() {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.fieldFill,
       border: inputBorder,
       enabledBorder: inputBorder,
       focusedBorder: inputBorder.copyWith(
