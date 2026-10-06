@@ -19,6 +19,7 @@ import '../format/money_format.dart';
 import '../format/quantity_format.dart';
 import '../input_limits.dart';
 import '../theme.dart';
+import '../widgets/fixed_action_bar.dart';
 import '../widgets/quick_amounts.dart';
 import 'fiado_cart.dart';
 import 'fiado_messages.dart';
@@ -190,7 +191,6 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
     // Se vuelve a leer al cambiar los ajustes del negocio.
     ref.watch(activeBusinessProvider);
     final mode = _amountMode;
-    final theme = Theme.of(context);
 
     var total = Money.zero;
     if (_totalOnly) {
@@ -204,165 +204,146 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text(Strings.newFiado)),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(
-                  value: false,
-                  label: Text(Strings.modeItems, key: ValueKey('mode-items')),
-                ),
-                ButtonSegment(
-                  value: true,
-                  label: Text(Strings.modeTotal, key: ValueKey('mode-total')),
-                ),
-              ],
-              selected: {_totalOnly},
-              showSelectedIcon: false,
-              onSelectionChanged: (value) =>
-                  setState(() => _totalOnly = value.first),
-            ),
-            const SizedBox(height: 12),
-            if (_totalOnly)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
-                        key: const ValueKey('fiado-total-input'),
-                        inputFormatters: InputLimits.text(InputLimits.amount),
-                        controller: _totalInput,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        onChanged: (_) => setState(() => _totalError = null),
-                        decoration: InputDecoration(
-                          labelText: Strings.fieldTotal,
-                          prefixText: 'L ',
-                          errorText: _totalError,
-                          errorMaxLines: 3,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      QuickAmounts(
-                        mode: mode,
-                        onSelected: (money) => setState(() {
-                          _totalError = null;
-                          _totalInput.text = plainAmount(money, mode);
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else ...[
-              TextField(
-                key: const ValueKey('product-search'),
-                controller: _search,
-                onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  hintText: Strings.searchProducts,
-                  prefixIcon: Icon(Icons.search),
-                ),
+      // La barra va en el cuerpo y no en `bottomNavigationBar`, que el teclado
+      // taparía: así sube con él.
+      body: Column(
+        children: [
+          Expanded(child: _buildScrollArea(context, mode)),
+          FixedActionBar(
+            key: const ValueKey('fiado-bar'),
+            totalLabel: Strings.totalLabel,
+            totalText: formatMoney(total, mode),
+            totalKey: const ValueKey('fiado-total'),
+            buttonLabel: Strings.newFiado,
+            buttonKey: const ValueKey('fiado-save'),
+            onPressed: _saving ? null : _save,
+            errorText: _formError,
+            errorKey: const ValueKey('fiado-form-error'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScrollArea(BuildContext context, AmountMode mode) {
+    final theme = Theme.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(
+                value: false,
+                label: Text(Strings.modeItems, key: ValueKey('mode-items')),
               ),
-              const SizedBox(height: 12),
-              _ProductGrid(
-                query: _search.text,
-                cart: _cart,
-                mode: mode,
-                onTap: _cart.addProduct,
+              ButtonSegment(
+                value: true,
+                label: Text(Strings.modeTotal, key: ValueKey('mode-total')),
               ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                key: const ValueKey('add-free'),
-                onPressed: _addFree,
-                icon: const Icon(Icons.add),
-                label: const Text(Strings.addFreeItem),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                Strings.cartTitle,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 8),
-              if (_cart.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Center(
-                    child: Text(
-                      Strings.cartEmptyHint,
-                      style: TextStyle(color: theme.colorScheme.outline),
-                    ),
-                  ),
-                )
-              else
-                for (final line in _cart.lines)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _CartRow(
-                      line: line,
-                      cart: _cart,
-                      mode: mode,
-                      onEdit: () => showLineEditSheet(
-                        context,
-                        cart: _cart,
-                        line: line,
-                        amountMode: mode,
-                        quantityMode: _quantityMode,
-                      ),
-                    ),
-                  ),
             ],
-            const SizedBox(height: 8),
+            selected: {_totalOnly},
+            showSelectedIcon: false,
+            onSelectionChanged: (value) =>
+                setState(() => _totalOnly = value.first),
+          ),
+          const SizedBox(height: 12),
+          if (_totalOnly)
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      Strings.totalLabel,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                    TextField(
+                      key: const ValueKey('fiado-total-input'),
+                      inputFormatters: InputLimits.text(InputLimits.amount),
+                      controller: _totalInput,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      onChanged: (_) => setState(() => _totalError = null),
+                      decoration: InputDecoration(
+                        labelText: Strings.fieldTotal,
+                        prefixText: 'L ',
+                        errorText: _totalError,
+                        errorMaxLines: 3,
                       ),
                     ),
-                    Text(
-                      formatMoney(total, mode),
-                      key: const ValueKey('fiado-total'),
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.navy,
-                      ),
+                    const SizedBox(height: 12),
+                    QuickAmounts(
+                      mode: mode,
+                      onSelected: (money) => setState(() {
+                        _totalError = null;
+                        _totalInput.text = plainAmount(money, mode);
+                      }),
                     ),
                   ],
                 ),
               ),
-            ),
-            if (_formError != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  _formError!,
-                  key: const ValueKey('fiado-form-error'),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: theme.colorScheme.error),
-                ),
+            )
+          else ...[
+            TextField(
+              key: const ValueKey('product-search'),
+              controller: _search,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                hintText: Strings.searchProducts,
+                prefixIcon: Icon(Icons.search),
               ),
-            const SizedBox(height: 16),
-            FilledButton(
-              key: const ValueKey('fiado-save'),
-              onPressed: _saving ? null : _save,
-              child: const Text(Strings.newFiado),
             ),
+            const SizedBox(height: 12),
+            _ProductGrid(
+              query: _search.text,
+              cart: _cart,
+              mode: mode,
+              onTap: _cart.addProduct,
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              key: const ValueKey('add-free'),
+              onPressed: _addFree,
+              icon: const Icon(Icons.add),
+              label: const Text(Strings.addFreeItem),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              Strings.cartTitle,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (_cart.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Text(
+                    Strings.cartEmptyHint,
+                    style: TextStyle(color: theme.colorScheme.outline),
+                  ),
+                ),
+              )
+            else
+              for (final line in _cart.lines)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _CartRow(
+                    line: line,
+                    cart: _cart,
+                    mode: mode,
+                    onEdit: () => showLineEditSheet(
+                      context,
+                      cart: _cart,
+                      line: line,
+                      amountMode: mode,
+                      quantityMode: _quantityMode,
+                    ),
+                  ),
+                ),
           ],
-        ),
+        ],
       ),
     );
   }
