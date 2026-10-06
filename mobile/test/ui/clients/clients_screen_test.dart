@@ -239,14 +239,20 @@ void _fabTests() {
     await tester.enterText(find.byKey(const ValueKey('field-name')), 'Beto');
     await tester.tap(find.byKey(const ValueKey('avatar-field')));
     await tester.pumpAndSettle();
-    for (final key in ['pick-char-01', 'pick-skin-1', 'pick-bg-01']) {
-      final finder = find.byKey(ValueKey(key));
-      await tester.ensureVisible(finder);
-      await tester.tap(finder);
-      await tester.pump();
+    // Tres pasos: personaje, tono de piel y fondo.
+    final steps = [
+      ['pick-char-01', 'avatar-next'],
+      ['pick-skin-1', 'avatar-next'],
+      ['pick-bg-01', 'avatar-continue'],
+    ];
+    for (final step in steps) {
+      for (final key in step) {
+        final finder = find.byKey(ValueKey(key));
+        await tester.ensureVisible(finder);
+        await tester.tap(finder);
+        await tester.pumpAndSettle();
+      }
     }
-    await tester.tap(find.byKey(const ValueKey('avatar-continue')));
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('client-save')));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 300)),

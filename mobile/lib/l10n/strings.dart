@@ -10,6 +10,13 @@ abstract final class Strings {
   static const avatarCharacter = 'Personaje';
   static const avatarSkin = 'Tono de piel';
   static const avatarBackground = 'Fondo';
+  static const avatarStepCharacter = 'Personaje';
+  static const avatarStepSkin = 'Piel';
+  static const avatarStepBackground = 'Fondo';
+  static const avatarChooseCharacterHint = 'Elige un personaje para continuar';
+  static const avatarNext = 'Siguiente';
+  static const avatarBack = 'Atrás';
+  static const avatarDone = 'Listo';
   static const avatarMissingCharacter = 'Falta elegir el personaje';
   static const avatarMissingSkin = 'Falta elegir el tono de piel';
   static const avatarMissingBackground = 'Falta elegir el fondo';
