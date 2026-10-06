@@ -433,7 +433,15 @@ class _ProductGrid extends ConsumerWidget {
                           .map((l) => l.quantity)
                           .firstOrNull,
                       mode: mode,
-                      onTap: () => onTap(product),
+                      onAdd: () => onTap(product),
+                      onRemove: () {
+                        final line = cart.lines
+                            .where((l) => l.productId == product.id)
+                            .firstOrNull;
+                        if (line != null) {
+                          cart.decrement(line.id);
+                        }
+                      },
                     ),
                   ),
               ],
@@ -543,93 +551,183 @@ class _AllProductsSheetState extends State<_AllProductsSheet> {
   }
 }
 
+/// Tarjeta de un producto: nombre, precio y unidad. Un toque en el cuerpo
+/// agrega 1 (RF-30). Con el producto ya en el carrito muestra − cantidad +
+/// para quitar o sumar desde la propia tarjeta; sin agregar muestra una
+/// píldora "+ Agregar", así todas las tarjetas tienen la misma altura.
 class _ProductTile extends StatelessWidget {
   const _ProductTile({
     required this.product,
     required this.inCart,
     required this.mode,
-    required this.onTap,
+    required this.onAdd,
+    required this.onRemove,
   });
 
   final Product product;
   final Quantity? inCart;
   final AmountMode mode;
-  final VoidCallback onTap;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final unit = SaleUnit.fromId(product.unit);
     final selected = inCart != null;
-    return Material(
-      color: selected
-          ? AppColors.turquoise.withValues(alpha: 0.18)
-          : Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        key: ValueKey('product-tile-${product.id}'),
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: selected ? AppColors.turquoise : Colors.transparent,
-              width: 2,
-            ),
+    final radius = BorderRadius.circular(20);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xFFE6F7F5) : Colors.white,
+        borderRadius: radius,
+        border: Border.all(
+          color: selected ? AppColors.turquoise : const Color(0xFFDCE6EB),
+          width: selected ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.navy.withValues(alpha: selected ? 0.14 : 0.07),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      formatMoney(Money(product.price), mode),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: AppColors.navy,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      '${Strings.perUnit} ${unit.singular}',
-                      key: ValueKey('product-unit-${product.id}'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.outline,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (selected)
-                CircleAvatar(
-                  radius: 13,
-                  backgroundColor: AppColors.navy,
-                  child: Text(
-                    formatQuantity(inCart!),
-                    key: ValueKey('product-count-${product.id}'),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
+        ],
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: ValueKey('product-tile-${product.id}'),
+          borderRadius: radius,
+          onTap: onAdd,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
                   ),
                 ),
-            ],
+                // Reserva siempre dos líneas para que las tarjetas queden
+                // alineadas aunque el nombre sea corto.
+                const SizedBox(height: 4),
+                Text(
+                  formatMoney(Money(product.price), mode),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: AppColors.navy,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  '${Strings.perUnit} ${unit.singular}',
+                  key: ValueKey('product-unit-${product.id}'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 36,
+                  child: selected
+                      ? _TileStepper(
+                          productId: product.id,
+                          quantity: inCart!,
+                          onAdd: onAdd,
+                          onRemove: onRemove,
+                        )
+                      : const _AddPill(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Píldora "+ Agregar" de una tarjeta que aún no está en el carrito. Es solo
+/// visual: el toque lo recibe la tarjeta entera.
+class _AddPill extends StatelessWidget {
+  const _AddPill();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: AppColors.turquoise.withValues(alpha: 0.16),
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.add, size: 18, color: AppColors.navy),
+        SizedBox(width: 4),
+        Text(
+          Strings.addAction,
+          style: TextStyle(
+            color: AppColors.navy,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// − cantidad + dentro de la tarjeta.
+class _TileStepper extends StatelessWidget {
+  const _TileStepper({
+    required this.productId,
+    required this.quantity,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final String productId;
+  final Quantity quantity;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget button(String key, IconData icon, String tooltip, VoidCallback f) =>
+        SizedBox.square(
+          dimension: 36,
+          child: IconButton.filled(
+            key: ValueKey(key),
+            padding: EdgeInsets.zero,
+            tooltip: tooltip,
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.navy,
+              foregroundColor: Colors.white,
+            ),
+            icon: Icon(icon, size: 20),
+            onPressed: f,
+          ),
+        );
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        button(
+          'product-minus-$productId',
+          Icons.remove,
+          Strings.lessOne,
+          onRemove,
+        ),
+        Text(
+          formatQuantity(quantity),
+          key: ValueKey('product-count-$productId'),
+          style: Theme.of(context).textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        button('product-plus-$productId', Icons.add, Strings.moreOne, onAdd),
+      ],
     );
   }
 }
@@ -754,17 +852,33 @@ class _CartRow extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (subtotal != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Text(
-                      formatMoney(subtotal, mode),
-                      key: ValueKey('line-subtotal-${line.id}'),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Con más de una unidad, el − solo resta 1: este botón
+                    // quita la línea entera de una vez.
+                    if (!removes)
+                      IconButton(
+                        key: ValueKey('line-delete-${line.id}'),
+                        tooltip: Strings.removeItem,
+                        visualDensity: VisualDensity.compact,
+                        color: AppColors.debt,
+                        icon: const Icon(Icons.delete_outline, size: 20),
+                        onPressed: () => cart.remove(line.id),
                       ),
-                    ),
-                  ),
+                    if (subtotal != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Text(
+                          formatMoney(subtotal, mode),
+                          key: ValueKey('line-subtotal-${line.id}'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ],

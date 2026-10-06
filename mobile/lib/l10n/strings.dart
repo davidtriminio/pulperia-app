@@ -98,6 +98,7 @@ abstract final class Strings {
   static const searchProducts = 'Buscar producto';
   static const noProductsFound = 'No hay productos con ese nombre';
   static const seeAllProducts = 'Ver todos';
+  static const addAction = 'Agregar';
   static const allProducts = 'Todos los productos';
   static const doneAction = 'Listo';
   static const cartTitle = 'Lo que se lleva';
