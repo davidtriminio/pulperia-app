@@ -13,6 +13,7 @@ import '../input_limits.dart';
 import '../format/amount_messages.dart';
 import '../format/money_format.dart';
 import '../theme.dart';
+import '../widgets/fixed_action_bar.dart';
 import '../widgets/quick_amounts.dart';
 
 /// Registrar un abono general a un cliente (RF-37): se resta de su saldo sin
@@ -146,86 +147,101 @@ class _PaymentFormScreenState extends ConsumerState<PaymentFormScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text(Strings.newPayment)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      // La barra va en el cuerpo y no en `bottomNavigationBar`, que el teclado
+      // taparía: así sube con él.
+      body: Column(
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _BalanceRow(
-                    label: Strings.currentBalance,
-                    valueKey: 'payment-current',
-                    value: current == null ? '' : _describe(current, mode),
-                  ),
-                  if (after != null) ...[
-                    const Divider(height: 24),
-                    _BalanceRow(
-                      label: Strings.balanceAfter,
-                      valueKey: 'payment-after',
-                      value: _describe(after, mode),
-                      color: switch (after.label) {
-                        BalanceLabel.debt => AppColors.debt,
-                        BalanceLabel.credit => AppColors.credit,
-                        BalanceLabel.settled => AppColors.navy,
-                      },
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+              children: [
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        _BalanceRow(
+                          label: Strings.currentBalance,
+                          valueKey: 'payment-current',
+                          value: current == null
+                              ? ''
+                              : _describe(current, mode),
+                        ),
+                        if (after != null) ...[
+                          const Divider(height: 24),
+                          _BalanceRow(
+                            label: Strings.balanceAfter,
+                            valueKey: 'payment-after',
+                            value: _describe(after, mode),
+                            color: switch (after.label) {
+                              BalanceLabel.debt => AppColors.debt,
+                              BalanceLabel.credit => AppColors.credit,
+                              BalanceLabel.settled => AppColors.navy,
+                            },
+                          ),
+                        ],
+                      ],
                     ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  key: const ValueKey('payment-input'),
+                  inputFormatters: InputLimits.text(InputLimits.amount),
+                  controller: _amount,
+                  autofocus: true,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  style: theme.textTheme.headlineSmall,
+                  onChanged: (_) => setState(() => _error = null),
+                  decoration: InputDecoration(
+                    labelText: Strings.fieldPaymentAmount,
+                    prefixText: 'L ',
+                    errorText: _error,
+                    errorMaxLines: 3,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (current != null && current.amount.isPositive)
+                      ActionChip(
+                        key: const ValueKey('pay-full'),
+                        avatar: const Icon(Icons.done_all, size: 18),
+                        label: const Text(Strings.payFull),
+                        labelStyle: const TextStyle(
+                          color: AppColors.navy,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        onPressed: () => _fill(current.debt),
+                      ),
+                    for (final lempiras in quickAmountLempiras)
+                      ActionChip(
+                        key: ValueKey('quick-$lempiras'),
+                        label: Text(formatMoney(Money(lempiras * 100), mode)),
+                        labelStyle: const TextStyle(
+                          color: AppColors.navy,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        onPressed: () => _fill(Money(lempiras * 100)),
+                      ),
                   ],
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          TextField(
-            key: const ValueKey('payment-input'),
-            inputFormatters: InputLimits.text(InputLimits.amount),
-            controller: _amount,
-            autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: theme.textTheme.headlineSmall,
-            onChanged: (_) => setState(() => _error = null),
-            decoration: InputDecoration(
-              labelText: Strings.fieldPaymentAmount,
-              prefixText: 'L ',
-              errorText: _error,
-              errorMaxLines: 3,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              if (current != null && current.amount.isPositive)
-                ActionChip(
-                  key: const ValueKey('pay-full'),
-                  avatar: const Icon(Icons.done_all, size: 18),
-                  label: const Text(Strings.payFull),
-                  labelStyle: const TextStyle(
-                    color: AppColors.navy,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  onPressed: () => _fill(current.debt),
-                ),
-              for (final lempiras in quickAmountLempiras)
-                ActionChip(
-                  key: ValueKey('quick-$lempiras'),
-                  label: Text(formatMoney(Money(lempiras * 100), mode)),
-                  labelStyle: const TextStyle(
-                    color: AppColors.navy,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  onPressed: () => _fill(Money(lempiras * 100)),
-                ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            key: const ValueKey('payment-save'),
+          FixedActionBar(
+            key: const ValueKey('payment-bar'),
+            totalLabel: Strings.fieldPaymentAmount,
+            totalText: formatMoney(typed ?? Money.zero, mode),
+            totalKey: const ValueKey('payment-bar-amount'),
+            buttonLabel: Strings.newPayment,
+            buttonKey: const ValueKey('payment-save'),
             onPressed: _saving ? null : _save,
-            child: const Text(Strings.newPayment),
           ),
         ],
       ),
@@ -252,13 +268,17 @@ class _BalanceRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: theme.textTheme.bodyMedium),
-        Text(
-          value,
-          key: ValueKey(valueKey),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: color,
+        Flexible(child: Text(label, style: theme.textTheme.bodyMedium)),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            value,
+            key: ValueKey(valueKey),
+            textAlign: TextAlign.end,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
           ),
         ),
       ],
