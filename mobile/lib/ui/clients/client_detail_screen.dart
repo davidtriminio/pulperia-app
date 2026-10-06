@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/annul_result.dart';
+import '../../data/repositories/client_repository.dart';
 import '../../data/repositories/ledger_queries.dart';
 import '../../domain/avatar/avatar.dart';
 import '../../domain/access/access.dart';
@@ -56,6 +57,9 @@ class ClientDetailScreen extends ConsumerWidget {
       Permission.annulMovement,
     );
 
+    final role = ref.watch(activeUserProvider).role;
+    final canArchive = can(role, Permission.archiveClient);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(Strings.clientDetail),
@@ -79,6 +83,22 @@ class ClientDetailScreen extends ConsumerWidget {
                 }
               },
             ),
+          // Solo el dueño archiva y restaura (RF-21, RF-23).
+          if (history.asData?.value != null && canArchive)
+            if (history.asData!.value!.client.archived)
+              IconButton(
+                key: const ValueKey('restore-client'),
+                tooltip: Strings.restoreClientTooltip,
+                icon: const Icon(Icons.unarchive_outlined),
+                onPressed: () => _setArchived(context, ref, clientId, false),
+              )
+            else
+              IconButton(
+                key: const ValueKey('archive-client'),
+                tooltip: Strings.archiveClientTooltip,
+                icon: const Icon(Icons.archive_outlined),
+                onPressed: () => _setArchived(context, ref, clientId, true),
+              ),
         ],
       ),
       bottomNavigationBar: history.asData?.value == null
@@ -140,6 +160,61 @@ class ClientDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Archiva (con confirmación, RF-20) o restaura (RF-23) al cliente. El
+/// repositorio vuelve a comprobar que sea el dueño (RF-21).
+Future<void> _setArchived(
+  BuildContext context,
+  WidgetRef ref,
+  String clientId,
+  bool archive,
+) async {
+  if (archive) {
+    final confirmed = await showConfirmDialog(
+      context,
+      icon: Icons.archive_outlined,
+      title: Strings.archiveClientTitle,
+      body: Strings.archiveClientBody,
+      confirmLabel: Strings.archiveClientConfirm,
+      cancelLabel: Strings.cancel,
+      confirmKey: const ValueKey('archive-confirm'),
+      cancelKey: const ValueKey('archive-cancel'),
+    );
+    if (!confirmed || !context.mounted) {
+      return;
+    }
+  }
+
+  final user = ref.read(activeUserProvider);
+  final repository = ref.read(clientRepositoryProvider);
+  final businessId = ref.read(activeBusinessIdProvider);
+  final result = archive
+      ? await repository.archive(
+          businessId: businessId,
+          userId: user.id,
+          role: user.role,
+          clientId: clientId,
+        )
+      : await repository.restore(
+          businessId: businessId,
+          userId: user.id,
+          role: user.role,
+          clientId: clientId,
+        );
+  if (!context.mounted) {
+    return;
+  }
+
+  ref.invalidate(clientHistoryProvider(clientId));
+  ref.invalidate(activeClientsProvider);
+  ref.invalidate(archivedClientsProvider);
+  final message = switch (result) {
+    ClientSaved() =>
+      archive ? Strings.clientArchivedDone : Strings.clientRestoredDone,
+    _ => Strings.saveError,
+  };
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
 
 /// Pide confirmación y anula el movimiento (RF-43). Solo llega aquí el dueño,
