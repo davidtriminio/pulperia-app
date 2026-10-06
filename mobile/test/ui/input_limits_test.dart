@@ -138,26 +138,6 @@ void main() {
   });
 
   group('formulario de fiado', () {
-    testWidgets('descripción, cantidad y precio tienen su límite', (
-      tester,
-    ) async {
-      await pump(tester, const FiadoFormScreen(clientId: 'c-1'));
-
-      final description = await typeInto(
-        tester,
-        'item-description-0',
-        'a' * 300,
-      );
-      final quantity = await typeInto(tester, 'item-quantity-0', '9' * 30);
-      final price = await typeInto(tester, 'item-price-0', '9' * 30);
-
-      expect(description.length, InputLimits.itemDescription);
-      expect(quantity.length, InputLimits.quantity);
-      expect(price.length, InputLimits.amount);
-      expect(InputLimits.itemDescription, 100);
-      expect(InputLimits.quantity, 8);
-    });
-
     testWidgets('el monto total tiene su límite', (tester) async {
       await pump(tester, const FiadoFormScreen(clientId: 'c-1'));
       await tester.tap(find.byKey(const ValueKey('mode-total')));

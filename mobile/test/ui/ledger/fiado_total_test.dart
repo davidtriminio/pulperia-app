@@ -50,6 +50,7 @@ void main() {
           const ClientsCompanion(archived: Value(true)),
         );
       }
+      await insertProductNamed(db, 'p-1', session.businessId, 'Arroz', 2500);
     });
     await tester.pumpWidget(
       ProviderScope(
@@ -98,7 +99,7 @@ void main() {
   testWidgets('por defecto se registra con detalle de ítems', (tester) async {
     await pumpScreen(tester, home: const FiadoFormScreen(clientId: 'c-1'));
 
-    expect(find.byKey(const ValueKey('item-quantity-0')), findsOne);
+    expect(find.byKey(const ValueKey('product-search')), findsOne);
     expect(find.byKey(const ValueKey('fiado-total-input')), findsNothing);
   });
 
@@ -108,8 +109,8 @@ void main() {
     await openTotalMode(tester);
 
     expect(find.byKey(const ValueKey('fiado-total-input')), findsOne);
-    expect(find.byKey(const ValueKey('item-quantity-0')), findsNothing);
-    expect(find.byKey(const ValueKey('add-item')), findsNothing);
+    expect(find.byKey(const ValueKey('product-search')), findsNothing);
+    expect(find.byKey(const ValueKey('cart-line-1')), findsNothing);
   });
 
   testWidgets('registra el fiado sin ítems con el monto indicado (RF-29)', (
@@ -237,31 +238,25 @@ void main() {
     expect(await fiados(tester), isEmpty);
   });
 
-  testWidgets('cambiar de modo conserva lo escrito en los ítems', (
-    tester,
-  ) async {
+  testWidgets('cambiar de modo conserva el carrito', (tester) async {
     await pumpScreen(tester, home: const FiadoFormScreen(clientId: 'c-1'));
-    await tester.enterText(
-      find.byKey(const ValueKey('item-description-0')),
-      'Arroz',
-    );
+    await tester.tap(find.byKey(const ValueKey('product-tile-p-1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('mode-total')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('mode-items')));
     await tester.pumpAndSettle();
 
-    final description = tester.widget<TextField>(
-      find.byKey(const ValueKey('item-description-0')),
-    );
-    expect(description.controller!.text, 'Arroz');
+    expect(find.byKey(const ValueKey('cart-line-1')), findsOne);
   });
 
   testWidgets('en modo monto solo se guarda el monto, no los ítems', (
     tester,
   ) async {
     await pumpScreen(tester, home: const FiadoFormScreen(clientId: 'c-1'));
-    await tester.enterText(find.byKey(const ValueKey('item-price-0')), '99');
+    await tester.tap(find.byKey(const ValueKey('product-tile-p-1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('mode-total')));
     await tester.pumpAndSettle();
 

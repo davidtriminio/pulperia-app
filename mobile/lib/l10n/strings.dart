@@ -94,6 +94,15 @@ abstract final class Strings {
   static const currentBalance = 'Saldo actual';
   static const balanceAfter = 'Quedaría';
 
+  static const searchProducts = 'Buscar producto';
+  static const noProductsFound = 'No hay productos con ese nombre';
+  static const cartTitle = 'Lo que se lleva';
+  static const cartEmptyHint = 'Toca un producto para agregarlo';
+  static const freeItem = 'Ítem libre';
+  static const lessOne = 'Quitar uno';
+  static const moreOne = 'Agregar uno';
+  static const fiadoMissingPrice = 'Falta el precio de algún ítem';
+
   static const modeItems = 'Con detalle';
   static const modeTotal = 'Solo monto';
   static const fieldTotal = 'Monto total';
