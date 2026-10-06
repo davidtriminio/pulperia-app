@@ -5,6 +5,7 @@ import '../app/providers.dart';
 import '../l10n/strings.dart';
 import 'catalog/catalog_screen.dart';
 import 'clients/clients_screen.dart';
+import 'summary/summary_screen.dart';
 
 /// Estructura principal: barra superior con el negocio activo y navegación
 /// inferior entre las secciones.
@@ -27,7 +28,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       ),
       body: IndexedStack(
         index: _index,
-        children: const [ClientsScreen(), CatalogScreen()],
+        children: const [ClientsScreen(), SummaryScreen(), CatalogScreen()],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
@@ -38,6 +39,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             icon: Icon(Icons.people_outline),
             selectedIcon: Icon(Icons.people),
             label: Strings.clients,
+          ),
+          NavigationDestination(
+            key: ValueKey('nav-summary'),
+            icon: Icon(Icons.insights_outlined),
+            selectedIcon: Icon(Icons.insights),
+            label: Strings.summary,
           ),
           NavigationDestination(
             key: ValueKey('nav-catalog'),
