@@ -35,6 +35,11 @@ void main() {
     Future<void> Function()? seed,
     Widget? home,
   }) async {
+    // Ventana alta: el historial es una lista perezosa y, con la acción
+    // "Anular" del dueño, las tarjetas ocupan más.
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await tester.runAsync(() async {
       await seedDevSession(db, devSessionFor(isRelease: false));
       await insertClient(db, 'c-1', businessId, name: 'Ana López');

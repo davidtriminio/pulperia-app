@@ -58,6 +58,20 @@ abstract final class Strings {
   static const entryPayment = 'Abono';
   static const annulled = 'Anulado';
   static const annulledOn = 'Anulado el';
+  static const annulAction = 'Anular';
+  static const annulFiadoTitle = '¿Anular este fiado?';
+  static const annulPaymentTitle = '¿Anular este abono?';
+  static const annulFiadoBody =
+      'Dejará de contar en el saldo del cliente. El registro se conserva '
+      'marcado como anulado, con la fecha y quién lo anuló. No se puede '
+      'deshacer.';
+  static const annulPaymentBody =
+      'El abono dejará de restar del saldo del cliente. El registro se '
+      'conserva marcado como anulado, con la fecha y quién lo anuló. No se '
+      'puede deshacer.';
+  static const annulConfirm = 'Sí, anular';
+  static const annulKeep = 'No anular';
+  static const annulDone = 'Movimiento anulado';
 
   static const amountNotPositive = 'El monto debe ser mayor que cero';
   static const amountNotWhole = 'Este negocio usa montos enteros, sin centavos';

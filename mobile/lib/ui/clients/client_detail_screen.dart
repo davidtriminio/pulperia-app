@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
+import '../../data/repositories/annul_result.dart';
 import '../../data/repositories/ledger_queries.dart';
 import '../../domain/avatar/avatar.dart';
+import '../../domain/access/access.dart';
 import '../../domain/business/amount_mode.dart';
 import '../../domain/catalog/sale_unit.dart';
 import '../../domain/ledger/balance.dart';
@@ -16,6 +18,7 @@ import '../format/date_format.dart';
 import '../format/money_format.dart';
 import '../format/quantity_format.dart';
 import '../theme.dart';
+import '../widgets/confirm_dialog.dart';
 import '../ledger/fiado_form_screen.dart';
 import '../ledger/payment_form_screen.dart';
 import 'client_form_screen.dart';
@@ -46,6 +49,12 @@ class ClientDetailScreen extends ConsumerWidget {
           data: (b) => AmountMode.fromId(b.amountMode),
           orElse: () => AmountMode.twoDecimals,
         );
+
+    // Solo el dueño anula (RF-45): al empleado no se le ofrece la acción.
+    final canAnnul = can(
+      ref.watch(activeUserProvider).role,
+      Permission.annulMovement,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -120,18 +129,84 @@ class ClientDetailScreen extends ConsumerWidget {
           if (data == null) {
             return const Center(child: Text(Strings.clientNotFound));
           }
-          return _Body(history: data, mode: mode);
+          return _Body(
+            history: data,
+            mode: mode,
+            onAnnul: canAnnul
+                ? (entry) => _annul(context, ref, clientId, entry)
+                : null,
+          );
         },
       ),
     );
   }
 }
 
+/// Pide confirmación y anula el movimiento (RF-43). Solo llega aquí el dueño,
+/// pero el repositorio lo comprueba también (RF-45).
+Future<void> _annul(
+  BuildContext context,
+  WidgetRef ref,
+  String clientId,
+  HistoryEntry entry,
+) async {
+  final isFiado = entry.kind == MovementKind.fiado;
+  final confirmed = await showConfirmDialog(
+    context,
+    icon: Icons.block,
+    title: isFiado ? Strings.annulFiadoTitle : Strings.annulPaymentTitle,
+    body: isFiado ? Strings.annulFiadoBody : Strings.annulPaymentBody,
+    confirmLabel: Strings.annulConfirm,
+    cancelLabel: Strings.annulKeep,
+    confirmKey: const ValueKey('annul-confirm'),
+    cancelKey: const ValueKey('annul-cancel'),
+  );
+  if (!confirmed || !context.mounted) {
+    return;
+  }
+
+  final user = ref.read(activeUserProvider);
+  final businessId = ref.read(activeBusinessIdProvider);
+  final AnnulResult<Object> result = isFiado
+      ? await ref
+            .read(fiadoRepositoryProvider)
+            .annul(
+              businessId: businessId,
+              userId: user.id,
+              role: user.role,
+              fiadoId: entry.id,
+            )
+      : await ref
+            .read(paymentRepositoryProvider)
+            .annul(
+              businessId: businessId,
+              userId: user.id,
+              role: user.role,
+              paymentId: entry.id,
+            );
+  if (!context.mounted) {
+    return;
+  }
+
+  ref.invalidate(clientHistoryProvider(clientId));
+  ref.invalidate(activeClientsProvider);
+  final messenger = ScaffoldMessenger.of(context);
+  switch (result) {
+    case Annulled():
+      messenger.showSnackBar(const SnackBar(content: Text(Strings.annulDone)));
+    case AnnulNotFound() || AnnulForbidden():
+      messenger.showSnackBar(const SnackBar(content: Text(Strings.saveError)));
+  }
+}
+
 class _Body extends StatelessWidget {
-  const _Body({required this.history, required this.mode});
+  const _Body({required this.history, required this.mode, this.onAnnul});
 
   final ClientHistory history;
   final AmountMode mode;
+
+  /// Null si el usuario no puede anular.
+  final ValueChanged<HistoryEntry>? onAnnul;
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +259,13 @@ class _Body extends StatelessWidget {
           for (final entry in history.entries)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: _EntryTile(entry: entry, mode: mode),
+              child: _EntryTile(
+                entry: entry,
+                mode: mode,
+                onAnnul: onAnnul == null || entry.isAnnulled
+                    ? null
+                    : () => onAnnul!(entry),
+              ),
             ),
       ],
     );
@@ -339,10 +420,13 @@ class _ContactRow extends StatelessWidget {
 /// Un movimiento del historial: ícono redondo, tipo y fecha a la izquierda,
 /// monto a la derecha. Un movimiento anulado se ve atenuado y marcado.
 class _EntryTile extends StatelessWidget {
-  const _EntryTile({required this.entry, required this.mode});
+  const _EntryTile({required this.entry, required this.mode, this.onAnnul});
 
   final HistoryEntry entry;
   final AmountMode mode;
+
+  /// Null si no se puede anular (empleado o ya anulado).
+  final VoidCallback? onAnnul;
 
   @override
   Widget build(BuildContext context) {
@@ -441,6 +525,17 @@ class _EntryTile extends StatelessWidget {
               ],
             ),
             for (final item in entry.items) _ItemRow(item: item, mode: mode),
+            if (onAnnul != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  key: ValueKey('annul-${entry.id}'),
+                  style: TextButton.styleFrom(foregroundColor: AppColors.debt),
+                  onPressed: onAnnul,
+                  icon: const Icon(Icons.block, size: 18),
+                  label: const Text(Strings.annulAction),
+                ),
+              ),
           ],
         ),
       ),
