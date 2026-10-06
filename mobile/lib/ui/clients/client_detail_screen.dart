@@ -285,35 +285,12 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final client = history.client;
     final theme = Theme.of(context);
-    final contact = [
-      if (client.phone != null)
-        ('contact-phone', Icons.phone_outlined, client.phone!),
-      if (client.address != null)
-        ('contact-address', Icons.place_outlined, client.address!),
-      if (client.note != null)
-        ('contact-note', Icons.notes_outlined, client.note!),
-    ];
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       children: [
         _Header(history: history, mode: mode),
-        if (contact.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                children: [
-                  for (final (key, icon, text) in contact)
-                    _ContactRow(rowKey: key, icon: icon, text: text),
-                ],
-              ),
-            ),
-          ),
-        ],
         const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -324,7 +301,7 @@ class _Body extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         if (history.entries.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
@@ -333,7 +310,7 @@ class _Body extends StatelessWidget {
         else
           for (final entry in history.entries)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 10),
               child: _EntryTile(
                 entry: entry,
                 mode: mode,
@@ -347,7 +324,9 @@ class _Body extends StatelessWidget {
   }
 }
 
-/// Tarjeta azul con el cliente y su saldo destacado (RF-42).
+/// Tarjeta azul del cliente: avatar, nombre y marca de archivado arriba; el
+/// saldo como protagonista en un panel interior; y los datos de contacto
+/// como chips al pie (RF-41, RF-42).
 class _Header extends StatelessWidget {
   const _Header({required this.history, required this.mode});
 
@@ -378,8 +357,18 @@ class _Header extends StatelessWidget {
       ),
     };
 
+    final contact = [
+      if (client.phone != null)
+        ('contact-phone', Icons.phone_outlined, client.phone!),
+      if (client.address != null)
+        ('contact-address', Icons.place_outlined, client.address!),
+      if (client.note != null)
+        ('contact-note', Icons.notes_outlined, client.note!),
+    ];
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      key: const ValueKey('detail-header'),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppColors.navy, AppColors.navyDark],
@@ -387,6 +376,13 @@ class _Header extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.navy.withValues(alpha: 0.25),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,6 +404,8 @@ class _Header extends StatelessWidget {
                   children: [
                     Text(
                       client.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -415,18 +413,22 @@ class _Header extends StatelessWidget {
                     ),
                     if (client.archived)
                       Container(
-                        margin: const EdgeInsets.only(top: 4),
+                        margin: const EdgeInsets.only(top: 6),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
+                          horizontal: 10,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white24,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Text(
                           Strings.archivedBadge,
-                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                   ],
@@ -434,66 +436,126 @@ class _Header extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Container(
-            key: const ValueKey('balance-chip'),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: chipColor,
-              borderRadius: BorderRadius.circular(20),
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(18),
             ),
-            child: Text(
-              label,
-              key: const ValueKey('balance-label'),
-              style: const TextStyle(
-                color: AppColors.ink,
-                fontWeight: FontWeight.w700,
-              ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      Strings.currentBalance,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      key: const ValueKey('balance-chip'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: chipColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        label,
+                        key: const ValueKey('balance-label'),
+                        style: const TextStyle(
+                          color: AppColors.ink,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      amount,
+                      key: const ValueKey('balance-amount'),
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            amount,
-            key: const ValueKey('balance-amount'),
-            style: theme.textTheme.displaySmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
+          if (contact.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final (key, icon, text) in contact)
+                  _ContactChip(chipKey: key, icon: icon, text: text),
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _ContactRow extends StatelessWidget {
-  const _ContactRow({
-    required this.rowKey,
+/// Un dato de contacto como chip translúcido dentro de la cabecera.
+class _ContactChip extends StatelessWidget {
+  const _ContactChip({
+    required this.chipKey,
     required this.icon,
     required this.text,
   });
 
-  final String rowKey;
+  final String chipKey;
   final IconData icon;
   final String text;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    key: ValueKey(rowKey),
-    padding: const EdgeInsets.symmetric(vertical: 8),
+  Widget build(BuildContext context) => Container(
+    key: ValueKey(chipKey),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(14),
+    ),
     child: Row(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: AppColors.navy),
-        const SizedBox(width: 12),
-        Expanded(child: Text(text)),
+        Padding(
+          padding: const EdgeInsets.only(top: 1),
+          child: Icon(icon, size: 16, color: Colors.white70),
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            text,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+          ),
+        ),
       ],
     ),
   );
 }
 
-/// Un movimiento del historial: ícono redondo, tipo y fecha a la izquierda,
-/// monto a la derecha. Un movimiento anulado se ve atenuado y marcado.
+/// Un movimiento del historial, con el estilo de las tarjetas de producto y
+/// de cliente: icono tintado, tipo y fecha a la izquierda, monto con signo a
+/// la derecha (+ el fiado, − el abono) y los ítems del fiado en un panel
+/// interior. Un movimiento anulado se ve atenuado y marcado.
 class _EntryTile extends StatelessWidget {
   const _EntryTile({required this.entry, required this.mode, this.onAnnul});
 
@@ -513,24 +575,36 @@ class _EntryTile extends StatelessWidget {
     final accent = annulled
         ? muted
         : (isFiado ? AppColors.debt : AppColors.credit);
+    final sign = isFiado ? '+' : '−';
 
-    return Card(
+    return DecoratedBox(
       key: ValueKey('entry-${entry.id}'),
-      color: annulled ? const Color(0xFFE9EEF1) : null,
+      decoration: BoxDecoration(
+        color: annulled ? const Color(0xFFEEF3F6) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFDCE6EB)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.navy.withValues(alpha: annulled ? 0.03 : 0.07),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  radius: 20,
+                  radius: 22,
                   backgroundColor: accent.withValues(alpha: 0.14),
                   child: Icon(
                     isFiado ? Icons.shopping_bag_outlined : Icons.payments,
-                    size: 20,
+                    size: 22,
                     color: accent,
                   ),
                 ),
@@ -589,17 +663,40 @@ class _EntryTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                Text(
-                  formatMoney(entry.amount, mode),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    decoration: strike,
-                    color: annulled ? muted : AppColors.ink,
+                const SizedBox(width: 8),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '$sign ${formatMoney(entry.amount, mode)}',
+                      key: ValueKey('entry-amount-${entry.id}'),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        decoration: strike,
+                        color: annulled ? muted : accent,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
-            for (final item in entry.items) _ItemRow(item: item, mode: mode),
+            if (entry.items.isNotEmpty)
+              Container(
+                key: ValueKey('entry-items-${entry.id}'),
+                margin: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  children: [
+                    for (final item in entry.items)
+                      _ItemRow(item: item, mode: mode),
+                  ],
+                ),
+              ),
             if (onAnnul != null)
               Align(
                 alignment: Alignment.centerRight,
@@ -628,7 +725,7 @@ class _ItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: 6, left: 28),
+      padding: const EdgeInsets.only(top: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -636,7 +733,10 @@ class _ItemRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.description),
+                Text(
+                  item.description,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 Text(
                   '${formatQuantity(Quantity(item.quantity))} '
                   '${SaleUnit.fromId(item.unit).nameFor(Quantity(item.quantity))} × '
@@ -646,6 +746,7 @@ class _ItemRow extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Text(formatMoney(Money(item.subtotal), mode)),
         ],
       ),

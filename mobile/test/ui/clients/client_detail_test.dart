@@ -177,8 +177,8 @@ void main() {
     expect(top('f-1'), lessThan(top('f-2')));
     expect(top('f-2'), lessThan(top('p-1')));
     expect(find.text(formatDateTime(day1)), findsOne);
-    expect(find.text('L 50.00'), findsOne);
-    expect(find.text('L 20.00'), findsOne);
+    expect(find.text('+ L 50.00'), findsOne);
+    expect(find.text('− L 20.00'), findsOne);
     expect(find.text(Strings.entryFiado), findsNWidgets(2));
     expect(find.text(Strings.entryPayment), findsOne);
   });
