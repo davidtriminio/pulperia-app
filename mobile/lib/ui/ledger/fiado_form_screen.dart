@@ -19,6 +19,7 @@ import '../format/money_format.dart';
 import '../format/quantity_format.dart';
 import '../input_limits.dart';
 import '../theme.dart';
+import '../widgets/quick_amounts.dart';
 import 'fiado_cart.dart';
 import 'fiado_messages.dart';
 import 'line_edit_sheet.dart';
@@ -229,20 +230,33 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(14),
-                  child: TextField(
-                    key: const ValueKey('fiado-total-input'),
-                    inputFormatters: InputLimits.text(InputLimits.amount),
-                    controller: _totalInput,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onChanged: (_) => setState(() => _totalError = null),
-                    decoration: InputDecoration(
-                      labelText: Strings.fieldTotal,
-                      prefixText: 'L ',
-                      errorText: _totalError,
-                      errorMaxLines: 3,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        key: const ValueKey('fiado-total-input'),
+                        inputFormatters: InputLimits.text(InputLimits.amount),
+                        controller: _totalInput,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        onChanged: (_) => setState(() => _totalError = null),
+                        decoration: InputDecoration(
+                          labelText: Strings.fieldTotal,
+                          prefixText: 'L ',
+                          errorText: _totalError,
+                          errorMaxLines: 3,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      QuickAmounts(
+                        mode: mode,
+                        onSelected: (money) => setState(() {
+                          _totalError = null;
+                          _totalInput.text = plainAmount(money, mode);
+                        }),
+                      ),
+                    ],
                   ),
                 ),
               )
