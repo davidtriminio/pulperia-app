@@ -1521,6 +1521,28 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     $customConstraints: 'NOT NULL DEFAULT \'unit\' CHECK (unit IN (\'unit\', \'pound\', \'ounce\', \'kilo\', \'dozen\', \'liter\', \'gallon\', \'box\', \'bag\', \'pack\'))',
     defaultValue: const CustomExpression('\'unit\''),
   );
+  static const VerificationMeta _previousPriceMeta = const VerificationMeta(
+    'previousPrice',
+  );
+  @override
+  late final GeneratedColumn<int> previousPrice = GeneratedColumn<int>(
+    'previous_price',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NULL CHECK (previous_price IS NULL OR previous_price > 0)',
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime>
+  priceChangedAt = GeneratedColumn<DateTime>(
+    'price_changed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  ).withConverter<DateTime?>($ProductsTable.$converterpriceChangedAt);
   static const VerificationMeta _archivedMeta = const VerificationMeta(
     'archived',
   );
@@ -1575,6 +1597,8 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     name,
     price,
     unit,
+    previousPrice,
+    priceChangedAt,
     archived,
     version,
     createdBy,
@@ -1625,6 +1649,15 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
       context.handle(
         _unitMeta,
         unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
+    if (data.containsKey('previous_price')) {
+      context.handle(
+        _previousPriceMeta,
+        previousPrice.isAcceptableOrUnknown(
+          data['previous_price']!,
+          _previousPriceMeta,
+        ),
       );
     }
     if (data.containsKey('archived')) {
@@ -1680,6 +1713,16 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
         DriftSqlType.string,
         data['${effectivePrefix}unit'],
       )!,
+      previousPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}previous_price'],
+      ),
+      priceChangedAt: $ProductsTable.$converterpriceChangedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}price_changed_at'],
+        ),
+      ),
       archived: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}archived'],
@@ -1706,6 +1749,8 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     return $ProductsTable(attachedDatabase, alias);
   }
 
+  static TypeConverter<DateTime?, DateTime?> $converterpriceChangedAt =
+      NullAwareTypeConverter.wrap(const UtcDateTimeConverter());
   static TypeConverter<DateTime, DateTime> $convertercreatedAt =
       const UtcDateTimeConverter();
 }
@@ -1722,6 +1767,12 @@ class Product extends DataClass implements Insertable<Product> {
   /// omisión.
   /// La lista del CHECK debe coincidir con `SaleUnit`; un test lo comprueba.
   final String unit;
+
+  /// Precio anterior en la unidad menor y fecha del último cambio de precio
+  /// (RF-90, D-24); nulos mientras el precio nunca ha cambiado. Es solo el
+  /// último anterior, no un historial.
+  final int? previousPrice;
+  final DateTime? priceChangedAt;
   final bool archived;
   final int version;
   final String createdBy;
@@ -1732,6 +1783,8 @@ class Product extends DataClass implements Insertable<Product> {
     required this.name,
     required this.price,
     required this.unit,
+    this.previousPrice,
+    this.priceChangedAt,
     required this.archived,
     required this.version,
     required this.createdBy,
@@ -1745,6 +1798,14 @@ class Product extends DataClass implements Insertable<Product> {
     map['name'] = Variable<String>(name);
     map['price'] = Variable<int>(price);
     map['unit'] = Variable<String>(unit);
+    if (!nullToAbsent || previousPrice != null) {
+      map['previous_price'] = Variable<int>(previousPrice);
+    }
+    if (!nullToAbsent || priceChangedAt != null) {
+      map['price_changed_at'] = Variable<DateTime>(
+        $ProductsTable.$converterpriceChangedAt.toSql(priceChangedAt),
+      );
+    }
     map['archived'] = Variable<bool>(archived);
     map['version'] = Variable<int>(version);
     map['created_by'] = Variable<String>(createdBy);
@@ -1763,6 +1824,12 @@ class Product extends DataClass implements Insertable<Product> {
       name: Value(name),
       price: Value(price),
       unit: Value(unit),
+      previousPrice: previousPrice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(previousPrice),
+      priceChangedAt: priceChangedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(priceChangedAt),
       archived: Value(archived),
       version: Value(version),
       createdBy: Value(createdBy),
@@ -1781,6 +1848,8 @@ class Product extends DataClass implements Insertable<Product> {
       name: serializer.fromJson<String>(json['name']),
       price: serializer.fromJson<int>(json['price']),
       unit: serializer.fromJson<String>(json['unit']),
+      previousPrice: serializer.fromJson<int?>(json['previousPrice']),
+      priceChangedAt: serializer.fromJson<DateTime?>(json['priceChangedAt']),
       archived: serializer.fromJson<bool>(json['archived']),
       version: serializer.fromJson<int>(json['version']),
       createdBy: serializer.fromJson<String>(json['createdBy']),
@@ -1796,6 +1865,8 @@ class Product extends DataClass implements Insertable<Product> {
       'name': serializer.toJson<String>(name),
       'price': serializer.toJson<int>(price),
       'unit': serializer.toJson<String>(unit),
+      'previousPrice': serializer.toJson<int?>(previousPrice),
+      'priceChangedAt': serializer.toJson<DateTime?>(priceChangedAt),
       'archived': serializer.toJson<bool>(archived),
       'version': serializer.toJson<int>(version),
       'createdBy': serializer.toJson<String>(createdBy),
@@ -1809,6 +1880,8 @@ class Product extends DataClass implements Insertable<Product> {
     String? name,
     int? price,
     String? unit,
+    Value<int?> previousPrice = const Value.absent(),
+    Value<DateTime?> priceChangedAt = const Value.absent(),
     bool? archived,
     int? version,
     String? createdBy,
@@ -1819,6 +1892,12 @@ class Product extends DataClass implements Insertable<Product> {
     name: name ?? this.name,
     price: price ?? this.price,
     unit: unit ?? this.unit,
+    previousPrice: previousPrice.present
+        ? previousPrice.value
+        : this.previousPrice,
+    priceChangedAt: priceChangedAt.present
+        ? priceChangedAt.value
+        : this.priceChangedAt,
     archived: archived ?? this.archived,
     version: version ?? this.version,
     createdBy: createdBy ?? this.createdBy,
@@ -1833,6 +1912,12 @@ class Product extends DataClass implements Insertable<Product> {
       name: data.name.present ? data.name.value : this.name,
       price: data.price.present ? data.price.value : this.price,
       unit: data.unit.present ? data.unit.value : this.unit,
+      previousPrice: data.previousPrice.present
+          ? data.previousPrice.value
+          : this.previousPrice,
+      priceChangedAt: data.priceChangedAt.present
+          ? data.priceChangedAt.value
+          : this.priceChangedAt,
       archived: data.archived.present ? data.archived.value : this.archived,
       version: data.version.present ? data.version.value : this.version,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
@@ -1848,6 +1933,8 @@ class Product extends DataClass implements Insertable<Product> {
           ..write('name: $name, ')
           ..write('price: $price, ')
           ..write('unit: $unit, ')
+          ..write('previousPrice: $previousPrice, ')
+          ..write('priceChangedAt: $priceChangedAt, ')
           ..write('archived: $archived, ')
           ..write('version: $version, ')
           ..write('createdBy: $createdBy, ')
@@ -1863,6 +1950,8 @@ class Product extends DataClass implements Insertable<Product> {
     name,
     price,
     unit,
+    previousPrice,
+    priceChangedAt,
     archived,
     version,
     createdBy,
@@ -1877,6 +1966,8 @@ class Product extends DataClass implements Insertable<Product> {
           other.name == this.name &&
           other.price == this.price &&
           other.unit == this.unit &&
+          other.previousPrice == this.previousPrice &&
+          other.priceChangedAt == this.priceChangedAt &&
           other.archived == this.archived &&
           other.version == this.version &&
           other.createdBy == this.createdBy &&
@@ -1889,6 +1980,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   final Value<String> name;
   final Value<int> price;
   final Value<String> unit;
+  final Value<int?> previousPrice;
+  final Value<DateTime?> priceChangedAt;
   final Value<bool> archived;
   final Value<int> version;
   final Value<String> createdBy;
@@ -1900,6 +1993,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.name = const Value.absent(),
     this.price = const Value.absent(),
     this.unit = const Value.absent(),
+    this.previousPrice = const Value.absent(),
+    this.priceChangedAt = const Value.absent(),
     this.archived = const Value.absent(),
     this.version = const Value.absent(),
     this.createdBy = const Value.absent(),
@@ -1912,6 +2007,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     required String name,
     required int price,
     this.unit = const Value.absent(),
+    this.previousPrice = const Value.absent(),
+    this.priceChangedAt = const Value.absent(),
     this.archived = const Value.absent(),
     this.version = const Value.absent(),
     required String createdBy,
@@ -1929,6 +2026,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Expression<String>? name,
     Expression<int>? price,
     Expression<String>? unit,
+    Expression<int>? previousPrice,
+    Expression<DateTime>? priceChangedAt,
     Expression<bool>? archived,
     Expression<int>? version,
     Expression<String>? createdBy,
@@ -1941,6 +2040,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       if (name != null) 'name': name,
       if (price != null) 'price': price,
       if (unit != null) 'unit': unit,
+      if (previousPrice != null) 'previous_price': previousPrice,
+      if (priceChangedAt != null) 'price_changed_at': priceChangedAt,
       if (archived != null) 'archived': archived,
       if (version != null) 'version': version,
       if (createdBy != null) 'created_by': createdBy,
@@ -1955,6 +2056,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Value<String>? name,
     Value<int>? price,
     Value<String>? unit,
+    Value<int?>? previousPrice,
+    Value<DateTime?>? priceChangedAt,
     Value<bool>? archived,
     Value<int>? version,
     Value<String>? createdBy,
@@ -1967,6 +2070,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       name: name ?? this.name,
       price: price ?? this.price,
       unit: unit ?? this.unit,
+      previousPrice: previousPrice ?? this.previousPrice,
+      priceChangedAt: priceChangedAt ?? this.priceChangedAt,
       archived: archived ?? this.archived,
       version: version ?? this.version,
       createdBy: createdBy ?? this.createdBy,
@@ -1992,6 +2097,14 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     }
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
+    }
+    if (previousPrice.present) {
+      map['previous_price'] = Variable<int>(previousPrice.value);
+    }
+    if (priceChangedAt.present) {
+      map['price_changed_at'] = Variable<DateTime>(
+        $ProductsTable.$converterpriceChangedAt.toSql(priceChangedAt.value),
+      );
     }
     if (archived.present) {
       map['archived'] = Variable<bool>(archived.value);
@@ -2021,6 +2134,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
           ..write('name: $name, ')
           ..write('price: $price, ')
           ..write('unit: $unit, ')
+          ..write('previousPrice: $previousPrice, ')
+          ..write('priceChangedAt: $priceChangedAt, ')
           ..write('archived: $archived, ')
           ..write('version: $version, ')
           ..write('createdBy: $createdBy, ')
@@ -6429,6 +6544,8 @@ typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
   required String name,
   required int price,
   Value<String> unit,
+  Value<int?> previousPrice,
+  Value<DateTime?> priceChangedAt,
   Value<bool> archived,
   Value<int> version,
   required String createdBy,
@@ -6441,6 +6558,8 @@ typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<String> name,
   Value<int> price,
   Value<String> unit,
+  Value<int?> previousPrice,
+  Value<DateTime?> priceChangedAt,
   Value<bool> archived,
   Value<int> version,
   Value<String> createdBy,
@@ -6497,6 +6616,17 @@ class $$ProductsTableFilterComposer
   ColumnFilters<String> get unit => $composableBuilder(
     column: $table.unit,
     builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get previousPrice => $composableBuilder(
+    column: $table.previousPrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get priceChangedAt => $composableBuilder(
+    column: $table.priceChangedAt,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<bool> get archived => $composableBuilder(
@@ -6573,6 +6703,16 @@ class $$ProductsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get previousPrice => $composableBuilder(
+    column: $table.previousPrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get priceChangedAt => $composableBuilder(
+    column: $table.priceChangedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get archived => $composableBuilder(
     column: $table.archived,
     builder: (column) => ColumnOrderings(column),
@@ -6637,6 +6777,17 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<String> get unit =>
       $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<int> get previousPrice => $composableBuilder(
+    column: $table.previousPrice,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get priceChangedAt =>
+      $composableBuilder(
+        column: $table.priceChangedAt,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<bool> get archived =>
       $composableBuilder(column: $table.archived, builder: (column) => column);
@@ -6707,6 +6858,8 @@ class $$ProductsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<int> price = const Value.absent(),
                 Value<String> unit = const Value.absent(),
+                Value<int?> previousPrice = const Value.absent(),
+                Value<DateTime?> priceChangedAt = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
@@ -6718,6 +6871,8 @@ class $$ProductsTableTableManager
                 name: name,
                 price: price,
                 unit: unit,
+                previousPrice: previousPrice,
+                priceChangedAt: priceChangedAt,
                 archived: archived,
                 version: version,
                 createdBy: createdBy,
@@ -6731,6 +6886,8 @@ class $$ProductsTableTableManager
                 required String name,
                 required int price,
                 Value<String> unit = const Value.absent(),
+                Value<int?> previousPrice = const Value.absent(),
+                Value<DateTime?> priceChangedAt = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 required String createdBy,
@@ -6742,6 +6899,8 @@ class $$ProductsTableTableManager
                 name: name,
                 price: price,
                 unit: unit,
+                previousPrice: previousPrice,
+                priceChangedAt: priceChangedAt,
                 archived: archived,
                 version: version,
                 createdBy: createdBy,

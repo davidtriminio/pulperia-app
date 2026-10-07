@@ -108,6 +108,16 @@ class Products extends Table {
         "NOT NULL DEFAULT 'unit' CHECK (unit IN ('unit', 'pound', 'ounce', "
         "'kilo', 'dozen', 'liter', 'gallon', 'box', 'bag', 'pack'))",
       )();
+
+  /// Precio anterior en la unidad menor y fecha del último cambio de precio
+  /// (RF-90, D-24); nulos mientras el precio nunca ha cambiado. Es solo el
+  /// último anterior, no un historial.
+  IntColumn get previousPrice => integer().nullable().customConstraint(
+    'NULL CHECK (previous_price IS NULL OR previous_price > 0)',
+  )();
+  DateTimeColumn get priceChangedAt => dateTime().nullable().map(
+    NullAwareTypeConverter.wrap(const UtcDateTimeConverter()),
+  )();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
   IntColumn get version => integer().withDefault(const Constant(1))();
   TextColumn get createdBy => text()();
