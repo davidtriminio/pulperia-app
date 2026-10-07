@@ -1,0 +1,176 @@
+{
+  "description": "Precio anterior de un producto (RF-90, D-24). Al cambiar el precio, el producto guarda como precio anterior el que tenía y como fecha del cambio la de la operación, sustituyendo lo que hubiera; si el precio nuevo es igual al vigente (por ejemplo cuando solo cambia el nombre o la unidad), no se toca nada. Entrada: current_price y new_price en la unidad menor, previous_price y price_changed_at del producto antes del cambio (null si nunca cambió), y at, la fecha de creación de la operación (ISO 8601 en UTC). Salida: previous_price y price_changed_at del producto después del cambio",
+  "rf": [
+    90
+  ],
+  "cases": [
+    {
+      "name": "RF-90: el primer cambio de precio guarda el precio anterior y la fecha",
+      "input": {
+        "current_price": 2000,
+        "previous_price": null,
+        "price_changed_at": null,
+        "new_price": 2500,
+        "at": "2026-10-05T14:30:00Z"
+      },
+      "expected": {
+        "previous_price": 2000,
+        "price_changed_at": "2026-10-05T14:30:00Z"
+      }
+    },
+    {
+      "name": "RF-90: un precio más bajo también guarda el anterior",
+      "input": {
+        "current_price": 2500,
+        "previous_price": null,
+        "price_changed_at": null,
+        "new_price": 1800,
+        "at": "2026-10-06T09:00:00Z"
+      },
+      "expected": {
+        "previous_price": 2500,
+        "price_changed_at": "2026-10-06T09:00:00Z"
+      }
+    },
+    {
+      "name": "RF-90: un segundo cambio reemplaza al anterior guardado",
+      "input": {
+        "current_price": 2500,
+        "previous_price": 2000,
+        "price_changed_at": "2026-10-05T14:30:00Z",
+        "new_price": 3000,
+        "at": "2026-10-07T08:15:00Z"
+      },
+      "expected": {
+        "previous_price": 2500,
+        "price_changed_at": "2026-10-07T08:15:00Z"
+      }
+    },
+    {
+      "name": "RF-90: volver al precio de antes deja como anterior el que se abandona (20, 25 y otra vez 20 deja 25)",
+      "input": {
+        "current_price": 2500,
+        "previous_price": 2000,
+        "price_changed_at": "2026-10-05T14:30:00Z",
+        "new_price": 2000,
+        "at": "2026-10-08T10:00:00Z"
+      },
+      "expected": {
+        "previous_price": 2500,
+        "price_changed_at": "2026-10-08T10:00:00Z"
+      }
+    },
+    {
+      "name": "RF-90: si solo cambia el nombre o la unidad el precio es el mismo y no se toca nada",
+      "input": {
+        "current_price": 2500,
+        "previous_price": 2000,
+        "price_changed_at": "2026-10-05T14:30:00Z",
+        "new_price": 2500,
+        "at": "2026-10-09T12:00:00Z"
+      },
+      "expected": {
+        "previous_price": 2000,
+        "price_changed_at": "2026-10-05T14:30:00Z"
+      }
+    },
+    {
+      "name": "RF-90: sin cambio de precio y sin cambios anteriores sigue sin anterior",
+      "input": {
+        "current_price": 2500,
+        "previous_price": null,
+        "price_changed_at": null,
+        "new_price": 2500,
+        "at": "2026-10-09T12:00:00Z"
+      },
+      "expected": {
+        "previous_price": null,
+        "price_changed_at": null
+      }
+    },
+    {
+      "name": "RF-90: un aumento de un solo centavo es un cambio",
+      "input": {
+        "current_price": 2500,
+        "previous_price": null,
+        "price_changed_at": null,
+        "new_price": 2501,
+        "at": "2026-10-05T14:30:00Z"
+      },
+      "expected": {
+        "previous_price": 2500,
+        "price_changed_at": "2026-10-05T14:30:00Z"
+      }
+    },
+    {
+      "name": "RF-90: un precio mínimo de un centavo se guarda como anterior",
+      "input": {
+        "current_price": 1,
+        "previous_price": null,
+        "price_changed_at": null,
+        "new_price": 2,
+        "at": "2026-10-05T14:30:00Z"
+      },
+      "expected": {
+        "previous_price": 1,
+        "price_changed_at": "2026-10-05T14:30:00Z"
+      }
+    },
+    {
+      "name": "RF-90: precios enteros en lempiras (múltiplos de 100) se tratan igual",
+      "input": {
+        "current_price": 5000,
+        "previous_price": null,
+        "price_changed_at": null,
+        "new_price": 5500,
+        "at": "2026-10-05T14:30:00Z"
+      },
+      "expected": {
+        "previous_price": 5000,
+        "price_changed_at": "2026-10-05T14:30:00Z"
+      }
+    },
+    {
+      "name": "RF-90: la fecha es la de la operación, aunque sea anterior a la del cambio previo",
+      "input": {
+        "current_price": 2500,
+        "previous_price": 2000,
+        "price_changed_at": "2026-10-10T08:00:00Z",
+        "new_price": 2700,
+        "at": "2026-10-09T08:00:00Z"
+      },
+      "expected": {
+        "previous_price": 2500,
+        "price_changed_at": "2026-10-09T08:00:00Z"
+      }
+    },
+    {
+      "name": "RF-90: precios grandes (millones) no pierden precisión",
+      "input": {
+        "current_price": 123456789,
+        "previous_price": null,
+        "price_changed_at": null,
+        "new_price": 123456790,
+        "at": "2026-10-05T14:30:00Z"
+      },
+      "expected": {
+        "previous_price": 123456789,
+        "price_changed_at": "2026-10-05T14:30:00Z"
+      }
+    },
+    {
+      "name": "RF-90: dos cambios seguidos en el mismo instante conservan el último anterior",
+      "input": {
+        "current_price": 3000,
+        "previous_price": 2500,
+        "price_changed_at": "2026-10-05T14:30:00Z",
+        "new_price": 3500,
+        "at": "2026-10-05T14:30:00Z"
+      },
+      "expected": {
+        "previous_price": 3000,
+        "price_changed_at": "2026-10-05T14:30:00Z"
+      }
+    }
+  ]
+}

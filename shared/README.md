@@ -6,7 +6,7 @@ Esta carpeta no contiene código ejecutable. Contiene **datos** que los tests de
 El mismo cálculo (por ejemplo el redondeo de un subtotal o el saldo de un cliente) lo implementan tres plataformas. Si cada una definiera sus propios casos de prueba, podrían divergir sin que nadie lo note, y el saldo de un cliente sería distinto en el móvil y en el servidor. Aquí hay una sola fuente de verdad: cada plataforma tiene que pasar los mismos casos.
 
 ## Archivos previstos
-Se crean en las tareas T006 a T013 y T086 de `specs/001-mvp/tasks.md`.
+Se crean en las tareas T006 a T013, T086 y T176 de `specs/001-mvp/tasks.md`.
 
 | Archivo | Contenido | RF |
 |---|---|---|
@@ -19,6 +19,7 @@ Se crean en las tareas T006 a T013 y T086 de `specs/001-mvp/tasks.md`.
 | `vectors/client-validation.json` | Validación de cliente | 15, 17, 74 |
 | `vectors/business-modes.json` | Modos de montos y cantidades del negocio | 8, 9, 32, 35, 36, 84 |
 | `vectors/units.json` | Unidades de venta (lista fija con ids estables) | 86, 87, 88, 89 |
+| `vectors/price-change.json` | Precio anterior de un producto al cambiarle el precio | 90 |
 | `openapi.json` | Contrato de la API | — |
 
 ## Formato de un archivo de vectores
