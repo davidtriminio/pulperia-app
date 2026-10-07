@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 
 import '../../domain/access/access.dart';
 import '../../domain/business/amount_mode.dart';
+import '../../domain/catalog/price_change.dart';
 import '../../domain/catalog/product_validation.dart';
 import '../../domain/catalog/sale_unit.dart';
 import '../../domain/money/money.dart';
@@ -144,6 +145,21 @@ class ProductRepository {
       // Sin unidad indicada se conserva la que tenía.
       final effectiveUnit = unit ?? SaleUnit.fromId(current.unit);
 
+      // Un precio distinto deja el vigente como anterior, con la fecha del
+      // cambio; si el precio es el mismo no se toca (RF-90, D-24). Los ítems
+      // de fiado ya guardados no se tocan (RF-25).
+      final history = applyPriceChange(
+        currentPrice: Money(current.price),
+        current: PriceHistory(
+          previousPrice: current.previousPrice == null
+              ? null
+              : Money(current.previousPrice!),
+          changedAt: current.priceChangedAt,
+        ),
+        newPrice: valid.price,
+        at: now,
+      );
+
       await (_db.update(_db.products)..where(
             (p) => p.id.equals(productId) & p.businessId.equals(businessId),
           ))
@@ -152,6 +168,8 @@ class ProductRepository {
               name: Value(valid.name),
               price: Value(valid.price.minorUnits),
               unit: Value(effectiveUnit.id),
+              previousPrice: Value(history.previousPrice?.minorUnits),
+              priceChangedAt: Value(history.changedAt),
               version: Value(current.version + 1),
             ),
           );
