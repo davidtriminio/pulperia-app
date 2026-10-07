@@ -123,7 +123,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T176** Vectores compartidos `shared/vectors/price-change.json` y regla móvil del precio anterior. RF: 90. Dep: T034. *Hecho cuando:* los casos pasan en móvil: un precio distinto guarda anterior y fecha; el mismo precio, solo el nombre o solo la unidad no los tocan; 20, 25 y de vuelta a 20 deja 25 como anterior.
 - [x] **T177** Esquema local versión 3 con `previous_price` y `price_changed_at` en productos. RF: 90. Dep: T155, T176. *Hecho cuando:* una base creada con la versión 2, con productos, migra a la versión 3 sin perder datos y deja los dos campos en nulo; el código de Drift se regenera y las pruebas de esquema pasan.
 - [x] **T178** El repositorio de productos guarda el precio anterior y la fecha al cambiar el precio. RF: 90, 25. Dep: T177. *Hecho cuando:* cambiar el precio guarda anterior y fecha, los ítems de fiado ya guardados no cambian y la operación en la cola conserva su forma.
-- [ ] **T179** El catálogo muestra "Antes: L 20.00" y la fecha del cambio. RF: 90. Dep: T178, T157. *Hecho cuando:* un test de widget comprueba que solo aparece en productos con cambio de precio y que el formato respeta el modo de montos del negocio.
+- [x] **T179** El catálogo muestra "Antes: L 20.00" y la fecha del cambio. RF: 90. Dep: T178, T157. *Hecho cuando:* un test de widget comprueba que solo aparece en productos con cambio de precio y que el formato respeta el modo de montos del negocio.
 
 ## Fase 4 — Dominio de la API (.NET, sin EF ni HTTP)
 - [ ] **T041** Dinero y cantidad en unidad menor y milésimas. RF: 84; RNF-2. Dep: T013. *Hecho cuando:* pasan los vectores y no hay `double` ni `float` en el dominio.

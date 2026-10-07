@@ -5,3 +5,10 @@ String formatDateTime(DateTime value) {
   String two(int n) => n.toString().padLeft(2, '0');
   return '${two(d.day)}/${two(d.month)}/${d.year} ${two(d.hour)}:${two(d.minute)}';
 }
+
+/// Fecha local corta como `02/10/2026`.
+String formatDate(DateTime value) {
+  final d = value.toLocal();
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(d.day)}/${two(d.month)}/${d.year}';
+}
