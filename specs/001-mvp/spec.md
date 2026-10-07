@@ -84,6 +84,8 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - RF-87: CUANDO el usuario elige un producto del catálogo para un ítem, EL SISTEMA propondrá la unidad del producto y permitirá cambiarla solo para ese ítem; un ítem que no pertenece al catálogo también lleva una unidad, "unidad" por omisión.
 - RF-88: CUANDO se registra un ítem de fiado, EL SISTEMA guardará su unidad junto con la cantidad y el precio unitario de ese momento, de modo que cambiar la unidad de un producto o archivarlo no altere los ítems ya registrados.
 - RF-89: EL SISTEMA tratará la unidad solo como una etiqueta: el precio unitario es por esa unidad y la cantidad se expresa en ella, sin convertir entre unidades y sin cambiar el cálculo del subtotal ni las reglas de cantidad del negocio (RF-35, RF-84).
+- RF-90: CUANDO un usuario cambia el precio de un producto, EL SISTEMA guardará junto al producto el precio anterior y la fecha del cambio (sustituyendo los que hubiera) y los mostrará en el catálogo; cambiar solo el nombre o la unidad no los modifica.
+- RF-91: SI el nombre de un producto, con su unidad, coincide con el de otro producto no archivado del negocio (ignorando mayúsculas y espacios exteriores), ENTONCES EL SISTEMA avisará de la coincidencia y permitirá continuar solo si el usuario lo confirma, u ofrecerá ir a cambiar el precio del existente; aplica al crear un producto y al cambiar su nombre o su unidad.
 
 ### Fiados
 - RF-28: CUANDO un usuario registra un fiado con uno o más ítems (descripción, cantidad y precio unitario), EL SISTEMA guardará cada ítem con la cantidad y el precio unitario vigentes en ese momento.

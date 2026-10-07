@@ -1,6 +1,6 @@
 # Tareas 001 — MVP: administrador de deudas (fiados) para pulperías
 
-Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cubre `spec.md` (RF-1 a RF-89, RNF-1 a RNF-8).
+Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cubre `spec.md` (RF-1 a RF-91, RNF-1 a RNF-8).
 
 ## Cómo se trabaja
 - **Una unidad de trabajo es un bloque** de tareas relacionadas, con una rama y un PR. Se trabaja el bloque entero, tarea a tarea, y se para al cerrarlo (en el paso del PR) o antes si algo bloquea: un test que no pasa, una laguna de la spec, una dependencia no aprobada o una tarea de más de 30 minutos.
@@ -115,6 +115,16 @@ Solo interfaz: no cambia ningún RF ni las reglas del dominio. Barras inferiores
 - [x] **T170** Tarjeta del producto con − cantidad + para quitar y agregar desde la propia tarjeta, y tarjetas más cuidadas (sombra suave, botón + visible, estado seleccionado claro). RF: 30, 31. Dep: T169. *Hecho cuando:* tests de widget comprueban que una tarjeta sin agregar no muestra el botón −, que con el producto en el carrito muestra − cantidad +, que − resta 1 y quita la línea al llegar a cero, que + suma 1, que un toque en el cuerpo de la tarjeta sigue agregando, y que lo mismo funciona en la hoja "Ver todos".
 - [x] **T171** Botón de borrar la línea entera en el carrito cuando la cantidad es mayor que 1. RF: 30, 31. Dep: T162. *Hecho cuando:* un test comprueba que con cantidad 1 no aparece, que con cantidad mayor que 1 aparece y que al tocarlo la línea se quita de una vez y el total se actualiza.
 
+## Fase 3f — Productos: precio anterior y repetidos (móvil)
+Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha del cambio, y al guardar un producto con el mismo nombre y unidad que otro activo se avisa. No toca los ítems fiados ya registrados ni la operación de la cola.
+
+- [ ] **T174** Regla de dominio de producto repetido por nombre y unidad. RF: 91. Dep: T024, T034. *Hecho cuando:* tests comprueban que ignora mayúsculas y espacios exteriores, que otra unidad no es repetido, que los archivados no cuentan y que al editar un producto se excluye a sí mismo.
+- [ ] **T175** Aviso de producto repetido en el formulario del catálogo, con "Cambiar el precio del existente" y "Crear de todos modos". RF: 91. Dep: T174, T157. *Hecho cuando:* tests de widget comprueban que el aviso sale al crear y al cambiar nombre o unidad, que confirmar guarda, que la otra salida abre el producto existente y que sin repetido no sale aviso.
+- [ ] **T176** Vectores compartidos `shared/vectors/price-change.json` y regla móvil del precio anterior. RF: 90. Dep: T034. *Hecho cuando:* los casos pasan en móvil: un precio distinto guarda anterior y fecha; el mismo precio, solo el nombre o solo la unidad no los tocan; 20, 25 y de vuelta a 20 deja 25 como anterior.
+- [ ] **T177** Esquema local versión 3 con `previous_price` y `price_changed_at` en productos. RF: 90. Dep: T155, T176. *Hecho cuando:* una base creada con la versión 2, con productos, migra a la versión 3 sin perder datos y deja los dos campos en nulo; el código de Drift se regenera y las pruebas de esquema pasan.
+- [ ] **T178** El repositorio de productos guarda el precio anterior y la fecha al cambiar el precio. RF: 90, 25. Dep: T177. *Hecho cuando:* cambiar el precio guarda anterior y fecha, los ítems de fiado ya guardados no cambian y la operación en la cola conserva su forma.
+- [ ] **T179** El catálogo muestra "Antes: L 20.00" y la fecha del cambio. RF: 90. Dep: T178, T157. *Hecho cuando:* un test de widget comprueba que solo aparece en productos con cambio de precio y que el formato respeta el modo de montos del negocio.
+
 ## Fase 4 — Dominio de la API (.NET, sin EF ni HTTP)
 - [ ] **T041** Dinero y cantidad en unidad menor y milésimas. RF: 84; RNF-2. Dep: T013. *Hecho cuando:* pasan los vectores y no hay `double` ni `float` en el dominio.
 - [ ] **T042** Subtotales con ambos modos. RF: 34, 83. Dep: T006, T007. *Hecho cuando:* pasan los vectores de T006 y T007.
@@ -126,6 +136,7 @@ Solo interfaz: no cambia ningún RF ni las reglas del dominio. Barras inferiores
 - [ ] **T048** Reglas de ajustes del negocio. RF: 7, 8, 9. Dep: T013. *Hecho cuando:* pasan los vectores de transiciones.
 - [ ] **T049** Reglas de equipo: promoción, baja y último dueño. RF: 70, 71. *Hecho cuando:* toda acción que dejaría el negocio sin dueño se rechaza.
 - [ ] **T050** Reglas de invitación: estados y transiciones. RF: 10, 67, 68, 69. *Hecho cuando:* solo se puede aceptar o rechazar una invitación pendiente y una cancelada no se acepta.
+- [ ] **T180** Regla del precio anterior en el dominio de la API, contra los mismos vectores. RF: 90. Dep: T176. *Hecho cuando:* pasan los casos de `shared/vectors/price-change.json`.
 
 ## Fase 5 — Persistencia y aplicación de operaciones (API)
 - [ ] **T051** Persistencia de usuarios, negocios, pertenencias e invitaciones con migración. RF: 1, 2, 10. Dep: T049, T050. *Hecho cuando:* una prueba de integración contra PostgreSQL real crea y lee cada tabla.
@@ -140,6 +151,7 @@ Solo interfaz: no cambia ningún RF ni las reglas del dominio. Barras inferiores
 - [ ] **T060** Aplicar anulaciones de fiado y abono, idempotentes. RF: 43, 44, 46, 47, 49. *Hecho cuando:* cada anulación guarda usuario y fecha, y anular dos veces el mismo movimiento no cambia nada ni falla.
 - [ ] **T061** Comprobar permisos de rol en cada operación. RF: 13, 21, 45, 48. Dep: T046. *Hecho cuando:* un empleado que intenta anular o archivar recibe rechazo.
 - [ ] **T062** Registrar cada operación aplicada en `change_log` con su `seq`, de forma atómica. RF: 52. *Hecho cuando:* una falla a mitad de operación no deja `seq` huérfano.
+- [ ] **T181** Columnas `previous_price` y `price_changed_at` en `products`, aplicadas al procesar `product.update`, y devueltas por la sincronización y por la consulta de productos. RF: 90. Dep: T180. *Hecho cuando:* un cambio de precio sincronizado deja el anterior y la fecha, un cambio de solo nombre no los toca y el pull los entrega al móvil.
 
 ## Fase 6 — Cuentas, negocios y equipo (API)
 - [ ] **T063** Registro con correo, contraseña y nombre de negocio. RF: 1, 2, 78. Dep: T051. *Hecho cuando:* crea usuario, negocio y pertenencia de dueño; sin nombre de negocio se rechaza.
@@ -225,7 +237,7 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [ ] **T141** Documentar el comando de restablecimiento de contraseña. RF: 81. *Hecho cuando:* un tercero lo ejecuta siguiendo solo la documentación.
 
 ## Fase 12 — Validación
-- [ ] **T142** Recorrido RF por RF: qué test cubre cada uno y su resultado. RF: 1–89. *Hecho cuando:* existe una tabla con los 89 RF y los 8 RNF, cada uno con test o demo y resultado.
+- [ ] **T142** Recorrido RF por RF: qué test cubre cada uno y su resultado. RF: 1–91. *Hecho cuando:* existe una tabla con los 91 RF y los 8 RNF, cada uno con test o demo y resultado.
 - [ ] **T143** Demo: flujo principal en modo avión. RNF-1. *Hecho cuando:* se completa sin errores en un teléfono o emulador sin red.
 - [ ] **T144** Demo: dos dispositivos con fiados concurrentes. RF: 54. *Hecho cuando:* el saldo coincide en los dos.
 - [ ] **T145** Demo: recuperación en dispositivo nuevo. RF: 58. *Hecho cuando:* se ven todos los datos del negocio.
