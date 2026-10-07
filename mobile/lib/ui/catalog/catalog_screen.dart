@@ -7,6 +7,7 @@ import '../../domain/business/amount_mode.dart';
 import '../../domain/catalog/sale_unit.dart';
 import '../../domain/money/money.dart';
 import '../../l10n/strings.dart';
+import '../format/date_format.dart';
 import '../format/money_format.dart';
 import '../widgets/confirm_dialog.dart';
 import 'product_form_screen.dart';
@@ -153,6 +154,20 @@ class _ProductTile extends ConsumerWidget {
                           color: theme.colorScheme.outline,
                         ),
                       ),
+                      // Solo el último precio anterior, si el precio cambió
+                      // alguna vez (RF-90).
+                      if (product.previousPrice != null &&
+                          product.priceChangedAt != null)
+                        Text(
+                          '${Strings.previousPriceLabel}: '
+                          '${formatMoney(Money(product.previousPrice!), mode)}'
+                          ' · ${Strings.priceChangedOn} '
+                          '${formatDate(product.priceChangedAt!)}',
+                          key: ValueKey('product-previous-${product.id}'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                          ),
+                        ),
                     ],
                   ),
                 ),

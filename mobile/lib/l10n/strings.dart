@@ -49,6 +49,8 @@ abstract final class Strings {
   static const duplicateProductTitle = 'Ya existe un producto igual';
   static const duplicateCreateConfirm = 'Crear de todos modos';
   static const duplicateOpenExisting = 'Cambiar el precio del existente';
+  static const previousPriceLabel = 'Antes';
+  static const priceChangedOn = 'cambió el';
   static const clientNotFound = 'El cliente ya no existe';
   static const saveError = 'No se pudo guardar';
 
