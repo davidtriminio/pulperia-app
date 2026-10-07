@@ -23,9 +23,10 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   /// 1: esquema inicial. 2: unidad de venta en productos e ítems de fiado
-  /// (RF-86, RF-88, D-23).
+  /// (RF-86, RF-88, D-23). 3: precio anterior y fecha del cambio en productos
+  /// (RF-90, D-24).
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -34,6 +35,11 @@ class AppDatabase extends _$AppDatabase {
         // Lo que ya existía queda con la unidad por omisión ("unidad").
         await m.addColumn(products, products.unit);
         await m.addColumn(fiadoItems, fiadoItems.unit);
+      }
+      if (from < 3) {
+        // Lo que ya existía queda sin precio anterior (nulo).
+        await m.addColumn(products, products.previousPrice);
+        await m.addColumn(products, products.priceChangedAt);
       }
     },
     beforeOpen: (details) async {

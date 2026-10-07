@@ -42,11 +42,11 @@ AppDatabase openV1WithData() {
 }
 
 void main() {
-  test('el esquema actual es la versión 2', () {
+  test('el esquema es al menos la versión 2', () {
     final db = openDb();
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 2);
+    expect(db.schemaVersion, greaterThanOrEqualTo(2));
   });
 
   group('migración de la versión 1 a la 2 (RF-86, RF-88)', () {
