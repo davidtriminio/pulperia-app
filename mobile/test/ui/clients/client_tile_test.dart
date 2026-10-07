@@ -141,7 +141,7 @@ void main() {
         for (final id in ['c-1', 'c-2', 'c-3', 'c-4'])
           tester.getSize(key('client-tile-$id')).height,
       };
-      expect(heights.length, 1);
+      expect(heights, {92.0}, reason: 'alturas: $heights');
     });
 
     testWidgets('un nombre muy largo no desborda en pantallas angostas', (
@@ -157,6 +157,19 @@ void main() {
       ], width: 320);
 
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('el saldo queda pegado al borde derecho', (tester) async {
+      await pump(tester, [item('c-1', 700), item('c-2', 0)], width: 800);
+
+      for (final id in ['c-1', 'c-2']) {
+        final tile = tester.getRect(key('client-tile-$id'));
+        final chip = tester.getRect(key('balance-chip-$id'));
+        expect(tile.right - chip.right, lessThan(24), reason: id);
+      }
+      final tile = tester.getRect(key('client-tile-c-1'));
+      final amount = tester.getRect(key('balance-amount-c-1'));
+      expect(tile.right - amount.right, lessThan(24));
     });
 
     testWidgets('un toque abre el detalle', (tester) async {

@@ -254,6 +254,18 @@ void main() {
       expect(text(tester, 'balance-amount'), 'L 30.00');
     });
 
+    testWidgets('el monto de cada movimiento queda pegado al borde derecho', (
+      tester,
+    ) async {
+      await pump(tester, width: 800, seed: seedMovements);
+
+      for (final id in ['f-1', 'p-1']) {
+        final tile = tester.getRect(key('entry-$id'));
+        final amount = tester.getRect(key('entry-amount-$id'));
+        expect(tile.right - amount.right, lessThan(24), reason: id);
+      }
+    });
+
     testWidgets('las tarjetas de movimiento llevan sombra suave', (
       tester,
     ) async {

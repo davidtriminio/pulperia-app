@@ -12,6 +12,7 @@ import '../clients/client_detail_screen.dart';
 import '../clients/clients_screen.dart';
 import '../format/money_format.dart';
 import '../theme.dart';
+import '../widgets/amount_box.dart';
 
 /// Cuántos deudores se muestran de entrada; la lista completa la calcula el
 /// dominio y la interfaz decide el tope.
@@ -144,17 +145,13 @@ class _Content extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      formatMoney(summary.creditTotal, mode),
-                      key: const ValueKey('summary-credit-total'),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: AppColors.credit,
-                        fontWeight: FontWeight.w800,
-                      ),
+                AmountBox(
+                  child: Text(
+                    formatMoney(summary.creditTotal, mode),
+                    key: const ValueKey('summary-credit-total'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: AppColors.credit,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -269,17 +266,13 @@ class _DebtorTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      debt,
-                      key: ValueKey('debtor-amount-${client.id}'),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: AppColors.debt,
-                        fontWeight: FontWeight.w800,
-                      ),
+                AmountBox(
+                  child: Text(
+                    debt,
+                    key: ValueKey('debtor-amount-${client.id}'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: AppColors.debt,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),

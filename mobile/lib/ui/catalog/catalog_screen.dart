@@ -10,6 +10,7 @@ import '../../l10n/strings.dart';
 import '../format/date_format.dart';
 import '../format/money_format.dart';
 import '../widgets/confirm_dialog.dart';
+import '../widgets/amount_box.dart';
 import '../theme.dart';
 import 'product_form_screen.dart';
 
@@ -197,17 +198,13 @@ class _ProductTile extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerRight,
-                            child: Text(
-                              formatMoney(Money(product.price), mode),
-                              key: ValueKey('product-price-${product.id}'),
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                color: AppColors.navy,
-                                fontWeight: FontWeight.w800,
-                              ),
+                        AmountBox(
+                          child: Text(
+                            formatMoney(Money(product.price), mode),
+                            key: ValueKey('product-price-${product.id}'),
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: AppColors.navy,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
