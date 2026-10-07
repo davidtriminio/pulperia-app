@@ -20,6 +20,7 @@ import '../format/money_format.dart';
 import '../format/quantity_format.dart';
 import '../theme.dart';
 import '../widgets/confirm_dialog.dart';
+import '../widgets/amount_box.dart';
 import '../ledger/fiado_form_screen.dart';
 import '../ledger/payment_form_screen.dart';
 import 'client_form_screen.dart';
@@ -664,18 +665,14 @@ class _EntryTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '$sign ${formatMoney(entry.amount, mode)}',
-                      key: ValueKey('entry-amount-${entry.id}'),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        decoration: strike,
-                        color: annulled ? muted : accent,
-                      ),
+                AmountBox(
+                  child: Text(
+                    '$sign ${formatMoney(entry.amount, mode)}',
+                    key: ValueKey('entry-amount-${entry.id}'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      decoration: strike,
+                      color: annulled ? muted : accent,
                     ),
                   ),
                 ),

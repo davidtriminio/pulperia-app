@@ -173,6 +173,23 @@ void main() {
       expect(find.text('Nadie debe nada por ahora'), findsOne);
     });
 
+    testWidgets('los montos quedan pegados al borde derecho', (tester) async {
+      await pump(tester);
+      // Pantalla ancha: el hueco se vería si el monto no estuviera pegado.
+      tester.view.physicalSize = const Size(800, 1200);
+      await tester.pumpAndSettle();
+
+      // Saldo a favor: margen de la lista (16) más el de la tarjeta (16).
+      final credit = tester.getRect(key('summary-credit-total'));
+      expect(800 - credit.right, lessThan(36));
+
+      for (final id in ['c-carla', 'c-ana']) {
+        final tile = tester.getRect(key('debtor-$id'));
+        final amount = tester.getRect(key('debtor-amount-$id'));
+        expect(tile.right - amount.right, lessThan(24), reason: id);
+      }
+    });
+
     testWidgets('tocar un deudor abre su detalle', (tester) async {
       await pump(tester);
 

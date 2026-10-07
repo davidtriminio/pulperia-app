@@ -148,6 +148,22 @@ void main() {
       },
     );
 
+    testWidgets('el precio y archivar quedan pegados al borde derecho', (
+      tester,
+    ) async {
+      // Pantalla ancha y precio corto: el hueco se vería si el precio no
+      // estuviera pegado al borde.
+      await pump(tester, width: 800, seed: sample);
+
+      final tile = tester.getRect(key('catalog-tile-p-1'));
+      final icon = tester.getRect(key('archive-p-1'));
+      final price = tester.getRect(key('product-price-p-1'));
+      // El icono llega casi al borde y el precio va justo a su lado, sin un
+      // hueco vacío a la derecha.
+      expect(tile.right - icon.right, lessThan(12));
+      expect(icon.left - price.right, lessThan(24));
+    });
+
     testWidgets('un toque abre la edición del producto', (tester) async {
       await pump(tester, seed: sample);
 
