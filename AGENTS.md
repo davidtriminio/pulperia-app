@@ -30,18 +30,21 @@ Desde la raíz del repo salvo donde se indica.
 
 ## Ramas
 - Flujo `main` ← `develop` ← ramas de trabajo. Nunca se commitea directo en `main` ni en `develop`.
-- Unidad de trabajo = bloque (un grupo de tareas relacionadas). Cada bloque tiene una rama y un PR, con un commit por tarea.
-- La rama se crea desde `develop` y se llama `<tipo>/<scope>-<descripción-del-bloque>` (ej. `feat/mobile-estructura-app`), con tipo y scope de Conventional Commits.
-- Las tareas delicadas (sincronización, permisos, API/servidor, seguridad, migraciones) llevan rama y PR propios.
-- Las ramas entran en `develop` mediante PR con "rebase and merge" (nunca squash), para conservar un commit por tarea; solo con CI (`ci-ok`) en verde. `develop` entra en `main` mediante PR cuando hay un estado estable con las suites en verde.
+- Niveles de trabajo: **tarea** (un commit con sus tests y su casilla de `tasks.md`), **bloque** (grupo de tareas relacionadas, que cierra con informe) y **fase** (grupo de bloques de una fase, o de un tramo estable de ella, de `tasks.md`).
+- Cada fase tiene una rama y un PR hacia `develop`; los bloques de esa fase son commits consecutivos en esa misma rama, con un commit por tarea. Si una fase es muy larga se parte en tramos coherentes, cada uno con su rama y su PR.
+- La rama se crea desde `develop` y se llama `<tipo>/<scope>-<descripción-de-la-fase>` (ej. `feat/mobile-fase-9-interfaz`), con tipo y scope de Conventional Commits.
+- Las tareas delicadas (sincronización, permisos, API/servidor, seguridad, migraciones) llevan rama y PR propios, aparte de la fase.
+- Las ramas entran en `develop` mediante PR con "rebase and merge" (nunca squash), para conservar un commit por tarea; solo con CI (`ci-ok`) en verde.
+- `develop` entra en `main` mediante PR al cerrar cada fase, o cada tramo estable de una fase cuyo resto depende de otro proyecto (p. ej. del servidor), siempre con las suites de los proyectos existentes en verde. Al cerrar una fase se propone ese PR al usuario.
 - Antes de cada bloque: `git fetch --prune`, `gh pr list --state all` y pull de `develop`, verificando qué está realmente fusionado.
-- Al terminar el bloque, se sube la rama y se para en el paso del PR, con un informe de cierre (por tarea: qué se hizo, tests, y decisiones que la spec no define). No se abren ni se fusionan PR sin petición del usuario.
+- Al terminar cada bloque se sube la rama y se para con un informe de cierre (por tarea: qué se hizo, tests, y decisiones que la spec no define); el PR se abre al cerrar la fase o el tramo, o antes si el usuario lo pide. No se abren ni se fusionan PR sin petición del usuario.
+- Al abrir un PR se entrega siempre al usuario el comando de fusión con el número real: `gh pr merge <número> --rebase --delete-branch`.
 
 ## Reglas
 - Lee `docs/constitution.md` y la spec activa en `specs/` antes de tocar código.
 - No añadas dependencias ni cambies el contrato de la API sin actualizar antes la spec/plan.
 - No modifiques archivos dentro de `specs/` salvo petición explícita.
-- Tests primero en cada tarea (verlos en rojo, implementar, ver verde) y un commit por tarea. Párate al terminar el bloque, o antes si algo bloquea: un test que no pasa, una laguna de la spec, una dependencia no aprobada o una tarea de más de 30 minutos.
+- Tests primero en cada tarea (verlos en rojo, implementar, ver verde) y un commit por tarea. Párate al terminar el bloque (informe y push), o antes si algo bloquea: un test que no pasa, una laguna de la spec, una dependencia no aprobada o una tarea de más de 30 minutos.
 
 ## Al terminar cada tarea y al cerrar el bloque
 - Ejecuta los tests del/los proyecto(s) tocados y confirma en tu respuesta que todo pasa.
