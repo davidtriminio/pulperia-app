@@ -1,6 +1,6 @@
 # Plan técnico 001 — MVP: administrador de deudas (fiados) para pulperías
 
-Estado: APROBADO el 2026-10-02; enmendado el 2026-10-05 con las unidades de venta (RF-86 a RF-89, D-23). Cubre `spec.md` (RF-1 a RF-89, RNF-1 a RNF-8) y respeta `docs/constitution.md` (principios 1 a 11).
+Estado: APROBADO el 2026-10-02; enmendado el 2026-10-05 con las unidades de venta (RF-86 a RF-89, D-23) y el 2026-10-07 con el precio anterior y los productos repetidos (RF-90, RF-91, D-24). Cubre `spec.md` (RF-1 a RF-91, RNF-1 a RNF-8) y respeta `docs/constitution.md` (principios 1 a 11).
 Este plan no contiene código. Define módulos, modelo de datos, decisiones y estrategia de tests.
 
 ## 1. Visión general
@@ -39,7 +39,7 @@ Carpeta nueva en la raíz del monorepo. No es código ejecutable: son datos que 
 | Backups | Copia diaria de la base, enviada fuera de la máquina, con rotación de 3 copias | RNF-8 |
 | Invitations | Invitaciones pendientes, aceptar, rechazar, cancelar; promoción a dueño; último dueño; baja de empleado | 10–13, 67–71 |
 | Clients | Alta, edición, archivado y restauración; avatar; datos de contacto; aviso de homónimo | 14–23, 72–77 |
-| Catalog | Productos: alta, cambio de precio y de unidad, archivado | 24–27, 86 |
+| Catalog | Productos: alta, cambio de precio y de unidad, archivado, precio anterior y aviso de repetidos | 24–27, 86, 90, 91 |
 | Ledger | Fiados, ítems con su unidad, abonos, anulación, saldo, permisos por rol, autoría | 28–47, 49, 87–89 |
 | Sync | Recepción de lotes de operaciones, idempotencia, conflictos, entrega de cambios por cursor, descarga inicial | 51–58, 62 |
 | Reports | Resumen del negocio para la web | 63–65 |
@@ -82,7 +82,7 @@ Todo registro de negocio lleva `business_id` (principio 6). Los IDs son GUID gen
 | memberships | user_id, business_id, role (dueño / empleado), status (activo / removido), removed_at, final_sync_used |
 | invitations | id, business_id, email, status (pendiente / aceptada / rechazada / cancelada), created_by, created_at |
 | clients | id, business_id, name, character_id, skin_id, background_id, phone?, address?, note?, archived, version, created_by, created_at, updated_at |
-| products | id, business_id, name, price (unidad menor), unit, archived, version, created_by, created_at |
+| products | id, business_id, name, price (unidad menor), unit, previous_price? (unidad menor), price_changed_at?, archived, version, created_by, created_at |
 | fiados | id, business_id, client_id, total (unidad menor), occurred_at, created_by, annulled_at?, annulled_by? |
 | fiado_items | id, fiado_id, product_id?, description, quantity (milésimas), unit, unit_price (unidad menor), subtotal (unidad menor) |
 | payments | id, business_id, client_id, amount (unidad menor), occurred_at, created_by, annulled_at?, annulled_by? |
@@ -106,6 +106,7 @@ Reglas del modelo:
 - **session**: usuario, negocio activo, tokens (en almacenamiento seguro, no en la base).
 - El saldo y el resumen son consultas sobre las tablas locales (RF-66).
 - La base local pasa a la versión 2 al añadir `unit` a `products` y `fiado_items`: una migración que conserva los datos y deja la unidad por omisión en lo existente (D-23).
+- La base local pasa a la versión 3 al añadir `previous_price` y `price_changed_at` (ambos nulos) a `products`: una migración que conserva los datos y deja los dos campos en nulo en lo existente (D-24).
 
 ## 4. Sincronización
 
@@ -176,6 +177,7 @@ El negocio activo se indica en cada petición y el servidor comprueba siempre qu
 | D-21 | IDs generados en el cliente con el paquete `uuid`, UUID v7 (RFC 9562), desde un único generador inyectable; el servidor acepta cualquier GUID válido y puede generar los mismos con `Guid.CreateVersion7` de .NET | Estándar, ordenable por tiempo (mejor rendimiento de índices en PostgreSQL) y repositorios con generadores deterministas en los tests | Generador propio con `Random.secure`: mantenimiento y auditoría a nuestro cargo |
 | D-22 | Integración continua con GitHub Actions: tests de api, mobile y web en cada PR hacia `develop` y `main`, con un job final `ci-ok` exigible como comprobación obligatoria | Principio 8 (tests como puerta) aplicado también a la fusión de PR | Comprobar solo en local: depende de la disciplina de cada persona |
 | D-23 | La unidad de venta es una etiqueta de una lista fija con identificadores estables; el producto y cada ítem de fiado llevan una (la del ítem es copia de la del producto, editable solo para ese ítem). No hay conversiones ni reglas de cantidad por unidad | Las pulperías venden por libra, docena, etc., y basta con mostrar en qué se contó; sin conversiones no hay inventario ni dinero que redondear distinto (RF-89) | Convertir entre unidades: reglas nuevas en las tres plataformas y cerca del inventario, fuera de alcance. Unidad como texto libre: validación y sincronización sin beneficio claro. Reglas de decimales por unidad: contradice RF-35 y RF-84 |
+| D-24 | El precio anterior de un producto y la fecha del cambio viven en el propio producto (`previous_price`, `price_changed_at`), no en una lista de historial: cada cambio de precio reemplaza al anterior. Lo calcula el servidor al aplicar `product.update` con un precio distinto del vigente (la fecha es la de creación de la operación, como en D-18); un cambio que no toca el precio no los modifica. La operación de la cola no cambia; la respuesta de sincronización y las consultas de productos incluyen los dos campos (cambio aditivo del contrato). El aviso de producto repetido (RF-91) es solo del cliente y no lo exige el servidor | Es lo que se pidió (solo el anterior), no cambia las operaciones y los ítems fiados ya sirven de historial de lo cobrado | Tabla de historial completo: más trabajo en móvil, API y web sin necesidad en el MVP |
 | D-18 | Historial ordenado por la fecha de creación del dispositivo, con desempate por orden de llegada al servidor | Refleja cuándo ocurrió la venta aunque se sincronice tarde | Orden por llegada al servidor: confundiría al usuario con ventas hechas sin conexión |
 
 ## 7. Estrategia de tests
