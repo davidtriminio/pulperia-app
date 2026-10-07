@@ -198,7 +198,7 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [ ] **T118** Invitaciones recibidas: aceptar o rechazar. RF: 67, 68. *Hecho cuando:* se muestran al iniciar sesión y al aceptar el negocio aparece en la lista.
 - [ ] **T119** Ajustes y nombre del negocio. RF: 7, 8, 9, 80. *Hecho cuando:* pasar de decimales a enteros no se ofrece.
 - [ ] **T120** Mensajes de error en español para cada código de la API. RNF-5. *Hecho cuando:* una prueba recorre todos los códigos y ninguno queda sin mensaje.
-- [ ] **T121** Verificación del flujo principal en modo avión. RNF-1. *Hecho cuando:* en un dispositivo o emulador sin red se completa el flujo de clientes, fiados, abonos, anulación y resumen.
+- [x] **T121** Verificación del flujo principal en modo avión. RNF-1. *Hecho cuando:* en un dispositivo o emulador sin red se completa el flujo de clientes, fiados, abonos, anulación y resumen.
 
 ## Fase 10 — Cliente web
 - [ ] **T122** Dominio web: validaciones de formulario con los vectores. RF: 15, 17, 32, 34, 35, 36, 74, 77, 83, 84. Dep: T006, T007, T009, T012, T013. *Hecho cuando:* pasan los vectores en `ng test`.
