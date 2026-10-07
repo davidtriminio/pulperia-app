@@ -10,6 +10,7 @@ import '../../l10n/strings.dart';
 import '../format/date_format.dart';
 import '../format/money_format.dart';
 import '../widgets/confirm_dialog.dart';
+import '../theme.dart';
 import 'product_form_screen.dart';
 
 /// Productos del catálogo del negocio activo que se pueden ofrecer al fiar.
@@ -115,50 +116,115 @@ class _ProductTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final radius = BorderRadius.circular(20);
+    final hasPrevious =
+        product.previousPrice != null && product.priceChangedAt != null;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => ProductFormScreen(existing: product),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: DecoratedBox(
+        key: ValueKey('catalog-tile-${product.id}'),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: radius,
+          border: Border.all(color: const Color(0xFFDCE6EB)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.navy.withValues(alpha: 0.07),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(
-              left: 16,
-              top: 6,
-              bottom: 6,
-              right: 4,
+          ],
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: radius,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ProductFormScreen(existing: product),
+              ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 84),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 4, 10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                product.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                key: ValueKey(
+                                  'product-unit-pill-${product.id}',
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.turquoise.withValues(
+                                    alpha: 0.16,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${Strings.perUnit} '
+                                  '${SaleUnit.fromId(product.unit).singular}',
+                                  key: ValueKey('product-unit-${product.id}'),
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: AppColors.navy,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Text(
-                        '${Strings.perUnit} '
-                        '${SaleUnit.fromId(product.unit).singular}',
-                        key: ValueKey('product-unit-${product.id}'),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.outline,
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              formatMoney(Money(product.price), mode),
+                              key: ValueKey('product-price-${product.id}'),
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: AppColors.navy,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      // Solo el último precio anterior, si el precio cambió
-                      // alguna vez (RF-90).
-                      if (product.previousPrice != null &&
-                          product.priceChangedAt != null)
-                        Text(
+                        IconButton(
+                          key: ValueKey('archive-${product.id}'),
+                          tooltip: Strings.archiveProduct,
+                          icon: const Icon(Icons.archive_outlined),
+                          onPressed: () => _archive(context, ref),
+                        ),
+                      ],
+                    ),
+                    // Solo el último precio anterior, si el precio cambió
+                    // alguna vez (RF-90), a todo el ancho de la tarjeta.
+                    if (hasPrevious)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2, right: 12),
+                        child: Text(
                           '${Strings.previousPriceLabel}: '
                           '${formatMoney(Money(product.previousPrice!), mode)}'
                           ' · ${Strings.priceChangedOn} '
@@ -168,22 +234,10 @@ class _ProductTile extends ConsumerWidget {
                             color: theme.colorScheme.outline,
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
-                Text(
-                  formatMoney(Money(product.price), mode),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                IconButton(
-                  key: ValueKey('archive-${product.id}'),
-                  tooltip: Strings.archiveProduct,
-                  icon: const Icon(Icons.archive_outlined),
-                  onPressed: () => _archive(context, ref),
-                ),
-              ],
+              ),
             ),
           ),
         ),
