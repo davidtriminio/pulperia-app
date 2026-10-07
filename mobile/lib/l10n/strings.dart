@@ -46,6 +46,9 @@ abstract final class Strings {
       'Existe otro cliente con el mismo nombre en este negocio. '
       '¿Quieres guardar de todos modos?';
   static const homonymConfirm = 'Guardar de todos modos';
+  static const duplicateProductTitle = 'Ya existe un producto igual';
+  static const duplicateCreateConfirm = 'Crear de todos modos';
+  static const duplicateOpenExisting = 'Cambiar el precio del existente';
   static const clientNotFound = 'El cliente ya no existe';
   static const saveError = 'No se pudo guardar';
 
