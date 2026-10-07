@@ -5,6 +5,7 @@ import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/product_repository.dart';
 import '../../domain/business/amount_mode.dart';
+import '../../domain/catalog/duplicate_product.dart';
 import '../../domain/catalog/product_validation.dart';
 import '../../domain/catalog/sale_unit.dart';
 import '../../domain/money/money.dart';
@@ -12,6 +13,7 @@ import '../../l10n/strings.dart';
 import '../input_limits.dart';
 import '../format/amount_messages.dart';
 import '../format/money_format.dart';
+import '../widgets/confirm_dialog.dart';
 import 'catalog_screen.dart';
 import 'unit_selector.dart';
 
@@ -96,11 +98,16 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       return;
     }
 
-    setState(() => _saving = true);
     final repository = ref.read(productRepositoryProvider);
     final businessId = ref.read(activeBusinessIdProvider);
     final user = ref.read(activeUserProvider);
     final existing = widget.existing;
+
+    if (!await _confirmNotDuplicate(repository, businessId, existing)) {
+      return;
+    }
+
+    setState(() => _saving = true);
 
     final result = existing == null
         ? await repository.create(
@@ -146,6 +153,79 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       case ProductForbidden():
         setState(() => _saving = false);
         _show(Strings.saveError);
+    }
+  }
+
+  /// Avisa si ya hay otro producto activo con el mismo nombre y unidad
+  /// (RF-91). Al editar solo avisa si cambia el nombre o la unidad, y el propio
+  /// producto no cuenta. Devuelve false si no se debe guardar: el usuario
+  /// canceló o fue a cambiar el precio del existente.
+  Future<bool> _confirmNotDuplicate(
+    ProductRepository repository,
+    String businessId,
+    Product? editing,
+  ) async {
+    final name = _name.text;
+    final changed =
+        editing == null ||
+        editing.name.trim().toLowerCase() != name.trim().toLowerCase() ||
+        editing.unit != _unit.id;
+    if (!changed) {
+      return true;
+    }
+
+    final products = await repository.activeProducts(businessId);
+    final found = findDuplicateProduct(
+      name: name,
+      unit: _unit,
+      existing: [
+        for (final p in products)
+          ProductRef(
+            id: p.id,
+            name: p.name,
+            unit: SaleUnit.fromId(p.unit),
+            archived: p.archived,
+          ),
+      ],
+      excludeId: editing?.id,
+    );
+    if (found == null || !mounted) {
+      return found == null;
+    }
+
+    final duplicate = products.firstWhere((p) => p.id == found.id);
+    final price = formatMoney(Money(duplicate.price), _mode);
+    final choice = await showChoiceDialog(
+      context,
+      icon: Icons.copy_all_outlined,
+      title: Strings.duplicateProductTitle,
+      body:
+          'Ya tienes ${duplicate.name} ${Strings.perUnit} ${_unit.singular} '
+          'a $price. Puedes cambiarle el precio o crear otro igual.',
+      confirmLabel: editing == null
+          ? Strings.duplicateCreateConfirm
+          : Strings.homonymConfirm,
+      cancelLabel: Strings.cancel,
+      extraLabel: Strings.duplicateOpenExisting,
+      confirmKey: const ValueKey('duplicate-confirm'),
+      cancelKey: const ValueKey('duplicate-cancel'),
+      extraKey: const ValueKey('duplicate-open-existing'),
+    );
+    if (!mounted) {
+      return false;
+    }
+    switch (choice) {
+      case ConfirmChoice.confirm:
+        return true;
+      case ConfirmChoice.cancel:
+        return false;
+      case ConfirmChoice.extra:
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => ProductFormScreen(existing: duplicate),
+          ),
+        );
+        return false;
     }
   }
 
