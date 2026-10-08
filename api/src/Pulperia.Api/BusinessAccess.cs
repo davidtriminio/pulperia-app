@@ -43,6 +43,18 @@ public static class BusinessAccess
             return await next(invocation);
         });
 
+    /// <summary>
+    /// Exige además un permiso del rol del usuario en el negocio activo (RF-13). Va después de
+    /// <see cref="RequireBusiness"/> y antes de leer el cuerpo, así que a un empleado se le
+    /// rechaza con 403 sea cual sea lo que envíe.
+    /// </summary>
+    public static TBuilder RequirePermission<TBuilder>(this TBuilder builder, Permission permission)
+        where TBuilder : IEndpointConventionBuilder =>
+        builder.AddEndpointFilter(async (invocation, next) =>
+            RolePermissions.Can(invocation.HttpContext.GetActiveBusiness().Role, permission)
+                ? await next(invocation)
+                : Http.Error(StatusCodes.Status403Forbidden, "forbidden"));
+
     /// <summary>El negocio activo de una ruta protegida con <see cref="RequireBusiness"/>.</summary>
     public static ActiveBusiness GetActiveBusiness(this HttpContext context) =>
         context.Items[ItemKey] as ActiveBusiness

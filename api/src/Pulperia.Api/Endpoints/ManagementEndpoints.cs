@@ -18,7 +18,9 @@ internal static class ManagementEndpoints
 
     public static void MapManagementEndpoints(this WebApplication app)
     {
-        var business = app.MapGroup("/api/business").RequireBusiness();
+        // Ajustes y equipo son solo del dueño: ManageTeam y ManageBusinessSettings son permisos de dueño
+        // (el servicio vuelve a comprobarlo). Una ruta nueva en este grupo queda protegida de entrada.
+        var business = app.MapGroup("/api/business").RequireBusiness().RequirePermission(Permission.ManageTeam);
         business.MapGet("", GetSettingsAsync);
         business.MapPatch("", UpdateSettingsAsync);
         business.MapPost("/invitations", InviteAsync);
