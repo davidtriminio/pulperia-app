@@ -21,6 +21,15 @@ public static class InvitationStatuses
         InvitationStatus.Cancelled => "cancelled",
         _ => throw new ArgumentOutOfRangeException(nameof(status)),
     };
+
+    public static InvitationStatus FromId(string id) => id switch
+    {
+        "pending" => InvitationStatus.Pending,
+        "accepted" => InvitationStatus.Accepted,
+        "rejected" => InvitationStatus.Rejected,
+        "cancelled" => InvitationStatus.Cancelled,
+        _ => throw new ArgumentException($"Estado de invitación desconocido: {id}", nameof(id)),
+    };
 }
 
 /// <summary>

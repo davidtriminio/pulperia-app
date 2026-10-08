@@ -247,6 +247,16 @@ public class InvitationRulesTests
     }
 
     [Fact]
+    public void Los_ids_de_estado_se_leen_de_vuelta_y_uno_desconocido_lanza()
+    {
+        foreach (var status in Enum.GetValues<InvitationStatus>())
+        {
+            Assert.Equal(status, InvitationStatuses.FromId(status.Id()));
+        }
+        Assert.Throws<ArgumentException>(() => InvitationStatuses.FromId("expired"));
+    }
+
+    [Fact]
     public void Los_ids_de_estado_son_estables()
     {
         Assert.Equal("pending", InvitationStatus.Pending.Id());
