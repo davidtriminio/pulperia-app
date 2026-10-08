@@ -174,7 +174,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T076** Conflicto de versión: gana el servidor. RF: 55. *Hecho cuando:* una edición con versión anterior se rechaza y no sobrescribe.
 - [x] **T077** Fiados y abonos concurrentes del mismo cliente desde dos dispositivos. RF: 54. *Hecho cuando:* tras ambos envíos el saldo es la suma de todos.
 - [x] **T078** Anulación de un fiado con abonos de otro dispositivo. RF: 47. *Hecho cuando:* los abonos se conservan y el saldo queda a favor.
-- [ ] **T079** Endpoint de cambios por cursor, paginado. RF: 52; RNF-7. *Hecho cuando:* devuelve solo lo posterior al cursor y en páginas.
+- [x] **T079** Endpoint de cambios por cursor, paginado. RF: 52; RNF-7. *Hecho cuando:* devuelve solo lo posterior al cursor y en páginas.
 - [ ] **T080** Descarga inicial desde cursor cero. RF: 58. *Hecho cuando:* un cursor vacío entrega todo el negocio y nada de otros negocios.
 - [ ] **T081** Empleado removido: último lote y revocación. RF: 11, 12. *Hecho cuando:* su primer envío tras la baja se acepta, el siguiente se rechaza, y no hay límite de tiempo.
 - [ ] **T082** Prueba de fiado a cliente archivado por otro dispositivo. RF: 85. *Hecho cuando:* el fiado se acepta y el cliente sigue archivado con el saldo actualizado.

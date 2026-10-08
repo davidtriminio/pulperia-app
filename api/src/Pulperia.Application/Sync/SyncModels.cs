@@ -40,3 +40,13 @@ public sealed record ProcessedOp(string Result, bool InThisBusiness);
 
 /// <summary>La pertenencia de un usuario al negocio de la sincronización (RF-6, RF-12).</summary>
 public sealed record SyncMembership(Role Role, MembershipStatus Status, bool FinalSyncUsed);
+
+/// <summary>
+/// Un registro que cambió y la versión actual completa del registro (plan 4.3): un
+/// <c>ClientRecord</c>, <c>ProductRecord</c>, <c>FiadoRecord</c> o <c>PaymentRecord</c> según el tipo.
+/// </summary>
+/// <param name="Seq">El <c>seq</c> del último cambio de ese registro dentro de la página.</param>
+public sealed record ChangeEntry(long Seq, Pulperia.Domain.Sync.ChangeEntityType Type, object Record);
+
+/// <summary>Una página de cambios: el cursor a pedir después y si hay más páginas.</summary>
+public sealed record ChangePage(long Cursor, bool HasMore, IReadOnlyList<ChangeEntry> Changes);

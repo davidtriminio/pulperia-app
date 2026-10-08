@@ -163,13 +163,13 @@ public sealed class EfOperationStore : IOperationStore
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    private static PaymentRecord ToRecord(PaymentEntity e) => new(
+    internal static PaymentRecord ToRecord(PaymentEntity e) => new(
         e.Id, e.ClientId, new Money(e.Amount), e.OccurredAt, e.CreatedBy, e.AnnulledAt, e.AnnulledBy);
 
-    private static FiadoItemRecord ToRecord(FiadoItemEntity e) => new(
+    internal static FiadoItemRecord ToRecord(FiadoItemEntity e) => new(
         e.Id, e.ProductId, e.Description, new Quantity(e.Quantity), e.Unit, new Money(e.UnitPrice), new Money(e.Subtotal));
 
-    private static ProductRecord ToRecord(ProductEntity e) => new(
+    internal static ProductRecord ToRecord(ProductEntity e) => new(
         e.Id, e.Name, new Money(e.Price), e.Unit,
         e.PreviousPrice is { } previous ? new Money(previous) : null, e.PriceChangedAt,
         e.Archived, e.Version, e.CreatedBy, e.CreatedAt);
@@ -199,7 +199,7 @@ public sealed class EfOperationStore : IOperationStore
     public Task<T> InTransactionAsync<T>(Func<Task<T>> work, CancellationToken cancellationToken = default) =>
         Transactions.RunAsync(_db, work, cancellationToken);
 
-    private static ClientRecord ToRecord(ClientEntity e) => new(
+    internal static ClientRecord ToRecord(ClientEntity e) => new(
         e.Id, e.Name, e.CharacterId, e.SkinId, e.BackgroundId, e.Phone, e.Address, e.Note,
         e.Archived, e.Version, e.CreatedBy, e.CreatedAt, e.UpdatedAt);
 

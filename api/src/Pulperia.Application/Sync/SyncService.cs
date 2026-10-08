@@ -16,6 +16,11 @@ public sealed class SyncService(OperationApplier applier, ISyncStore store, Time
     /// <summary>Operaciones por lote, para que un envío no sea ilimitado (el móvil envía por tandas).</summary>
     public const int MaxBatchSize = 500;
 
+    /// <summary>Registros por página de cambios si el dispositivo no pide un tamaño, y el máximo que se le da.</summary>
+    public const int DefaultPageSize = 200;
+
+    public const int MaxPageSize = 500;
+
     public const string Forbidden = "forbidden";
     public const string BatchTooLarge = "batch_too_large";
     public const string OpIdInUse = "op_id_in_use";
@@ -51,6 +56,22 @@ public sealed class SyncService(OperationApplier applier, ISyncStore store, Time
             },
             cancellationToken);
         return AccountResult<IReadOnlyList<OperationOutcome>>.Ok(outcomes);
+    }
+
+    /// <summary>
+    /// Los cambios del negocio posteriores al cursor, paginados (plan 4.3). Con cursor cero es la
+    /// descarga inicial (RF-58). Solo para quien pertenece al negocio: un removido ya no lee sus
+    /// datos (RF-11); su único acceso es el último lote de envío (RF-12).
+    /// </summary>
+    public async Task<AccountResult<ChangePage>> PullAsync(
+        Guid userId, long cursor, int? limit, CancellationToken cancellationToken = default)
+    {
+        if (await store.FindMembershipAsync(userId, cancellationToken) is not { Status: MembershipStatus.Active })
+        {
+            return AccountResult<ChangePage>.Fail(Forbidden);
+        }
+        var size = Math.Clamp(limit ?? DefaultPageSize, 1, MaxPageSize);
+        return AccountResult<ChangePage>.Ok(await store.ReadChangesAsync(cursor, size, cancellationToken));
     }
 
     /// <summary>

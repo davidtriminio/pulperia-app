@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Pulperia.Application.Operations;
 using Pulperia.Application.Sync;
+using Pulperia.Domain.Amounts;
+using Pulperia.Domain.Sync;
+using Pulperia.Infrastructure.Operations;
 using Pulperia.Infrastructure.Persistence;
 using Pulperia.Infrastructure.Persistence.Entities;
 
@@ -31,6 +35,80 @@ public sealed class EfSyncStore : ISyncStore
         _ = await _db.Database
             .SqlQuery<int>($"SELECT 1 AS \"Value\" FROM businesses WHERE id = {_businessId} FOR UPDATE")
             .ToListAsync(cancellationToken);
+
+    public async Task<ChangePage> ReadChangesAsync(long cursor, int limit, CancellationToken cancellationToken = default)
+    {
+        // Una fila de más para saber si queda otra página sin contar.
+        var rows = await _db.ChangeLog.AsNoTracking()
+            .Where(c => c.Seq > cursor).OrderBy(c => c.Seq).Take(limit + 1)
+            .ToListAsync(cancellationToken);
+        var hasMore = rows.Count > limit;
+        if (hasMore)
+        {
+            rows.RemoveAt(rows.Count - 1);
+        }
+        if (rows.Count == 0)
+        {
+            return new ChangePage(cursor, false, []);
+        }
+
+        // Un registro que cambió varias veces en la página viaja una vez, con su último seq.
+        var latest = rows
+            .GroupBy(r => (r.EntityType, r.EntityId))
+            .Select(g => g.Last())
+            .OrderBy(r => r.Seq)
+            .ToList();
+        var records = new Dictionary<(ChangeEntityType, Guid), object>();
+        await LoadAsync(latest, ChangeEntityType.Client, ids => LoadClientsAsync(ids, cancellationToken), records);
+        await LoadAsync(latest, ChangeEntityType.Product, ids => LoadProductsAsync(ids, cancellationToken), records);
+        await LoadAsync(latest, ChangeEntityType.Fiado, ids => LoadFiadosAsync(ids, cancellationToken), records);
+        await LoadAsync(latest, ChangeEntityType.Payment, ids => LoadPaymentsAsync(ids, cancellationToken), records);
+
+        return new ChangePage(
+            rows[^1].Seq,
+            hasMore,
+            latest.Select(r => new ChangeEntry(r.Seq, r.EntityType, records[(r.EntityType, r.EntityId)])).ToList());
+    }
+
+    private static async Task LoadAsync(
+        List<ChangeLogEntity> changes,
+        ChangeEntityType type,
+        Func<Guid[], Task<IEnumerable<(Guid Id, object Record)>>> load,
+        Dictionary<(ChangeEntityType, Guid), object> into)
+    {
+        var ids = changes.Where(c => c.EntityType == type).Select(c => c.EntityId).ToArray();
+        if (ids.Length == 0)
+        {
+            return;
+        }
+        foreach (var (id, record) in await load(ids))
+        {
+            into[(type, id)] = record;
+        }
+    }
+
+    private async Task<IEnumerable<(Guid, object)>> LoadClientsAsync(Guid[] ids, CancellationToken cancellationToken) =>
+        (await _db.Clients.AsNoTracking().Where(c => ids.Contains(c.Id)).ToListAsync(cancellationToken))
+            .Select(c => (c.Id, (object)EfOperationStore.ToRecord(c)));
+
+    private async Task<IEnumerable<(Guid, object)>> LoadProductsAsync(Guid[] ids, CancellationToken cancellationToken) =>
+        (await _db.Products.AsNoTracking().Where(p => ids.Contains(p.Id)).ToListAsync(cancellationToken))
+            .Select(p => (p.Id, (object)EfOperationStore.ToRecord(p)));
+
+    private async Task<IEnumerable<(Guid, object)>> LoadPaymentsAsync(Guid[] ids, CancellationToken cancellationToken) =>
+        (await _db.Payments.AsNoTracking().Where(p => ids.Contains(p.Id)).ToListAsync(cancellationToken))
+            .Select(p => (p.Id, (object)EfOperationStore.ToRecord(p)));
+
+    private async Task<IEnumerable<(Guid, object)>> LoadFiadosAsync(Guid[] ids, CancellationToken cancellationToken)
+    {
+        var fiados = await _db.Fiados.AsNoTracking().Where(f => ids.Contains(f.Id)).ToListAsync(cancellationToken);
+        var items = (await _db.FiadoItems.AsNoTracking().Where(i => ids.Contains(i.FiadoId)).OrderBy(i => i.Id)
+                .ToListAsync(cancellationToken))
+            .ToLookup(i => i.FiadoId);
+        return fiados.Select(f => (f.Id, (object)new FiadoRecord(
+            f.Id, f.ClientId, new Money(f.Total), f.OccurredAt, f.CreatedBy, f.AnnulledAt, f.AnnulledBy,
+            items[f.Id].Select(EfOperationStore.ToRecord).ToList())));
+    }
 
     public async Task<ProcessedOp?> FindProcessedOpAsync(Guid opId, CancellationToken cancellationToken = default)
     {
