@@ -169,7 +169,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T183** Código de invitación: columna `code` (migración `CodigoDeInvitacion`, `email` opcional), código al crear la invitación con o sin correo, visible en el listado del dueño, y `POST /api/invitations/redeem` con límite de intentos. RF: 10, 92, 93, 94; D-28. Dep: T068, T069. *Hecho cuando:* una invitación sin correo se activa con su código desde una cuenta cualquiera y entra como empleado; una con correo también se puede activar por código desde otro correo; un código usado, cancelado o inexistente da el mismo rechazo sin revelar el negocio; el invitado no ve el código en su lista; y el undécimo intento fallido en un minuto se rechaza.
 
 ## Fase 7 — Sincronización y consultas (API)
-- [ ] **T074** Endpoint de envío de lote con resultado por operación. RF: 52. Dep: T056–T062. *Hecho cuando:* cada operación del lote devuelve aplicada, duplicada o rechazada con código.
+- [x] **T074** Endpoint de envío de lote con resultado por operación. RF: 52. Dep: T056–T062. *Hecho cuando:* cada operación del lote devuelve aplicada, duplicada o rechazada con código.
 - [ ] **T075** Idempotencia por `op_id`. RF: 53. *Hecho cuando:* reenviar el mismo lote tres veces deja un solo fiado, abono o anulación.
 - [ ] **T076** Conflicto de versión: gana el servidor. RF: 55. *Hecho cuando:* una edición con versión anterior se rechaza y no sobrescribe.
 - [ ] **T077** Fiados y abonos concurrentes del mismo cliente desde dos dispositivos. RF: 54. *Hecho cuando:* tras ambos envíos el saldo es la suma de todos.
