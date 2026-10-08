@@ -165,7 +165,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T070** Listar equipo y promover a dueño. RF: 70. *Hecho cuando:* el promovido recibe todos los permisos de dueño.
 - [x] **T071** Quitar usuario con protección del último dueño. RF: 11, 71. *Hecho cuando:* el usuario quitado pierde acceso y no se puede quitar al último dueño.
 - [x] **T072** Rechazar gestión de equipo y negocio para empleados. RF: 13. *Hecho cuando:* todas las rutas de gestión devuelven rechazo a un empleado.
-- [ ] **T073** Comando del servidor para restablecer una contraseña, con auditoría. RF: 81, 82. Dep: T054. *Hecho cuando:* cambia la contraseña, escribe en `admin_audit` quién y cuándo, y su salida no muestra datos de negocios.
+- [x] **T073** Comando del servidor para restablecer una contraseña, con auditoría. RF: 81, 82. Dep: T054. *Hecho cuando:* cambia la contraseña, escribe en `admin_audit` quién y cuándo, y su salida no muestra datos de negocios.
 
 ## Fase 7 — Sincronización y consultas (API)
 - [ ] **T074** Endpoint de envío de lote con resultado por operación. RF: 52. Dep: T056–T062. *Hecho cuando:* cada operación del lote devuelve aplicada, duplicada o rechazada con código.
