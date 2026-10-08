@@ -27,6 +27,12 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
 
     public DbSet<ProductEntity> Products => Set<ProductEntity>();
 
+    public DbSet<FiadoEntity> Fiados => Set<FiadoEntity>();
+
+    public DbSet<FiadoItemEntity> FiadoItems => Set<FiadoItemEntity>();
+
+    public DbSet<PaymentEntity> Payments => Set<PaymentEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureUsers(modelBuilder);
@@ -35,6 +41,9 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
         ConfigureInvitations(modelBuilder);
         ConfigureClients(modelBuilder);
         ConfigureProducts(modelBuilder);
+        ConfigureFiados(modelBuilder);
+        ConfigureFiadoItems(modelBuilder);
+        ConfigurePayments(modelBuilder);
 
         SnakeCase.Apply(modelBuilder);
     }
@@ -154,6 +163,63 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
             e.HasOne<BusinessEntity>().WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => x.BusinessId);
+        });
+
+    private static void ConfigureFiados(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<FiadoEntity>(e =>
+        {
+            e.ToTable("fiados", t =>
+            {
+                t.HasCheckConstraint("ck_fiados_total", "total > 0");
+                // La fecha y el usuario de la anulación van juntos o ninguno (RF-43).
+                t.HasCheckConstraint("ck_fiados_annulment_pair", "(annulled_at IS NULL) = (annulled_by IS NULL)");
+            });
+            e.HasKey(x => x.Id);
+            e.HasAlternateKey(x => new { x.Id, x.BusinessId });
+            // El cliente debe ser del mismo negocio (RNF-6).
+            e.HasOne<ClientEntity>().WithMany().HasForeignKey(x => new { x.ClientId, x.BusinessId })
+                .HasPrincipalKey(c => new { c.Id, c.BusinessId }).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.AnnulledBy).OnDelete(DeleteBehavior.Restrict);
+        });
+
+    private static void ConfigureFiadoItems(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<FiadoItemEntity>(e =>
+        {
+            e.ToTable("fiado_items", t =>
+            {
+                t.HasCheckConstraint("ck_fiado_items_quantity", "quantity > 0");
+                t.HasCheckConstraint("ck_fiado_items_unit_price", "unit_price > 0");
+                t.HasCheckConstraint("ck_fiado_items_subtotal", "subtotal > 0");
+                t.HasCheckConstraint(
+                    "ck_fiado_items_unit",
+                    "unit IN ('unit', 'pound', 'ounce', 'kilo', 'dozen', 'liter', 'gallon', 'box', 'bag', 'pack')");
+            });
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Description).IsRequired();
+            e.Property(x => x.Unit).HasConversion(u => u.Id(), id => SaleUnits.TryFromId(id)!.Value);
+            // El fiado y el producto deben ser del mismo negocio (RNF-6).
+            e.HasOne<FiadoEntity>().WithMany().HasForeignKey(x => new { x.FiadoId, x.BusinessId })
+                .HasPrincipalKey(f => new { f.Id, f.BusinessId }).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<ProductEntity>().WithMany().HasForeignKey(x => new { x.ProductId, x.BusinessId })
+                .HasPrincipalKey(p => new { p.Id, p.BusinessId }).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.FiadoId);
+        });
+
+    private static void ConfigurePayments(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<PaymentEntity>(e =>
+        {
+            e.ToTable("payments", t =>
+            {
+                t.HasCheckConstraint("ck_payments_amount", "amount > 0");
+                t.HasCheckConstraint("ck_payments_annulment_pair", "(annulled_at IS NULL) = (annulled_by IS NULL)");
+            });
+            e.HasKey(x => x.Id);
+            e.HasAlternateKey(x => new { x.Id, x.BusinessId });
+            e.HasOne<ClientEntity>().WithMany().HasForeignKey(x => new { x.ClientId, x.BusinessId })
+                .HasPrincipalKey(c => new { c.Id, c.BusinessId }).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.AnnulledBy).OnDelete(DeleteBehavior.Restrict);
         });
 
     private static string MembershipStatusId(MembershipStatus status) => status switch

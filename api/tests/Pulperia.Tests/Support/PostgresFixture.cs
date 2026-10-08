@@ -32,9 +32,12 @@ public sealed class PostgresFixture : IAsyncLifetime
             await create.ExecuteNonQueryAsync();
         }
 
+        // Sin pool: cada prueba usa su propia base y, con pool, cada una dejaría conexiones
+        // abiertas hasta agotar el límite del servidor.
         var connectionString = new NpgsqlConnectionStringBuilder(_container.GetConnectionString())
         {
             Database = name,
+            Pooling = false,
         }.ConnectionString;
 
         var context = NewContext(connectionString);
