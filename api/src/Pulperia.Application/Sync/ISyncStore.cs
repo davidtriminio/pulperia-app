@@ -23,6 +23,13 @@ public interface ISyncStore
     /// </summary>
     Task<ProcessedOp?> FindProcessedOpAsync(Guid opId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Hasta <paramref name="limit"/> registros que cambiaron después de <paramref name="cursor"/>, en
+    /// orden de <c>seq</c>, cada uno con su versión actual. Un registro que cambió varias veces
+    /// dentro de la página viaja una sola vez.
+    /// </summary>
+    Task<ChangePage> ReadChangesAsync(long cursor, int limit, CancellationToken cancellationToken = default);
+
     /// <summary>Deja constancia de que la operación se procesó, para no repetirla (RF-53).</summary>
     Task AddProcessedOpAsync(Guid opId, string result, DateTime processedAt, CancellationToken cancellationToken = default);
 

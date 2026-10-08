@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Pulperia.Application.Operations;
 using Pulperia.Application.Sync;
+using Pulperia.Domain.Catalog;
+using Pulperia.Domain.Sync;
 using Pulperia.Infrastructure.Operations;
 using Pulperia.Infrastructure.Persistence;
 using Pulperia.Infrastructure.Sync;
@@ -22,6 +24,7 @@ internal static class SyncEndpoints
     {
         var sync = app.MapGroup("/api/sync").RequireBusinessCaller();
         sync.MapPost("/push", PushAsync);
+        sync.MapGet("/pull", PullAsync);
     }
 
     /// <summary>Un servicio de sincronización limitado al negocio de la petición (RNF-6).</summary>
@@ -64,6 +67,83 @@ internal static class SyncEndpoints
             ? Results.Json(new { results = result.Value!.Select(Json) }, Http.Json)
             : Failure(result.Codes);
     }
+
+    /// <summary>
+    /// <c>GET /api/sync/pull?cursor=N&amp;limit=M</c>: lo que cambió después del <c>seq</c> N. Sin cursor es
+    /// la descarga inicial (cursor cero). Responde <c>{ cursor, hasMore, changes: [{ seq, type, entity }] }</c>.
+    /// </summary>
+    private static async Task<IResult> PullAsync(HttpContext context, PulperiaDbContext db, TimeProvider clock)
+    {
+        var caller = context.GetBusinessCaller();
+        var query = context.Request.Query;
+        if (!TryReadNumber(query["cursor"], out var cursor) || cursor < 0
+            || !TryReadNumber(query["limit"], out var limit) || limit <= 0)
+        {
+            return Http.InvalidRequest();
+        }
+
+        var result = await CreateService(db, clock, caller.BusinessId).PullAsync(
+            caller.UserId, cursor ?? 0, limit is { } size ? (int)Math.Min(size, SyncService.MaxPageSize) : null,
+            context.RequestAborted);
+        return result.IsSuccess
+            ? Results.Json(
+                new
+                {
+                    cursor = result.Value!.Cursor,
+                    hasMore = result.Value.HasMore,
+                    changes = result.Value.Changes.Select(c => new { seq = c.Seq, type = c.Type.Id(), entity = Entity(c.Record) }),
+                },
+                Http.Json)
+            : Failure(result.Codes);
+    }
+
+    /// <summary>Un parámetro numérico opcional: ausente es válido y queda en null; presente debe ser un entero.</summary>
+    private static bool TryReadNumber(string? text, out long? value)
+    {
+        value = null;
+        if (string.IsNullOrEmpty(text))
+        {
+            return true;
+        }
+        if (!long.TryParse(text, System.Globalization.NumberStyles.AllowLeadingSign, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+        {
+            return false;
+        }
+        value = parsed;
+        return true;
+    }
+
+    private static object Entity(object record) => record switch
+    {
+        ClientRecord c => new
+        {
+            id = c.Id, name = c.Name, characterId = c.CharacterId, skinId = c.SkinId, backgroundId = c.BackgroundId,
+            phone = c.Phone, address = c.Address, note = c.Note, archived = c.Archived, version = c.Version,
+            createdBy = c.CreatedBy, createdAt = c.CreatedAt, updatedAt = c.UpdatedAt,
+        },
+        ProductRecord p => new
+        {
+            id = p.Id, name = p.Name, price = p.Price.MinorUnits, unit = p.Unit.Id(),
+            previousPrice = p.PreviousPrice?.MinorUnits, priceChangedAt = p.PriceChangedAt, archived = p.Archived,
+            version = p.Version, createdBy = p.CreatedBy, createdAt = p.CreatedAt,
+        },
+        FiadoRecord f => new
+        {
+            id = f.Id, clientId = f.ClientId, total = f.Total.MinorUnits, occurredAt = f.OccurredAt,
+            createdBy = f.CreatedBy, annulledAt = f.AnnulledAt, annulledBy = f.AnnulledBy,
+            items = f.Items.Select(i => new
+            {
+                id = i.Id, productId = i.ProductId, description = i.Description, quantity = i.Quantity.Milli,
+                unit = i.Unit.Id(), unitPrice = i.UnitPrice.MinorUnits, subtotal = i.Subtotal.MinorUnits,
+            }),
+        },
+        PaymentRecord p => new
+        {
+            id = p.Id, clientId = p.ClientId, amount = p.Amount.MinorUnits, occurredAt = p.OccurredAt,
+            createdBy = p.CreatedBy, annulledAt = p.AnnulledAt, annulledBy = p.AnnulledBy,
+        },
+        _ => throw new ArgumentOutOfRangeException(nameof(record)),
+    };
 
     private static object Json(OperationOutcome outcome) => outcome.Status switch
     {
