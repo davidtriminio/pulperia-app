@@ -15,10 +15,11 @@ internal static class AnnulmentOperations
         {
             return OperationResult.Rejected(RejectionCodes.FiadoNotFound);
         }
-        if (fiado.AnnulledAt is null)
+        if (fiado.AnnulledAt is not null)
         {
-            await store.AnnulFiadoAsync(fiado.Id, operation.CreatedAt.UtcDateTime, actor.UserId, cancellationToken);
+            return OperationResult.AppliedWithoutChange;
         }
+        await store.AnnulFiadoAsync(fiado.Id, operation.CreatedAt.UtcDateTime, actor.UserId, cancellationToken);
         return OperationResult.Applied;
     }
 
@@ -29,10 +30,11 @@ internal static class AnnulmentOperations
         {
             return OperationResult.Rejected(RejectionCodes.PaymentNotFound);
         }
-        if (payment.AnnulledAt is null)
+        if (payment.AnnulledAt is not null)
         {
-            await store.AnnulPaymentAsync(payment.Id, operation.CreatedAt.UtcDateTime, actor.UserId, cancellationToken);
+            return OperationResult.AppliedWithoutChange;
         }
+        await store.AnnulPaymentAsync(payment.Id, operation.CreatedAt.UtcDateTime, actor.UserId, cancellationToken);
         return OperationResult.Applied;
     }
 }

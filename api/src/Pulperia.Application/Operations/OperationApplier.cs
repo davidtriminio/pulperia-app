@@ -1,4 +1,5 @@
 using Pulperia.Domain.Access;
+using Pulperia.Domain.Sync;
 
 namespace Pulperia.Application.Operations;
 
@@ -22,6 +23,23 @@ public sealed class OperationApplier(IOperationStore store)
             return OperationResult.Rejected(RejectionCodes.Forbidden);
         }
 
+        // Todo o nada: la entidad y su fila de change_log (con su seq) se guardan juntas o no se guarda nada.
+        return await store.InTransactionAsync(
+            async () =>
+            {
+                var result = await DispatchAsync(operation, actor, cancellationToken);
+                if (result.Changed)
+                {
+                    await store.RecordChangeAsync(EntityTypeOf(operation.Type), operation.EntityId, cancellationToken);
+                }
+                return result;
+            },
+            cancellationToken);
+    }
+
+    private async Task<OperationResult> DispatchAsync(
+        Operation operation, OperationActor actor, CancellationToken cancellationToken)
+    {
         try
         {
             return operation.Type switch
@@ -45,6 +63,16 @@ public sealed class OperationApplier(IOperationStore store)
             return OperationResult.Rejected(RejectionCodes.InvalidPayload);
         }
     }
+
+    /// <summary>La entidad que el dispositivo vuelve a pedir al sincronizar: la del prefijo del tipo.</summary>
+    private static ChangeEntityType EntityTypeOf(string operationType) => operationType.Split('.')[0] switch
+    {
+        "client" => ChangeEntityType.Client,
+        "product" => ChangeEntityType.Product,
+        "fiado" => ChangeEntityType.Fiado,
+        "payment" => ChangeEntityType.Payment,
+        _ => throw new ArgumentOutOfRangeException(nameof(operationType)),
+    };
 }
 
 /// <summary>Códigos de rechazo que no vienen de una validación del dominio.</summary>

@@ -83,7 +83,7 @@ internal static class ProductOperations
         }
         if (current.Archived)
         {
-            return OperationResult.Applied;
+            return OperationResult.AppliedWithoutChange;
         }
 
         await store.UpdateProductAsync(current with { Archived = true, Version = current.Version + 1 }, cancellationToken);

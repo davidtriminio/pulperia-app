@@ -1,3 +1,5 @@
+using Pulperia.Domain.Sync;
+
 namespace Pulperia.Application.Operations;
 
 /// <summary>
@@ -42,4 +44,17 @@ public interface IOperationStore
 
     /// <summary>Marca el abono como anulado, con la fecha y el usuario. No toca nada más (RF-46).</summary>
     Task AnnulPaymentAsync(Guid id, DateTime at, Guid by, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reserva el siguiente <c>seq</c> del negocio y escribe la fila de <c>change_log</c> de esa
+    /// entidad. Debe llamarse dentro de <see cref="InTransactionAsync"/>, con la entidad ya guardada.
+    /// </summary>
+    Task RecordChangeAsync(ChangeEntityType type, Guid entityId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Ejecuta el trabajo de forma atómica: si falla, se deshace todo, también el contador del
+    /// <c>seq</c>, así que no quedan huecos ni entidades sin registro (T062). Si ya hay una
+    /// transacción abierta (la de un lote), el trabajo se une a ella.
+    /// </summary>
+    Task<T> InTransactionAsync<T>(Func<Task<T>> work, CancellationToken cancellationToken = default);
 }

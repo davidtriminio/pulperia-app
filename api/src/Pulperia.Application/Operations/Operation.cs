@@ -32,15 +32,26 @@ public sealed record OperationResult
 {
     private static readonly IReadOnlyList<string> NoDetails = [];
 
-    private OperationResult(string? code, IReadOnlyList<string> details)
+    private OperationResult(string? code, IReadOnlyList<string> details, bool changed)
     {
         Code = code;
         Details = details;
+        Changed = changed;
     }
 
-    public static OperationResult Applied { get; } = new(null, NoDetails);
+    /// <summary>Se aplicó y cambió algo: debe quedar en el registro de cambios (T062).</summary>
+    public static OperationResult Applied { get; } = new(null, NoDetails, true);
+
+    /// <summary>
+    /// Se aceptó, pero el estado ya era el pedido (archivar un cliente archivado, anular algo ya
+    /// anulado): no cambia nada ni consume un <c>seq</c> (RF-53).
+    /// </summary>
+    public static OperationResult AppliedWithoutChange { get; } = new(null, NoDetails, false);
 
     public bool IsApplied => Code is null;
+
+    /// <summary>Aplicada y con cambios en los datos.</summary>
+    public bool Changed { get; }
 
     /// <summary>Código del rechazo; null si se aplicó.</summary>
     public string? Code { get; }
@@ -48,8 +59,8 @@ public sealed record OperationResult
     /// <summary>Todos los problemas encontrados, cuando son varios (el primero es <see cref="Code"/>).</summary>
     public IReadOnlyList<string> Details { get; }
 
-    public static OperationResult Rejected(string code) => new(code, [code]);
+    public static OperationResult Rejected(string code) => new(code, [code], false);
 
     public static OperationResult Rejected(IReadOnlyList<string> codes) =>
-        codes.Count == 0 ? throw new ArgumentException("Falta el código.", nameof(codes)) : new(codes[0], codes);
+        codes.Count == 0 ? throw new ArgumentException("Falta el código.", nameof(codes)) : new(codes[0], codes, false);
 }
