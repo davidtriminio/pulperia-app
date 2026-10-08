@@ -160,7 +160,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T065** Crear negocio adicional y listar negocios con rol. RF: 5, 6, 79. *Hecho cuando:* un usuario con dos negocios los ve con su rol en cada uno.
 - [x] **T066** Negocio activo en cada petición con comprobación de pertenencia. RF: 50, 6. *Hecho cuando:* una petición a un negocio ajeno recibe rechazo.
 - [x] **T067** Leer y cambiar ajustes y nombre del negocio (solo dueño). RF: 7, 8, 9, 80. Dep: T048. *Hecho cuando:* pasar de decimales a enteros se rechaza y un empleado no puede cambiar nada.
-- [ ] **T068** Crear invitación, listar pendientes del usuario, aceptar y rechazar. RF: 10, 67, 68. Dep: T050. *Hecho cuando:* al aceptar entra como empleado aunque ya pertenezca a otros negocios.
+- [x] **T068** Crear invitación, listar pendientes del usuario, aceptar y rechazar. RF: 10, 67, 68. Dep: T050. *Hecho cuando:* al aceptar entra como empleado aunque ya pertenezca a otros negocios.
 - [ ] **T069** Cancelar invitación. RF: 69. *Hecho cuando:* una invitación cancelada no puede aceptarse.
 - [ ] **T070** Listar equipo y promover a dueño. RF: 70. *Hecho cuando:* el promovido recibe todos los permisos de dueño.
 - [ ] **T071** Quitar usuario con protección del último dueño. RF: 11, 71. *Hecho cuando:* el usuario quitado pierde acceso y no se puede quitar al último dueño.

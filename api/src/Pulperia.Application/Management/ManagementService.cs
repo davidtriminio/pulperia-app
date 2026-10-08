@@ -1,6 +1,8 @@
 using Pulperia.Application.Accounts;
 using Pulperia.Domain.Access;
+using Pulperia.Domain.Accounts;
 using Pulperia.Domain.Business;
+using Pulperia.Domain.Invitations;
 
 namespace Pulperia.Application.Management;
 
@@ -79,4 +81,89 @@ public sealed class ManagementService(IManagementStore store, TimeProvider clock
         }
         return AccountResult<BusinessSettings>.Ok(updated);
     }
+
+    /// <summary>Un dueño invita a una persona por su correo (RF-10). No hace falta que ya tenga cuenta.</summary>
+    public async Task<AccountResult<InvitationView>> InviteAsync(
+        Guid businessId, Role role, Guid createdBy, string? email, CancellationToken cancellationToken = default)
+    {
+        if (!RolePermissions.Can(role, Permission.ManageTeam))
+        {
+            return AccountResult<InvitationView>.Fail(Forbidden);
+        }
+        var normalized = InvitationRules.NormalizeEmail(email ?? "");
+        if (!AccountRules.IsValidEmail(normalized))
+        {
+            return AccountResult<InvitationView>.Fail("email_invalid");
+        }
+        if (await store.IsActiveMemberByEmailAsync(businessId, normalized, cancellationToken))
+        {
+            return AccountResult<InvitationView>.Fail("already_member");
+        }
+        if (await store.HasPendingInvitationAsync(businessId, normalized, cancellationToken))
+        {
+            return AccountResult<InvitationView>.Fail("invitation_already_pending");
+        }
+
+        var invitation = InvitationRules.Create(Guid.CreateVersion7(), businessId, normalized);
+        await store.AddInvitationAsync(invitation, createdBy, clock.GetUtcNow().UtcDateTime, cancellationToken);
+        return AccountResult<InvitationView>.Ok(ToView(invitation));
+    }
+
+    /// <summary>Las invitaciones pendientes del usuario, por el correo de su cuenta (RF-67).</summary>
+    public async Task<IReadOnlyList<InvitationOffer>> ListInvitationsForUserAsync(
+        Guid userId, CancellationToken cancellationToken = default) =>
+        await store.FindUserEmailAsync(userId, cancellationToken) is { } email
+            ? await store.ListPendingInvitationsAsync(InvitationRules.NormalizeEmail(email), cancellationToken)
+            : [];
+
+    /// <summary>
+    /// El invitado acepta (RF-68): entra al negocio como empleado, aunque ya pertenezca a otros.
+    /// Devuelve el negocio con su rol.
+    /// </summary>
+    public async Task<AccountResult<BusinessSummary>> AcceptInvitationAsync(
+        Guid userId, Guid invitationId, CancellationToken cancellationToken = default)
+    {
+        var (invitation, failure) = await ResolveAsync(userId, invitationId, InvitationRules.Accept, cancellationToken);
+        if (failure is not null)
+        {
+            return AccountResult<BusinessSummary>.Fail(failure);
+        }
+        if (!await store.AcceptInvitationAsync(invitationId, userId, cancellationToken))
+        {
+            return AccountResult<BusinessSummary>.Fail("invitation_not_pending");
+        }
+
+        var settings = await store.GetSettingsAsync(invitation!.BusinessId, cancellationToken);
+        return AccountResult<BusinessSummary>.Ok(new BusinessSummary(
+            invitation.BusinessId, settings!.Name, Role.Employee, settings.AmountMode, settings.QuantityMode));
+    }
+
+    /// <summary>El invitado rechaza (RF-68): no se crea ninguna pertenencia.</summary>
+    public async Task<AccountResult<InvitationView>> RejectInvitationAsync(
+        Guid userId, Guid invitationId, CancellationToken cancellationToken = default)
+    {
+        var (invitation, failure) = await ResolveAsync(userId, invitationId, InvitationRules.Reject, cancellationToken);
+        if (failure is not null)
+        {
+            return AccountResult<InvitationView>.Fail(failure);
+        }
+        return await store.RejectInvitationAsync(invitationId, cancellationToken)
+            ? AccountResult<InvitationView>.Ok(ToView(invitation! with { Status = InvitationStatus.Rejected }))
+            : AccountResult<InvitationView>.Fail("invitation_not_pending");
+    }
+
+    private async Task<(Invitation? Invitation, string? Failure)> ResolveAsync(
+        Guid userId, Guid invitationId, Func<Invitation, string, InvitationResult> rule, CancellationToken cancellationToken)
+    {
+        if (await store.FindInvitationAsync(invitationId, cancellationToken) is not { } invitation)
+        {
+            return (null, "invitation_not_found");
+        }
+        var email = await store.FindUserEmailAsync(userId, cancellationToken) ?? "";
+        var result = rule(invitation, email);
+        return result.IsValid ? (invitation, null) : (null, result.Error!.Value.Code());
+    }
+
+    private static InvitationView ToView(Invitation invitation) =>
+        new(invitation.Id, invitation.BusinessId, invitation.Email, invitation.Status);
 }

@@ -1,6 +1,7 @@
 using Pulperia.Application.Accounts;
 using Pulperia.Application.Management;
 using Pulperia.Domain.Business;
+using Pulperia.Domain.Invitations;
 
 namespace Pulperia.Api.Endpoints;
 
@@ -10,6 +11,8 @@ namespace Pulperia.Api.Endpoints;
 /// </summary>
 internal static class ManagementEndpoints
 {
+    private sealed record InviteBody(string? Email);
+
     private sealed record SettingsBody(string? Name, string? AmountMode, string? QuantityMode);
 
     public static void MapManagementEndpoints(this WebApplication app)
@@ -17,13 +20,20 @@ internal static class ManagementEndpoints
         var business = app.MapGroup("/api/business").RequireBusiness();
         business.MapGet("", GetSettingsAsync);
         business.MapPatch("", UpdateSettingsAsync);
+        business.MapPost("/invitations", InviteAsync);
+
+        // Las del invitado no llevan negocio activo: la invitación es de una persona, no de un negocio.
+        var invitations = app.MapGroup("/api/invitations");
+        invitations.MapGet("", ListInvitationsAsync);
+        invitations.MapPost("/{id:guid}/accept", AcceptAsync);
+        invitations.MapPost("/{id:guid}/reject", RejectAsync);
     }
 
     /// <summary>Traduce un rechazo del servicio a su estado HTTP.</summary>
     internal static IResult Failure(IReadOnlyList<string> codes) => Http.Error(
         codes[0] switch
         {
-            "forbidden" => StatusCodes.Status403Forbidden,
+            "forbidden" or "invitation_not_invitee" => StatusCodes.Status403Forbidden,
             var code when code.EndsWith("_not_found") => StatusCodes.Status404NotFound,
             var code when code.EndsWith("_already_pending") || code is "already_member" || code.EndsWith("_not_pending")
                 => StatusCodes.Status409Conflict,
@@ -76,5 +86,56 @@ internal static class ManagementEndpoints
         var result = await management.UpdateSettingsAsync(
             active.BusinessId, active.Role, new SettingsChange(body.Name, amountMode, quantityMode), context.RequestAborted);
         return result.IsSuccess ? Results.Json(Json(result.Value!), Http.Json) : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> InviteAsync(HttpContext context, ManagementService management)
+    {
+        var active = context.GetActiveBusiness();
+        var body = await Http.ReadBodyAsync<InviteBody>(context);
+        if (body is not { Email: not null })
+        {
+            return Http.InvalidRequest();
+        }
+        var result = await management.InviteAsync(active.BusinessId, active.Role, active.UserId, body.Email, context.RequestAborted);
+        return result.IsSuccess
+            ? Results.Json(
+                new { id = result.Value!.Id, email = result.Value.Email, status = result.Value.Status.Id() },
+                Http.Json, statusCode: StatusCodes.Status201Created)
+            : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> ListInvitationsAsync(
+        HttpContext context, AccountService accounts, ManagementService management)
+    {
+        if (await Http.AuthenticateAsync(context, accounts) is not { } user)
+        {
+            return Http.Unauthorized();
+        }
+        var offers = await management.ListInvitationsForUserAsync(user.UserId, context.RequestAborted);
+        return Results.Json(
+            offers.Select(o => new { id = o.Id, businessId = o.BusinessId, businessName = o.BusinessName, email = o.Email }),
+            Http.Json);
+    }
+
+    private static async Task<IResult> AcceptAsync(
+        Guid id, HttpContext context, AccountService accounts, ManagementService management)
+    {
+        if (await Http.AuthenticateAsync(context, accounts) is not { } user)
+        {
+            return Http.Unauthorized();
+        }
+        var result = await management.AcceptInvitationAsync(user.UserId, id, context.RequestAborted);
+        return result.IsSuccess ? Results.Json(BusinessEndpoints.Json(result.Value!), Http.Json) : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> RejectAsync(
+        Guid id, HttpContext context, AccountService accounts, ManagementService management)
+    {
+        if (await Http.AuthenticateAsync(context, accounts) is not { } user)
+        {
+            return Http.Unauthorized();
+        }
+        var result = await management.RejectInvitationAsync(user.UserId, id, context.RequestAborted);
+        return result.IsSuccess ? Results.NoContent() : Failure(result.Codes);
     }
 }
