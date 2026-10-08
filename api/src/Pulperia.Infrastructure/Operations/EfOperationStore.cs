@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Pulperia.Application.Operations;
 using Pulperia.Domain.Amounts;
+using Pulperia.Domain.Quantities;
 using Pulperia.Infrastructure.Persistence;
 using Pulperia.Infrastructure.Persistence.Entities;
 
@@ -71,6 +72,60 @@ public sealed class EfOperationStore : IOperationStore
         Copy(product, entity);
         await _db.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<FiadoRecord?> FindFiadoAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var fiado = await _db.Fiados.AsNoTracking().SingleOrDefaultAsync(f => f.Id == id, cancellationToken);
+        if (fiado is null)
+        {
+            return null;
+        }
+        var items = await _db.FiadoItems.AsNoTracking()
+            .Where(i => i.FiadoId == id).OrderBy(i => i.Id).ToListAsync(cancellationToken);
+        return new FiadoRecord(
+            fiado.Id, fiado.ClientId, new Money(fiado.Total), fiado.OccurredAt, fiado.CreatedBy,
+            fiado.AnnulledAt, fiado.AnnulledBy, items.Select(ToRecord).ToList());
+    }
+
+    public async Task<IReadOnlySet<Guid>> FindExistingItemIdsAsync(
+        IReadOnlyCollection<Guid> itemIds, CancellationToken cancellationToken = default)
+    {
+        var ids = itemIds.ToArray();
+        var existing = await _db.FiadoItems.AsNoTracking()
+            .Where(i => ids.Contains(i.Id)).Select(i => i.Id).ToListAsync(cancellationToken);
+        return existing.ToHashSet();
+    }
+
+    public async Task AddFiadoAsync(FiadoRecord fiado, CancellationToken cancellationToken = default)
+    {
+        _db.Fiados.Add(new FiadoEntity
+        {
+            Id = fiado.Id,
+            BusinessId = _businessId,
+            ClientId = fiado.ClientId,
+            Total = fiado.Total.MinorUnits,
+            OccurredAt = fiado.OccurredAt,
+            CreatedBy = fiado.CreatedBy,
+            AnnulledAt = fiado.AnnulledAt,
+            AnnulledBy = fiado.AnnulledBy,
+        });
+        _db.FiadoItems.AddRange(fiado.Items.Select(i => new FiadoItemEntity
+        {
+            Id = i.Id,
+            BusinessId = _businessId,
+            FiadoId = fiado.Id,
+            ProductId = i.ProductId,
+            Description = i.Description,
+            Quantity = i.Quantity.Milli,
+            Unit = i.Unit,
+            UnitPrice = i.UnitPrice.MinorUnits,
+            Subtotal = i.Subtotal.MinorUnits,
+        }));
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static FiadoItemRecord ToRecord(FiadoItemEntity e) => new(
+        e.Id, e.ProductId, e.Description, new Quantity(e.Quantity), e.Unit, new Money(e.UnitPrice), new Money(e.Subtotal));
 
     private static ProductRecord ToRecord(ProductEntity e) => new(
         e.Id, e.Name, new Money(e.Price), e.Unit,

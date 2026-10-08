@@ -23,4 +23,13 @@ public interface IOperationStore
 
     /// <summary>Reemplaza los datos del producto que tiene ese id. No hay forma de borrar uno (RF-27).</summary>
     Task UpdateProductAsync(ProductRecord product, CancellationToken cancellationToken = default);
+
+    Task<FiadoRecord?> FindFiadoAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Cuáles de estos ids de ítem ya existen en algún fiado del negocio.</summary>
+    Task<IReadOnlySet<Guid>> FindExistingItemIdsAsync(
+        IReadOnlyCollection<Guid> itemIds, CancellationToken cancellationToken = default);
+
+    /// <summary>Guarda el fiado con todos sus ítems en un solo guardado.</summary>
+    Task AddFiadoAsync(FiadoRecord fiado, CancellationToken cancellationToken = default);
 }
