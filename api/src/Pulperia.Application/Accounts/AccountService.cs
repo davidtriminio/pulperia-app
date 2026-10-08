@@ -1,4 +1,6 @@
+using Pulperia.Domain.Access;
 using Pulperia.Domain.Accounts;
+using Pulperia.Domain.Business;
 
 namespace Pulperia.Application.Accounts;
 
@@ -123,4 +125,29 @@ public sealed class AccountService(IAccountStore store, PasswordHasher hasher, T
             ? new AuthenticatedUser(session.UserId, session.Id)
             : null;
     }
+
+    /// <summary>Crea un negocio nuevo y asigna al usuario como dueño (RF-7, RF-78, RF-79).</summary>
+    public async Task<AccountResult<BusinessSummary>> CreateBusinessAsync(
+        Guid userId, string? name, AmountMode amountMode, QuantityMode quantityMode,
+        CancellationToken cancellationToken = default)
+    {
+        if (AccountRules.BusinessNameError(name) is { } problem)
+        {
+            return AccountResult<BusinessSummary>.Fail(problem);
+        }
+
+        var business = new NewBusiness(
+            Guid.CreateVersion7(), userId, name!.Trim(), amountMode, quantityMode, clock.GetUtcNow().UtcDateTime);
+        await store.AddBusinessAsync(business, cancellationToken);
+        return AccountResult<BusinessSummary>.Ok(
+            new BusinessSummary(business.BusinessId, business.Name, Role.Owner, amountMode, quantityMode));
+    }
+
+    /// <summary>Los negocios del usuario con su rol en cada uno, ordenados por nombre (RF-5, RF-6).</summary>
+    public async Task<IReadOnlyList<BusinessSummary>> ListBusinessesAsync(
+        Guid userId, CancellationToken cancellationToken = default) =>
+        (await store.ListBusinessesAsync(userId, cancellationToken))
+            .OrderBy(b => b.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(b => b.Id)
+            .ToList();
 }

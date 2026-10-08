@@ -35,6 +35,7 @@ public static class ApiHost
         }
 
         app.MapAuthEndpoints();
+        app.MapBusinessEndpoints();
         return app;
     }
 }

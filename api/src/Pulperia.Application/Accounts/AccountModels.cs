@@ -1,3 +1,4 @@
+using Pulperia.Domain.Access;
 using Pulperia.Domain.Business;
 
 namespace Pulperia.Application.Accounts;
@@ -33,3 +34,6 @@ public sealed record AccountResult<T>
 
     public static AccountResult<T> Fail(IReadOnlyList<string> codes) => new(default, codes);
 }
+
+/// <summary>Un negocio del usuario con el rol que tiene en él (RF-5, RF-6).</summary>
+public sealed record BusinessSummary(Guid Id, string Name, Role Role, AmountMode AmountMode, QuantityMode QuantityMode);
