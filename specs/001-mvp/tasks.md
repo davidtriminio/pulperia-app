@@ -135,7 +135,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T046** Permisos por rol. RF: 13, 21, 45, 48. *Hecho cuando:* la matriz coincide con la del móvil (T025).
 - [x] **T047** Resumen del negocio. RF: 63, 64, 65. Dep: T010. *Hecho cuando:* pasan los vectores de resumen.
 - [x] **T048** Reglas de ajustes del negocio. RF: 7, 8, 9. Dep: T013. *Hecho cuando:* pasan los vectores de transiciones.
-- [ ] **T049** Reglas de equipo: promoción, baja y último dueño. RF: 70, 71. *Hecho cuando:* toda acción que dejaría el negocio sin dueño se rechaza.
+- [x] **T049** Reglas de equipo: promoción, baja y último dueño. RF: 70, 71. *Hecho cuando:* toda acción que dejaría el negocio sin dueño se rechaza.
 - [ ] **T050** Reglas de invitación: estados y transiciones. RF: 10, 67, 68, 69. *Hecho cuando:* solo se puede aceptar o rechazar una invitación pendiente y una cancelada no se acepta.
 - [x] **T180** Regla del precio anterior en el dominio de la API, contra los mismos vectores. RF: 90. Dep: T176. *Hecho cuando:* pasan los casos de `shared/vectors/price-change.json`.
 
