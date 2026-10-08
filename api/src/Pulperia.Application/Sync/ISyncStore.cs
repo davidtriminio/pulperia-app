@@ -11,6 +11,13 @@ public interface ISyncStore
     Task<SyncMembership?> FindMembershipAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gasta, de forma atómica, el último lote de un usuario removido (RF-12): devuelve true solo
+    /// a quien lo reclama primero; el resto, y quien ya lo gastó, recibe false. Debe llamarse dentro
+    /// de <see cref="InTransactionAsync"/>, así que si el lote falla la oportunidad no se pierde.
+    /// </summary>
+    Task<bool> TryClaimFinalSyncAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Bloquea el negocio hasta que termine la transacción: dos lotes del mismo negocio se esperan
     /// y los <c>seq</c> salen en orden y sin huecos (D-5). Debe llamarse dentro de
     /// <see cref="InTransactionAsync"/>.
