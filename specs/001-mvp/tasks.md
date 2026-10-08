@@ -129,7 +129,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 ## Fase 4 — Dominio de la API (.NET, sin EF ni HTTP)
 - [x] **T041** Dinero y cantidad en unidad menor y milésimas. RF: 84; RNF-2. Dep: T013. *Hecho cuando:* pasan los vectores y no hay `double` ni `float` en el dominio.
 - [x] **T042** Subtotales con ambos modos. RF: 34, 83. Dep: T006, T007. *Hecho cuando:* pasan los vectores de T006 y T007.
-- [ ] **T043** Validación de fiado y abono. RF: 28, 29, 32, 33, 35, 36, 37, 38. *Hecho cuando:* los casos coinciden con los del móvil (T020, T021).
+- [x] **T043** Validación de fiado y abono. RF: 28, 29, 32, 33, 35, 36, 37, 38. *Hecho cuando:* los casos coinciden con los del móvil (T020, T021).
 - [ ] **T044** Cálculo de saldo. RF: 39, 40, 42, 44, 47. Dep: T008. *Hecho cuando:* pasan los vectores de saldo.
 - [ ] **T045** Validación de cliente y producto. RF: 15, 16, 24, 74, 77, 86. Dep: T009, T011, T012, T154. *Hecho cuando:* pasan los vectores correspondientes y una unidad fuera de la lista compartida se rechaza.
 - [ ] **T046** Permisos por rol. RF: 13, 21, 45, 48. *Hecho cuando:* la matriz coincide con la del móvil (T025).
