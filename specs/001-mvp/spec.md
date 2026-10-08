@@ -9,7 +9,8 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - **Dueño**: crea el negocio y tiene control total, incluida la gestión de usuarios, la anulación de movimientos y el archivado de clientes. Un negocio puede tener varios dueños.
 - **Empleado**: atiende el mostrador; puede registrar y consultar, pero no anular movimientos, archivar clientes ni gestionar usuarios o el negocio.
 - Una misma persona puede pertenecer a varios negocios, con un rol distinto en cada uno.
-- **Administrador del servidor**: persona que opera el servidor. Siempre debe existir al menos uno. Su única intervención sobre las cuentas es restablecer contraseñas, fuera de las apps.
+- **Administrador del servidor**: persona que opera el servidor. Siempre debe existir al menos uno. Marca y retira a los super administradores y restablece contraseñas con comandos en el servidor, fuera de las apps.
+- **Super administrador**: cuenta marcada por el administrador del servidor que gestiona la plataforma desde un panel web aparte: ve los negocios y las cuentas con cifras de uso, suspende o reactiva negocios y cuentas, restablece contraseñas y consulta la auditoría. **Nunca ve ni modifica los datos de un negocio** (clientes, productos, fiados, abonos, equipo ni ajustes). Siempre debe existir al menos uno.
 - **Cliente fiado**: persona a quien se fía. No usa el sistema; es un registro dentro del negocio.
 
 ## Historias de usuario
@@ -29,6 +30,7 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - H14: Como dueño quiero promover a un empleado a dueño para que un socio comparta la administración y el negocio nunca quede sin administrador.
 - H15: Como usuario que olvidó su contraseña quiero que el administrador del servidor pueda restablecerla para no perder el acceso a mi negocio.
 - H16: Como dueño quiero invitar a una persona dándole un código por el medio que prefiera (por ejemplo WhatsApp o en persona), aunque no use el correo con el que la invito, para que entre a mi negocio sin depender del correo.
+- H17: Como super administrador quiero ver y gestionar los negocios y las cuentas de la plataforma, sin ver sus fiados, para dar soporte, frenar abusos y conocer el uso del sistema.
 
 ## Requisitos funcionales (criterios de aceptación en EARS)
 
@@ -90,6 +92,13 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - RF-92: CUANDO un dueño crea una invitación, con o sin el correo de la persona, EL SISTEMA le asignará un código de invitación de un solo uso, que el dueño podrá ver mientras la invitación esté pendiente para entregarlo a la persona por el medio que prefiera.
 - RF-93: CUANDO una persona con sesión iniciada canjea el código de una invitación pendiente, EL SISTEMA la agregará al negocio con el rol de empleado y marcará la invitación como aceptada, sin importar si su correo coincide con el invitado ni si ya pertenece a otros negocios.
 - RF-94: SI el código no existe, ya se usó o su invitación fue cancelada, ENTONCES EL SISTEMA rechazará el canje con el mismo mensaje, sin revelar nada de ningún negocio, y limitará los intentos fallidos de cada usuario.
+- RF-95: EL SISTEMA permitirá marcar una cuenta como super administrador y retirarle la marca solo con un comando del servidor, nunca desde una app ni desde el panel, y no permitirá retirar la marca al último super administrador.
+- RF-96: SI una cuenta que no es super administrador intenta usar una función de administración de la plataforma, ENTONCES EL SISTEMA rechazará la petición; las sesiones de un super administrador duran menos que las de los demás usuarios.
+- RF-97: CUANDO un super administrador lista o busca negocios y cuentas, EL SISTEMA mostrará por negocio su nombre, los correos de sus dueños, el número de miembros, la fecha de creación, su estado (activo o suspendido), la fecha de su última sincronización y el total de clientes, productos, fiados y abonos; y por cuenta su correo, fecha de alta, estado y negocios a los que pertenece, sin mostrar nombres de clientes ni de productos, montos, deudas ni ningún otro dato de un negocio.
+- RF-98: CUANDO un super administrador suspende un negocio indicando un motivo, EL SISTEMA conservará todos sus datos, rechazará sus peticiones y sincronizaciones con un código estable hasta que se reactive, y los dispositivos seguirán funcionando sin conexión con lo que ya tienen.
+- RF-99: CUANDO un super administrador suspende una cuenta indicando un motivo, EL SISTEMA cerrará sus sesiones y no le permitirá iniciar sesión hasta que se reactive, sin tocar los negocios a los que pertenece.
+- RF-100: CUANDO un super administrador restablece la contraseña de una cuenta desde el panel, EL SISTEMA generará una contraseña nueva, la mostrará una sola vez, cerrará las sesiones de la cuenta y lo registrará como en RF-81.
+- RF-101: EL SISTEMA registrará cada acción de un super administrador (quién, cuándo, qué, sobre qué cuenta o negocio y el motivo) en la auditoría, que el panel permitirá consultar y que ninguna acción puede borrar ni editar.
 
 ### Fiados
 - RF-28: CUANDO un usuario registra un fiado con uno o más ítems (descripción, cantidad y precio unitario), EL SISTEMA guardará cada ítem con la cantidad y el precio unitario vigentes en ese momento.
@@ -178,6 +187,8 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - Cambio de montos de decimales a enteros: no se permite, para no dejar saldos inconsistentes (RF-9).
 - Acción en la web mientras otro móvil tiene cambios sin sincronizar sobre el mismo registro: gana el servidor (RF-62).
 - Código de invitación compartido por error: cualquier persona con sesión que lo canjee antes entra como empleado; el dueño lo evita cancelando la invitación mientras esté pendiente (RF-69) y puede quitar al empleado después (RF-71).
+- Super administrador que es también dueño o empleado de un negocio: sus funciones de plataforma y su trabajo en el negocio van separados; en el negocio solo ve lo que le corresponde por su rol.
+- Negocio suspendido con operaciones sin sincronizar en los teléfonos: se conservan en la cola y se envían cuando se reactive el negocio (RF-98).
 
 ## Fuera de alcance
 - Límite de crédito por cliente, con aviso o bloqueo.
@@ -195,7 +206,10 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - Transferir la propiedad en un solo paso: se resuelve con la promoción a dueño.
 - Caducidad automática de invitaciones.
 - Recuperación de contraseña por parte del propio usuario (por correo u otro medio).
-- Panel o rol de superadministración dentro de las apps.
+- Un rol o menú de superadministración dentro de las apps de las pulperías (el panel de la plataforma es aparte).
+- Que el super administrador vea o edite datos de un negocio, o entre a un negocio como si fuera un usuario.
+- Planes, cobros o facturación de la plataforma.
+- Autenticación de dos factores para el super administrador.
 - Borrado remoto de los datos locales de un empleado removido.
 - Teléfonos de otros países o con código de país: el formato actual es el de Honduras y podrá ampliarse después.
 - Funcionamiento de la web sin conexión.
@@ -212,6 +226,7 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - Demo manual de recuperación: iniciar sesión en un dispositivo nuevo y ver todos los datos del negocio.
 - Demo manual de permisos: un empleado no puede anular, archivar ni gestionar usuarios; el dueño sí.
 - Demo manual de la web: realizar las mismas operaciones principales y comprobar que aparecen en el móvil tras sincronizar.
+- Demo manual del super administrador: marcar una cuenta con el comando, entrar al panel, ver un negocio con sus cifras sin ningún dato de fiados, suspenderlo y comprobar que su sincronización se rechaza, reactivarlo, y ver las acciones en la auditoría.
 - Demo manual de ajustes del negocio: un negocio con enteros y otro con decimales y cantidades fraccionarias muestran los montos esperados.
 - Demo manual de respaldo: comprobar que existen las 3 copias diarias más recientes fuera del servidor y que una se puede restaurar.
 - Demo manual de restablecimiento: el administrador del servidor restablece una contraseña, la cuenta puede entrar y queda el registro de quién y cuándo.
