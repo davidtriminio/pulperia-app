@@ -21,6 +21,16 @@ internal static class Http
         }
     }
 
+    /// <summary>El token de la cabecera <c>Authorization: Bearer ...</c>, o null si falta.</summary>
+    public static string? BearerToken(HttpContext context)
+    {
+        var header = context.Request.Headers.Authorization.ToString();
+        const string prefix = "Bearer ";
+        return header.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && header.Length > prefix.Length
+            ? header[prefix.Length..].Trim()
+            : null;
+    }
+
     public static IResult Error(int status, params string[] codes) =>
         Results.Json(new { code = codes[0], codes }, Json, statusCode: status);
 

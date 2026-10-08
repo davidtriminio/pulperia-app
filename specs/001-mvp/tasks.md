@@ -156,7 +156,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 
 ## Fase 6 — Cuentas, negocios y equipo (API)
 - [x] **T063** Registro con correo, contraseña y nombre de negocio. RF: 1, 2, 78. Dep: T051. *Hecho cuando:* crea usuario, negocio y pertenencia de dueño; sin nombre de negocio se rechaza.
-- [ ] **T064** Inicio de sesión, renovación y cierre de sesión. RF: 3, 4. *Hecho cuando:* el token de acceso caduca, el de renovación lo reemplaza y tras cerrar sesión deja de servir.
+- [x] **T064** Inicio de sesión, renovación y cierre de sesión. RF: 3, 4. *Hecho cuando:* el token de acceso caduca, el de renovación lo reemplaza y tras cerrar sesión deja de servir.
 - [ ] **T065** Crear negocio adicional y listar negocios con rol. RF: 5, 6, 79. *Hecho cuando:* un usuario con dos negocios los ve con su rol en cada uno.
 - [ ] **T066** Negocio activo en cada petición con comprobación de pertenencia. RF: 50, 6. *Hecho cuando:* una petición a un negocio ajeno recibe rechazo.
 - [ ] **T067** Leer y cambiar ajustes y nombre del negocio (solo dueño). RF: 7, 8, 9, 80. Dep: T048. *Hecho cuando:* pasar de decimales a enteros se rechaza y un empleado no puede cambiar nada.

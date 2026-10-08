@@ -283,7 +283,7 @@ public class BusinessIsolationTests(PostgresFixture postgres)
     public async Task Toda_tabla_lleva_business_id_salvo_las_de_cuentas_y_administracion()
     {
         await using var db = await postgres.CreateDatabaseAsync();
-        HashSet<string> withoutBusinessId = ["users", "businesses", "admin_audit", "__EFMigrationsHistory"];
+        HashSet<string> withoutBusinessId = ["users", "sessions", "businesses", "admin_audit", "__EFMigrationsHistory"];
 
         var tables = await db.Database
             .SqlQueryRaw<string>("SELECT table_name AS \"Value\" FROM information_schema.tables WHERE table_schema = 'public'")
