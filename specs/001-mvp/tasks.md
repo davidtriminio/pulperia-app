@@ -127,7 +127,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T182** Tarjetas del catálogo más cuidadas, con el estilo de las de cliente y de producto al fiar (esquinas redondeadas, sombra suave, unidad en una píldora, precio destacado y altura mínima uniforme). RF: 24, 86, 90. Dep: T179, T170. *Hecho cuando:* tests de widget comprueban que todas las tarjetas tienen la misma altura mínima con y sin precio anterior, que muestran nombre, unidad, precio y el precio anterior si existe, que un nombre muy largo no desborda en pantallas angostas, que un toque abre la edición y que archivar sigue funcionando.
 
 ## Fase 4 — Dominio de la API (.NET, sin EF ni HTTP)
-- [ ] **T041** Dinero y cantidad en unidad menor y milésimas. RF: 84; RNF-2. Dep: T013. *Hecho cuando:* pasan los vectores y no hay `double` ni `float` en el dominio.
+- [x] **T041** Dinero y cantidad en unidad menor y milésimas. RF: 84; RNF-2. Dep: T013. *Hecho cuando:* pasan los vectores y no hay `double` ni `float` en el dominio.
 - [ ] **T042** Subtotales con ambos modos. RF: 34, 83. Dep: T006, T007. *Hecho cuando:* pasan los vectores de T006 y T007.
 - [ ] **T043** Validación de fiado y abono. RF: 28, 29, 32, 33, 35, 36, 37, 38. *Hecho cuando:* los casos coinciden con los del móvil (T020, T021).
 - [ ] **T044** Cálculo de saldo. RF: 39, 40, 42, 44, 47. Dep: T008. *Hecho cuando:* pasan los vectores de saldo.
