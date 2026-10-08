@@ -132,7 +132,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T043** Validación de fiado y abono. RF: 28, 29, 32, 33, 35, 36, 37, 38. *Hecho cuando:* los casos coinciden con los del móvil (T020, T021).
 - [x] **T044** Cálculo de saldo. RF: 39, 40, 42, 44, 47. Dep: T008. *Hecho cuando:* pasan los vectores de saldo.
 - [x] **T045** Validación de cliente y producto. RF: 15, 16, 24, 74, 77, 86. Dep: T009, T011, T012, T154. *Hecho cuando:* pasan los vectores correspondientes y una unidad fuera de la lista compartida se rechaza.
-- [ ] **T046** Permisos por rol. RF: 13, 21, 45, 48. *Hecho cuando:* la matriz coincide con la del móvil (T025).
+- [x] **T046** Permisos por rol. RF: 13, 21, 45, 48. *Hecho cuando:* la matriz coincide con la del móvil (T025).
 - [x] **T047** Resumen del negocio. RF: 63, 64, 65. Dep: T010. *Hecho cuando:* pasan los vectores de resumen.
 - [ ] **T048** Reglas de ajustes del negocio. RF: 7, 8, 9. Dep: T013. *Hecho cuando:* pasan los vectores de transiciones.
 - [ ] **T049** Reglas de equipo: promoción, baja y último dueño. RF: 70, 71. *Hecho cuando:* toda acción que dejaría el negocio sin dueño se rechaza.
