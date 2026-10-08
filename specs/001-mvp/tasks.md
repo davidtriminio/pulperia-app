@@ -171,7 +171,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 ## Fase 7 — Sincronización y consultas (API)
 - [x] **T074** Endpoint de envío de lote con resultado por operación. RF: 52. Dep: T056–T062. *Hecho cuando:* cada operación del lote devuelve aplicada, duplicada o rechazada con código.
 - [x] **T075** Idempotencia por `op_id`. RF: 53. *Hecho cuando:* reenviar el mismo lote tres veces deja un solo fiado, abono o anulación.
-- [ ] **T076** Conflicto de versión: gana el servidor. RF: 55. *Hecho cuando:* una edición con versión anterior se rechaza y no sobrescribe.
+- [x] **T076** Conflicto de versión: gana el servidor. RF: 55. *Hecho cuando:* una edición con versión anterior se rechaza y no sobrescribe.
 - [ ] **T077** Fiados y abonos concurrentes del mismo cliente desde dos dispositivos. RF: 54. *Hecho cuando:* tras ambos envíos el saldo es la suma de todos.
 - [ ] **T078** Anulación de un fiado con abonos de otro dispositivo. RF: 47. *Hecho cuando:* los abonos se conservan y el saldo queda a favor.
 - [ ] **T079** Endpoint de cambios por cursor, paginado. RF: 52; RNF-7. *Hecho cuando:* devuelve solo lo posterior al cursor y en páginas.
