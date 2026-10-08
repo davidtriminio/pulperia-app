@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Pulperia.Domain.Access;
+using Pulperia.Domain.Admin;
 using Pulperia.Domain.Business;
 using Pulperia.Domain.Catalog;
 using Pulperia.Domain.Invitations;
+using Pulperia.Domain.Sync;
 using Pulperia.Domain.Team;
 using Pulperia.Infrastructure.Persistence.Entities;
 
@@ -33,6 +35,12 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
 
     public DbSet<PaymentEntity> Payments => Set<PaymentEntity>();
 
+    public DbSet<ChangeLogEntity> ChangeLog => Set<ChangeLogEntity>();
+
+    public DbSet<ProcessedOpEntity> ProcessedOps => Set<ProcessedOpEntity>();
+
+    public DbSet<AdminAuditEntity> AdminAudits => Set<AdminAuditEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureUsers(modelBuilder);
@@ -44,6 +52,9 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
         ConfigureFiados(modelBuilder);
         ConfigureFiadoItems(modelBuilder);
         ConfigurePayments(modelBuilder);
+        ConfigureChangeLog(modelBuilder);
+        ConfigureProcessedOps(modelBuilder);
+        ConfigureAdminAudit(modelBuilder);
 
         SnakeCase.Apply(modelBuilder);
     }
@@ -220,6 +231,46 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
                 .HasPrincipalKey(c => new { c.Id, c.BusinessId }).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.AnnulledBy).OnDelete(DeleteBehavior.Restrict);
+        });
+
+    private static void ConfigureChangeLog(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<ChangeLogEntity>(e =>
+        {
+            e.ToTable("change_log", t =>
+            {
+                t.HasCheckConstraint("ck_change_log_seq", "seq > 0");
+                t.HasCheckConstraint("ck_change_log_entity_type", "entity_type IN ('client', 'product', 'fiado', 'payment')");
+            });
+            // Los dispositivos piden "lo posterior a este seq" de su negocio (RF-52).
+            e.HasKey(x => new { x.BusinessId, x.Seq });
+            e.Property(x => x.EntityType).HasConversion(t => t.Id(), id => ChangeEntityTypes.FromId(id));
+            e.HasOne<BusinessEntity>().WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+    private static void ConfigureProcessedOps(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<ProcessedOpEntity>(e =>
+        {
+            e.ToTable("processed_ops", t => t.HasCheckConstraint("ck_processed_ops_result", "btrim(result) <> ''"));
+            e.HasKey(x => x.OpId);
+            e.Property(x => x.Result).IsRequired();
+            e.HasOne<BusinessEntity>().WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.BusinessId);
+        });
+
+    private static void ConfigureAdminAudit(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<AdminAuditEntity>(e =>
+        {
+            e.ToTable("admin_audit", t =>
+            {
+                t.HasCheckConstraint("ck_admin_audit_action", "action IN ('reset_password')");
+                t.HasCheckConstraint("ck_admin_audit_performed_by", "btrim(performed_by) <> ''");
+            });
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Action).HasConversion(a => a.Id(), id => AdminActions.FromId(id));
+            e.Property(x => x.PerformedBy).IsRequired();
+            // Sin business_id a propósito: la auditoría no expone datos de negocios (RF-82).
+            e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.TargetUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.TargetUserId);
         });
 
     private static string MembershipStatusId(MembershipStatus status) => status switch
