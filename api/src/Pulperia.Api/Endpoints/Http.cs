@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Pulperia.Application.Accounts;
 using Pulperia.Domain.Business;
 
 namespace Pulperia.Api.Endpoints;
@@ -30,6 +31,12 @@ internal static class Http
             ? header[prefix.Length..].Trim()
             : null;
     }
+
+    /// <summary>El usuario del token de acceso de la petición, o null si falta, caducó o se cerró la sesión.</summary>
+    public static async Task<AuthenticatedUser?> AuthenticateAsync(HttpContext context, AccountService accounts) =>
+        BearerToken(context) is { } token ? await accounts.AuthenticateAsync(token, context.RequestAborted) : null;
+
+    public static IResult Unauthorized() => Error(StatusCodes.Status401Unauthorized, "unauthorized");
 
     public static IResult Error(int status, params string[] codes) =>
         Results.Json(new { code = codes[0], codes }, Json, statusCode: status);

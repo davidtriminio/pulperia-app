@@ -13,6 +13,15 @@ public sealed record NewAccount(
     QuantityMode QuantityMode,
     DateTime CreatedAt);
 
+/// <summary>Un negocio adicional de un usuario ya registrado, que lo crea como dueño.</summary>
+public sealed record NewBusiness(
+    Guid BusinessId,
+    Guid OwnerId,
+    string Name,
+    AmountMode AmountMode,
+    QuantityMode QuantityMode,
+    DateTime CreatedAt);
+
 /// <summary>
 /// Lo que el servicio de cuentas necesita de la base de datos. Las cuentas, los negocios y las
 /// sesiones no están limitados a un negocio: son anteriores a elegir uno.
@@ -51,4 +60,10 @@ public interface IAccountStore
 
     /// <summary>Cierra la sesión si sigue abierta; si ya estaba cerrada no cambia nada.</summary>
     Task RevokeSessionAsync(Guid sessionId, DateTime at, CancellationToken cancellationToken = default);
+
+    /// <summary>Crea el negocio y la pertenencia de dueño en una sola transacción (RF-79).</summary>
+    Task AddBusinessAsync(NewBusiness business, CancellationToken cancellationToken = default);
+
+    /// <summary>Los negocios en los que el usuario tiene una pertenencia activa, con su rol.</summary>
+    Task<IReadOnlyList<BusinessSummary>> ListBusinessesAsync(Guid userId, CancellationToken cancellationToken = default);
 }

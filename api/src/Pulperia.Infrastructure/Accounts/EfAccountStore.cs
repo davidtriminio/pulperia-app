@@ -97,4 +97,26 @@ public sealed class EfAccountStore(PulperiaDbContext db) : IAccountStore
     public async Task RevokeSessionAsync(Guid sessionId, DateTime at, CancellationToken cancellationToken = default) =>
         await db.Sessions.Where(s => s.Id == sessionId && s.RevokedAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevokedAt, at), cancellationToken);
+
+    public async Task AddBusinessAsync(NewBusiness business, CancellationToken cancellationToken = default)
+    {
+        db.Businesses.Add(new BusinessEntity
+        {
+            Id = business.BusinessId, Name = business.Name, AmountMode = business.AmountMode,
+            QuantityMode = business.QuantityMode, CreatedAt = business.CreatedAt,
+        });
+        db.Memberships.Add(new MembershipEntity
+        {
+            UserId = business.OwnerId, BusinessId = business.BusinessId, Role = Role.Owner, Status = MembershipStatus.Active,
+        });
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<BusinessSummary>> ListBusinessesAsync(
+        Guid userId, CancellationToken cancellationToken = default) =>
+        await db.Memberships.AsNoTracking()
+            .Where(m => m.UserId == userId && m.Status == MembershipStatus.Active)
+            .Join(db.Businesses, m => m.BusinessId, b => b.Id,
+                (m, b) => new BusinessSummary(b.Id, b.Name, m.Role, b.AmountMode, b.QuantityMode))
+            .ToListAsync(cancellationToken);
 }
