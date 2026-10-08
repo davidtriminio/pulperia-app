@@ -152,7 +152,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T060** Aplicar anulaciones de fiado y abono, idempotentes. RF: 43, 44, 46, 47, 49. *Hecho cuando:* cada anulación guarda usuario y fecha, y anular dos veces el mismo movimiento no cambia nada ni falla.
 - [x] **T061** Comprobar permisos de rol en cada operación. RF: 13, 21, 45, 48. Dep: T046. *Hecho cuando:* un empleado que intenta anular o archivar recibe rechazo.
 - [x] **T062** Registrar cada operación aplicada en `change_log` con su `seq`, de forma atómica. RF: 52. *Hecho cuando:* una falla a mitad de operación no deja `seq` huérfano.
-- [ ] **T181** Columnas `previous_price` y `price_changed_at` en `products`, aplicadas al procesar `product.update`, y devueltas por la sincronización y por la consulta de productos. RF: 90. Dep: T180. *Hecho cuando:* un cambio de precio sincronizado deja el anterior y la fecha, un cambio de solo nombre no los toca y el pull los entrega al móvil.
+- [x] **T181** Columnas `previous_price` y `price_changed_at` en `products`, aplicadas al procesar `product.update`, y devueltas por la sincronización y por la consulta de productos. RF: 90. Dep: T180. *Hecho cuando:* un cambio de precio sincronizado deja el anterior y la fecha, un cambio de solo nombre no los toca y el pull los entrega al móvil.
 
 ## Fase 6 — Cuentas, negocios y equipo (API)
 - [x] **T063** Registro con correo, contraseña y nombre de negocio. RF: 1, 2, 78. Dep: T051. *Hecho cuando:* crea usuario, negocio y pertenencia de dueño; sin nombre de negocio se rechaza.
