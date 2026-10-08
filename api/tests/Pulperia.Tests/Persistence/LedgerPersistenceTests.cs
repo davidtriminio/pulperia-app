@@ -133,7 +133,7 @@ public class LedgerPersistenceTests(PostgresFixture postgres)
         await w.Db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(w.Db.Database.GetConnectionString()!);
-        var read = await other.Fiados.SingleAsync(f => f.Id == fiado.Id);
+        var read = await other.Fiados.IgnoreQueryFilters().SingleAsync(f => f.Id == fiado.Id);
 
         Assert.Equal(99_999_999_000, read.Total);
         Assert.Equal(w.ClientId, read.ClientId);
@@ -163,7 +163,7 @@ public class LedgerPersistenceTests(PostgresFixture postgres)
         w.Db.Fiados.Add(fiado);
         await w.Db.SaveChangesAsync();
 
-        Assert.Equal(0, await w.Db.FiadoItems.CountAsync());
+        Assert.Equal(0, await w.Db.FiadoItems.IgnoreQueryFilters().CountAsync());
     }
 
     [Fact]
@@ -200,14 +200,14 @@ public class LedgerPersistenceTests(PostgresFixture postgres)
     public async Task Se_puede_fiar_a_un_cliente_archivado_RF85()
     {
         await using var w = await Setup();
-        var client = await w.Db.Clients.SingleAsync();
+        var client = await w.Db.Clients.IgnoreQueryFilters().SingleAsync();
         client.Archived = true;
         await w.Db.SaveChangesAsync();
         w.Db.Fiados.Add(Fiado(w));
 
         await w.Db.SaveChangesAsync();
 
-        Assert.Equal(1, await w.Db.Fiados.CountAsync());
+        Assert.Equal(1, await w.Db.Fiados.IgnoreQueryFilters().CountAsync());
     }
 
     // ---- ítems (RF-28, RF-31, RF-86, RF-88)
@@ -224,7 +224,7 @@ public class LedgerPersistenceTests(PostgresFixture postgres)
         await w.Db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(w.Db.Database.GetConnectionString()!);
-        var read = await other.FiadoItems.SingleAsync();
+        var read = await other.FiadoItems.IgnoreQueryFilters().SingleAsync();
 
         Assert.Equal("Arroz", read.Description);
         Assert.Equal(2000, read.Quantity);
@@ -245,7 +245,7 @@ public class LedgerPersistenceTests(PostgresFixture postgres)
 
         await w.Db.SaveChangesAsync();
 
-        Assert.Null((await w.Db.FiadoItems.SingleAsync()).ProductId);
+        Assert.Null((await w.Db.FiadoItems.IgnoreQueryFilters().SingleAsync()).ProductId);
     }
 
     [Fact]
@@ -340,7 +340,7 @@ public class LedgerPersistenceTests(PostgresFixture postgres)
         await w.Db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(w.Db.Database.GetConnectionString()!);
-        var read = await other.Payments.SingleAsync();
+        var read = await other.Payments.IgnoreQueryFilters().SingleAsync();
 
         Assert.Equal(3000, read.Amount);
         Assert.Equal(w.ClientId, read.ClientId);
@@ -403,7 +403,7 @@ public class LedgerPersistenceTests(PostgresFixture postgres)
         await w.Db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(w.Db.Database.GetConnectionString()!);
-        var read = await other.Fiados.SingleAsync();
+        var read = await other.Fiados.IgnoreQueryFilters().SingleAsync();
         Assert.Equal(Now.AddHours(1), read.AnnulledAt);
         Assert.Equal(w.UserId, read.AnnulledBy);
         Assert.Equal(5000, read.Total);
@@ -421,7 +421,7 @@ public class LedgerPersistenceTests(PostgresFixture postgres)
         payment.AnnulledBy = w.UserId;
         await w.Db.SaveChangesAsync();
 
-        Assert.NotNull((await w.Db.Payments.SingleAsync()).AnnulledAt);
+        Assert.NotNull((await w.Db.Payments.IgnoreQueryFilters().SingleAsync()).AnnulledAt);
     }
 
     [Fact]
@@ -470,8 +470,8 @@ public class LedgerPersistenceTests(PostgresFixture postgres)
 
     private static async Task<Balance> BalanceOf(World w)
     {
-        var fiados = await w.Db.Fiados.Where(f => f.ClientId == w.ClientId).ToListAsync();
-        var payments = await w.Db.Payments.Where(p => p.ClientId == w.ClientId).ToListAsync();
+        var fiados = await w.Db.Fiados.IgnoreQueryFilters().Where(f => f.ClientId == w.ClientId).ToListAsync();
+        var payments = await w.Db.Payments.IgnoreQueryFilters().Where(p => p.ClientId == w.ClientId).ToListAsync();
         return Balances.Compute(fiados.Select(f => f.ToMovement()).Concat(payments.Select(p => p.ToMovement())));
     }
 

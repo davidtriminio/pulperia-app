@@ -98,7 +98,7 @@ public class SyncPersistenceTests(PostgresFixture postgres)
         await db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(db.Database.GetConnectionString()!);
-        var read = await other.ChangeLog.SingleAsync();
+        var read = await other.ChangeLog.IgnoreQueryFilters().SingleAsync();
 
         Assert.Equal(1, read.Seq);
         Assert.Equal(ChangeEntityType.Fiado, read.EntityType);
@@ -178,6 +178,7 @@ public class SyncPersistenceTests(PostgresFixture postgres)
         await db.SaveChangesAsync();
 
         var after = await db.ChangeLog
+            .IgnoreQueryFilters()
             .Where(c => c.BusinessId == business.Id && c.Seq > 2)
             .OrderBy(c => c.Seq)
             .Select(c => c.Seq)
@@ -275,7 +276,7 @@ public class SyncPersistenceTests(PostgresFixture postgres)
         }));
 
         Assert.Equal(Enumerable.Range(1, 20).Select(n => (long)n), seqs.OrderBy(s => s));
-        Assert.Equal(20, await db.ChangeLog.CountAsync());
+        Assert.Equal(20, await db.ChangeLog.IgnoreQueryFilters().CountAsync());
     }
 
     [Fact]
@@ -299,7 +300,7 @@ public class SyncPersistenceTests(PostgresFixture postgres)
         await db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(db.Database.GetConnectionString()!);
-        var read = await other.ProcessedOps.SingleAsync(o => o.OpId == opId);
+        var read = await other.ProcessedOps.IgnoreQueryFilters().SingleAsync(o => o.OpId == opId);
 
         Assert.Equal("applied", read.Result);
         Assert.Equal(business.Id, read.BusinessId);
@@ -317,7 +318,7 @@ public class SyncPersistenceTests(PostgresFixture postgres)
         });
         await db.SaveChangesAsync();
 
-        Assert.Equal("version_conflict", (await db.ProcessedOps.SingleAsync()).Result);
+        Assert.Equal("version_conflict", (await db.ProcessedOps.IgnoreQueryFilters().SingleAsync()).Result);
     }
 
     [Fact]
