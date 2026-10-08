@@ -17,6 +17,9 @@ public sealed class OperationApplier(IOperationStore store)
                 "client.update" => await ClientOperations.UpdateAsync(store, operation, cancellationToken),
                 "client.archive" => await ClientOperations.SetArchivedAsync(store, operation, true, cancellationToken),
                 "client.restore" => await ClientOperations.SetArchivedAsync(store, operation, false, cancellationToken),
+                "product.create" => await ProductOperations.CreateAsync(store, operation, actor, cancellationToken),
+                "product.update" => await ProductOperations.UpdateAsync(store, operation, cancellationToken),
+                "product.archive" => await ProductOperations.ArchiveAsync(store, operation, cancellationToken),
                 _ => OperationResult.Rejected(RejectionCodes.UnknownOperation),
             };
         }
@@ -36,4 +39,5 @@ public static class RejectionCodes
     public const string VersionConflict = "version_conflict";
     public const string BaseVersionRequired = "base_version_required";
     public const string ClientNotFound = "client_not_found";
+    public const string ProductNotFound = "product_not_found";
 }

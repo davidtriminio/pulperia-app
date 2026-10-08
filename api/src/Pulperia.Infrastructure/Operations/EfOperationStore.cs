@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Pulperia.Application.Operations;
+using Pulperia.Domain.Amounts;
 using Pulperia.Infrastructure.Persistence;
 using Pulperia.Infrastructure.Persistence.Entities;
 
@@ -42,6 +43,52 @@ public sealed class EfOperationStore : IOperationStore
         var entity = await _db.Clients.SingleAsync(c => c.Id == client.Id, cancellationToken);
         Copy(client, entity);
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<BusinessModes> GetModesAsync(CancellationToken cancellationToken = default)
+    {
+        var business = await _db.Businesses.AsNoTracking().SingleAsync(b => b.Id == _businessId, cancellationToken);
+        return new BusinessModes(business.AmountMode, business.QuantityMode);
+    }
+
+    public async Task<ProductRecord?> FindProductAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _db.Products.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
+        return entity is null ? null : ToRecord(entity);
+    }
+
+    public async Task AddProductAsync(ProductRecord product, CancellationToken cancellationToken = default)
+    {
+        var entity = new ProductEntity { BusinessId = _businessId };
+        Copy(product, entity);
+        _db.Products.Add(entity);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateProductAsync(ProductRecord product, CancellationToken cancellationToken = default)
+    {
+        var entity = await _db.Products.SingleAsync(p => p.Id == product.Id, cancellationToken);
+        Copy(product, entity);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static ProductRecord ToRecord(ProductEntity e) => new(
+        e.Id, e.Name, new Money(e.Price), e.Unit,
+        e.PreviousPrice is { } previous ? new Money(previous) : null, e.PriceChangedAt,
+        e.Archived, e.Version, e.CreatedBy, e.CreatedAt);
+
+    private static void Copy(ProductRecord r, ProductEntity e)
+    {
+        e.Id = r.Id;
+        e.Name = r.Name;
+        e.Price = r.Price.MinorUnits;
+        e.Unit = r.Unit;
+        e.PreviousPrice = r.PreviousPrice?.MinorUnits;
+        e.PriceChangedAt = r.PriceChangedAt;
+        e.Archived = r.Archived;
+        e.Version = r.Version;
+        e.CreatedBy = r.CreatedBy;
+        e.CreatedAt = r.CreatedAt;
     }
 
     private static ClientRecord ToRecord(ClientEntity e) => new(
