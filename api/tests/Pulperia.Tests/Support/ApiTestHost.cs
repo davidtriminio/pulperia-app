@@ -76,6 +76,33 @@ public sealed class ApiTestHost : IAsyncDisposable
         return await Client.SendAsync(request);
     }
 
+    public async Task<HttpResponseMessage> PatchAsync(string path, object? body, string? accessToken = null, Guid? businessId = null)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Patch, path) { Content = JsonContent.Create(body, options: Json) };
+        Decorate(request, accessToken, businessId);
+        return await Client.SendAsync(request);
+    }
+
+    public async Task<HttpResponseMessage> DeleteAsync(string path, string? accessToken = null, Guid? businessId = null)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Delete, path);
+        Decorate(request, accessToken, businessId);
+        return await Client.SendAsync(request);
+    }
+
+    /// <summary>Envía el JSON tal cual, para probar cuerpos que un objeto C# no puede expresar.</summary>
+    public async Task<HttpResponseMessage> SendJsonAsync(
+        HttpMethod method, string path, string? json, string? accessToken = null, Guid? businessId = null)
+    {
+        using var request = new HttpRequestMessage(method, path);
+        if (json is not null)
+        {
+            request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        }
+        Decorate(request, accessToken, businessId);
+        return await Client.SendAsync(request);
+    }
+
     public static async Task<JsonElement> JsonOf(HttpResponseMessage response) =>
         JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement.Clone();
 

@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Pulperia.Api.Endpoints;
 using Pulperia.Application.Accounts;
+using Pulperia.Application.Management;
 using Pulperia.Infrastructure.Accounts;
+using Pulperia.Infrastructure.Management;
 using Pulperia.Infrastructure.Persistence;
 
 namespace Pulperia.Api;
@@ -25,6 +27,8 @@ public static class ApiHost
             sp.GetRequiredService<IConfiguration>().GetValue("Auth:PasswordIterations", PasswordHasher.DefaultIterations)));
         builder.Services.AddScoped<IAccountStore, EfAccountStore>();
         builder.Services.AddScoped<AccountService>();
+        builder.Services.AddScoped<IManagementStore, EfManagementStore>();
+        builder.Services.AddScoped<ManagementService>();
 
         configure?.Invoke(builder);
 
@@ -36,6 +40,7 @@ public static class ApiHost
 
         app.MapAuthEndpoints();
         app.MapBusinessEndpoints();
+        app.MapManagementEndpoints();
         return app;
     }
 }
