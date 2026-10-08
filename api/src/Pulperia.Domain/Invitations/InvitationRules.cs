@@ -36,8 +36,9 @@ public static class InvitationStatuses
 /// Invitación a un negocio, asociada a un correo. No caduca: sigue vigente hasta que se
 /// acepte, se rechace o un dueño la cancele (RF-10).
 /// </summary>
-/// <param name="Email">El correo ya normalizado (sin espacios exteriores y en minúsculas).</param>
-public sealed record Invitation(Guid Id, Guid BusinessId, string Email, InvitationStatus Status);
+/// <param name="Email">El correo ya normalizado (sin espacios exteriores y en minúsculas); null en una invitación solo por código (RF-92).</param>
+/// <param name="Code">El código de un solo uso, normalizado (RF-92, D-28).</param>
+public sealed record Invitation(Guid Id, Guid BusinessId, string? Email, InvitationStatus Status, string? Code = null);
 
 /// <summary>Motivo por el que se rechaza una acción sobre una invitación.</summary>
 public enum InvitationError
@@ -82,11 +83,12 @@ public static class InvitationRules
     /// <summary>Correo en su forma comparable: sin espacios exteriores y en minúsculas.</summary>
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
-    public static bool SameEmail(string a, string b) => NormalizeEmail(a) == NormalizeEmail(b);
+    public static bool SameEmail(string? a, string? b) =>
+        a is not null && b is not null && NormalizeEmail(a) == NormalizeEmail(b);
 
     /// <summary>Una invitación nueva queda pendiente y asociada al correo (RF-10).</summary>
-    public static Invitation Create(Guid id, Guid businessId, string email) =>
-        new(id, businessId, NormalizeEmail(email), InvitationStatus.Pending);
+    public static Invitation Create(Guid id, Guid businessId, string? email, string? code = null) =>
+        new(id, businessId, email is null ? null : NormalizeEmail(email), InvitationStatus.Pending, code);
 
     /// <summary>
     /// La persona invitada acepta una invitación pendiente y entra al negocio como empleado,
@@ -96,6 +98,15 @@ public static class InvitationRules
         Respond(invitation, userEmail, InvitationStatus.Accepted, Role.Employee);
 
     /// <summary>La persona invitada rechaza una invitación pendiente (RF-67).</summary>
+    /// <summary>
+    /// Canjear el código de una invitación pendiente (RF-93): la acepta y agrega a quien lo canjea
+    /// como empleado, sin importar su correo. Una resuelta no se puede canjear.
+    /// </summary>
+    public static InvitationResult AcceptByCode(Invitation invitation) =>
+        invitation.Status == InvitationStatus.Pending
+            ? InvitationResult.Ok(invitation with { Status = InvitationStatus.Accepted }, Role.Employee)
+            : InvitationResult.Fail(InvitationError.NotPending);
+
     public static InvitationResult Reject(Invitation invitation, string userEmail) =>
         Respond(invitation, userEmail, InvitationStatus.Rejected, null);
 

@@ -83,7 +83,11 @@ public sealed class ManagementService(IManagementStore store, TimeProvider clock
         return AccountResult<BusinessSettings>.Ok(updated);
     }
 
-    /// <summary>Un dueño invita a una persona por su correo (RF-10). No hace falta que ya tenga cuenta.</summary>
+    /// <summary>
+    /// Un dueño invita (RF-10, RF-92). Con correo, la invitación la ve esa persona al iniciar sesión;
+    /// sin correo (<c>null</c>), solo se activa con el código. En los dos casos lleva un código de
+    /// un solo uso que el dueño puede entregar por cualquier medio.
+    /// </summary>
     public async Task<AccountResult<InvitationView>> InviteAsync(
         Guid businessId, Role role, Guid createdBy, string? email, CancellationToken cancellationToken = default)
     {
@@ -91,23 +95,63 @@ public sealed class ManagementService(IManagementStore store, TimeProvider clock
         {
             return AccountResult<InvitationView>.Fail(Forbidden);
         }
-        var normalized = InvitationRules.NormalizeEmail(email ?? "");
-        if (!AccountRules.IsValidEmail(normalized))
+        string? normalized = null;
+        if (email is not null)
         {
-            return AccountResult<InvitationView>.Fail("email_invalid");
-        }
-        if (await store.IsActiveMemberByEmailAsync(businessId, normalized, cancellationToken))
-        {
-            return AccountResult<InvitationView>.Fail("already_member");
-        }
-        if (await store.HasPendingInvitationAsync(businessId, normalized, cancellationToken))
-        {
-            return AccountResult<InvitationView>.Fail("invitation_already_pending");
+            normalized = InvitationRules.NormalizeEmail(email);
+            if (!AccountRules.IsValidEmail(normalized))
+            {
+                return AccountResult<InvitationView>.Fail("email_invalid");
+            }
+            if (await store.IsActiveMemberByEmailAsync(businessId, normalized, cancellationToken))
+            {
+                return AccountResult<InvitationView>.Fail("already_member");
+            }
+            if (await store.HasPendingInvitationAsync(businessId, normalized, cancellationToken))
+            {
+                return AccountResult<InvitationView>.Fail("invitation_already_pending");
+            }
         }
 
-        var invitation = InvitationRules.Create(Guid.CreateVersion7(), businessId, normalized);
-        await store.AddInvitationAsync(invitation, createdBy, clock.GetUtcNow().UtcDateTime, cancellationToken);
-        return AccountResult<InvitationView>.Ok(ToView(invitation));
+        // El código es único en toda la tabla: si por azar choca con otro, se genera uno nuevo.
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var invitation = InvitationRules.Create(Guid.CreateVersion7(), businessId, normalized, InvitationCodes.Generate());
+            if (await store.TryAddInvitationAsync(invitation, createdBy, clock.GetUtcNow().UtcDateTime, cancellationToken))
+            {
+                return AccountResult<InvitationView>.Ok(ToView(invitation));
+            }
+        }
+        throw new InvalidOperationException("No se pudo generar un código de invitación único.");
+    }
+
+    /// <summary>
+    /// Canjear un código (RF-93, RF-94): quien lo escribe entra al negocio como empleado, sin importar
+    /// su correo. Un código inexistente, usado, cancelado o mal escrito da el mismo rechazo, sin decir
+    /// nada de ningún negocio. Quien ya es miembro activo no lo consume ni cambia de rol.
+    /// </summary>
+    public async Task<AccountResult<BusinessSummary>> RedeemInvitationCodeAsync(
+        Guid userId, string? typedCode, CancellationToken cancellationToken = default)
+    {
+        const string invalid = "invalid_invitation_code";
+        if (InvitationCodes.Normalize(typedCode) is not { } code
+            || await store.FindPendingInvitationByCodeAsync(code, cancellationToken) is not { } invitation)
+        {
+            return AccountResult<BusinessSummary>.Fail(invalid);
+        }
+        if (await store.IsActiveMemberAsync(userId, invitation.BusinessId, cancellationToken))
+        {
+            return AccountResult<BusinessSummary>.Fail("already_member");
+        }
+        if (!InvitationRules.AcceptByCode(invitation).IsValid
+            || !await store.AcceptInvitationAsync(invitation.Id, userId, cancellationToken))
+        {
+            return AccountResult<BusinessSummary>.Fail(invalid);
+        }
+
+        var settings = await store.GetSettingsAsync(invitation.BusinessId, cancellationToken);
+        return AccountResult<BusinessSummary>.Ok(new BusinessSummary(
+            invitation.BusinessId, settings!.Name, Role.Employee, settings.AmountMode, settings.QuantityMode));
     }
 
     /// <summary>Las invitaciones pendientes del negocio, para que el dueño pueda cancelarlas.</summary>
@@ -204,7 +248,7 @@ public sealed class ManagementService(IManagementStore store, TimeProvider clock
     }
 
     private static InvitationView ToView(Invitation invitation) =>
-        new(invitation.Id, invitation.BusinessId, invitation.Email, invitation.Status);
+        new(invitation.Id, invitation.BusinessId, invitation.Email, invitation.Status, InvitationCodes.Format(invitation.Code!));
 
     /// <summary>El equipo activo del negocio: dueños primero, luego por correo (RF-70).</summary>
     public async Task<AccountResult<IReadOnlyList<TeamMemberView>>> ListTeamAsync(

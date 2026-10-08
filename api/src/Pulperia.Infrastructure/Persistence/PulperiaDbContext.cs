@@ -206,14 +206,19 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
         {
             e.ToTable("invitations", t =>
             {
-                t.HasCheckConstraint("ck_invitations_email_normalized", string.Format(NormalizedEmail, "email"));
+                // El correo es opcional (invitación solo por código); si está, va normalizado.
+                t.HasCheckConstraint(
+                    "ck_invitations_email_normalized",
+                    "email IS NULL OR (email = lower(btrim(email)) AND btrim(email) <> '')");
+                t.HasCheckConstraint("ck_invitations_code_format", "code ~ '^[A-Z0-9]{8}$'");
                 t.HasCheckConstraint(
                     "ck_invitations_status",
                     "status IN ('pending', 'accepted', 'rejected', 'cancelled')");
             });
             e.HasKey(x => x.Id);
-            e.Property(x => x.Email).IsRequired();
+            e.Property(x => x.Code).IsRequired();
             e.Property(x => x.Status).HasConversion(s => s.Id(), id => InvitationStatuses.FromId(id));
+            e.HasIndex(x => x.Code).IsUnique();
             e.HasOne<BusinessEntity>().WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict);
             // Las invitaciones pendientes de un correo se buscan al iniciar sesión (RF-67).

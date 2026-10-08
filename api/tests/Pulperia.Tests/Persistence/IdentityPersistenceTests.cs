@@ -343,6 +343,7 @@ public class IdentityPersistenceTests(PostgresFixture postgres)
         Id = Guid.CreateVersion7(),
         BusinessId = businessId,
         Email = email,
+        Code = Pulperia.Domain.Invitations.InvitationCodes.Generate(),
         Status = InvitationStatus.Pending,
         CreatedBy = createdBy,
         CreatedAt = Now,
@@ -450,7 +451,7 @@ public class IdentityPersistenceTests(PostgresFixture postgres)
     [Fact]
     public void Una_invitacion_pasa_del_dominio_a_la_base_y_vuelve_igual()
     {
-        var domain = new Invitation(Guid.CreateVersion7(), Guid.CreateVersion7(), "beto@correo.com", InvitationStatus.Accepted);
+        var domain = new Invitation(Guid.CreateVersion7(), Guid.CreateVersion7(), "beto@correo.com", InvitationStatus.Accepted, "ABCDEFGH");
         var createdBy = Guid.CreateVersion7();
 
         var entity = InvitationEntity.FromDomain(domain, createdBy, Now);

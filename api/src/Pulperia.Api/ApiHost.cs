@@ -29,6 +29,7 @@ public static class ApiHost
         builder.Services.AddScoped<AccountService>();
         builder.Services.AddScoped<IManagementStore, EfManagementStore>();
         builder.Services.AddScoped<ManagementService>();
+        builder.Services.AddSingleton<RedeemRateLimiter>();
 
         configure?.Invoke(builder);
         RequireConnectionString(builder.Configuration);

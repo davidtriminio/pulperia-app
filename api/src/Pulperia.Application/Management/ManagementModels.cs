@@ -11,7 +11,9 @@ public sealed record BusinessSettings(string Name, AmountMode AmountMode, Quanti
 public sealed record SettingsChange(string? Name = null, AmountMode? AmountMode = null, QuantityMode? QuantityMode = null);
 
 /// <summary>Una invitación de un negocio a un correo (RF-10).</summary>
-public sealed record InvitationView(Guid Id, Guid BusinessId, string Email, InvitationStatus Status);
+/// <param name="Email">Null en una invitación solo por código.</param>
+/// <param name="Code">El código de un solo uso, en su forma para mostrar (<c>XXXX-XXXX</c>); solo lo ve el dueño (RF-92).</param>
+public sealed record InvitationView(Guid Id, Guid BusinessId, string? Email, InvitationStatus Status, string Code);
 
 /// <summary>Una invitación pendiente tal como la ve quien la recibe (RF-67).</summary>
 public sealed record InvitationOffer(Guid Id, Guid BusinessId, string BusinessName, string Email);
