@@ -7,7 +7,7 @@ Principios innegociables. Toda spec, plan y tarea debe cumplirlos.
 3. **Sync simple y determinista**: sincronización por lote (push de la cola, pull de cambios desde la última marca). Los registros distintos se conservan todos; si dos dispositivos modifican el mismo registro, el servidor gana. Las operaciones de sync son idempotentes.
 4. **Precio histórico inmutable**: cada ítem fiado guarda su precio y cantidad al momento de la compra. Cambiar el precio del producto jamás altera deudas ya registradas.
 5. **Dinero exacto**: nunca `double`/`float` para montos.
-6. **Aislamiento por negocio**: todo dato pertenece a un negocio; ninguna consulta ni sync cruza datos entre negocios.
+6. **Aislamiento por negocio**: todo dato pertenece a un negocio; ninguna consulta ni sync cruza datos entre negocios. La administración de la plataforma (super administrador) solo ve metadatos y cifras agregadas de cada negocio, jamás sus datos.
 7. **Lógica separada de interfaz**: reglas de negocio testeables sin UI ni red (dominio en .NET, repositorios/casos de uso en Flutter, servicios en Angular).
 8. **Tests como puerta**: cada tarea termina con sus tests en verde. Prohibido avanzar en rojo.
 9. **Ligero y optimizado**: pensado para móviles modestos y datos limitados; sync incremental, payloads pequeños, sin dependencias innecesarias.
