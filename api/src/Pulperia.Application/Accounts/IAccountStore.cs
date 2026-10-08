@@ -24,4 +24,31 @@ public interface IAccountStore
     /// false, sin crear nada, si el correo ya está registrado.
     /// </summary>
     Task<bool> TryCreateAccountAsync(NewAccount account, CancellationToken cancellationToken = default);
+
+    Task<UserCredentials?> FindUserByEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default);
+
+    Task UpdatePasswordHashAsync(Guid userId, string passwordHash, CancellationToken cancellationToken = default);
+
+    Task AddSessionAsync(NewSession session, CancellationToken cancellationToken = default);
+
+    Task<SessionInfo?> FindSessionByAccessHashAsync(string accessTokenHash, CancellationToken cancellationToken = default);
+
+    Task<SessionInfo?> FindSessionByRefreshHashAsync(string refreshTokenHash, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reemplaza los dos tokens de la sesión, pero solo si sigue abierta y su token de renovación
+    /// es todavía <paramref name="oldRefreshHash"/>. Es atómico: de dos renovaciones simultáneas
+    /// con el mismo token solo una devuelve true.
+    /// </summary>
+    Task<bool> RotateSessionAsync(
+        Guid sessionId,
+        string oldRefreshHash,
+        string newAccessHash,
+        DateTime accessExpiresAt,
+        string newRefreshHash,
+        DateTime refreshExpiresAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Cierra la sesión si sigue abierta; si ya estaba cerrada no cambia nada.</summary>
+    Task RevokeSessionAsync(Guid sessionId, DateTime at, CancellationToken cancellationToken = default);
 }

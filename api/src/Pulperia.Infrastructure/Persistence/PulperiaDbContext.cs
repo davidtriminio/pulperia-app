@@ -19,6 +19,8 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
 {
     public DbSet<UserEntity> Users => Set<UserEntity>();
 
+    public DbSet<SessionEntity> Sessions => Set<SessionEntity>();
+
     public DbSet<BusinessEntity> Businesses => Set<BusinessEntity>();
 
     public DbSet<MembershipEntity> Memberships => Set<MembershipEntity>();
@@ -120,6 +122,7 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureUsers(modelBuilder);
+        ConfigureSessions(modelBuilder);
         ConfigureBusinesses(modelBuilder);
         ConfigureMemberships(modelBuilder);
         ConfigureInvitations(modelBuilder);
@@ -147,6 +150,20 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
             e.Property(x => x.Email).IsRequired();
             e.Property(x => x.PasswordHash).IsRequired();
             e.HasIndex(x => x.Email).IsUnique();
+        });
+
+    private static void ConfigureSessions(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<SessionEntity>(e =>
+        {
+            e.ToTable("sessions");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.AccessTokenHash).IsRequired();
+            e.Property(x => x.RefreshTokenHash).IsRequired();
+            // Cada petición busca la sesión por el hash de su token (D-27).
+            e.HasIndex(x => x.AccessTokenHash).IsUnique();
+            e.HasIndex(x => x.RefreshTokenHash).IsUnique();
+            e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.UserId);
         });
 
     private static void ConfigureBusinesses(ModelBuilder modelBuilder) =>
