@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Pulperia.Application.Operations;
 using Pulperia.Domain.Amounts;
 using Pulperia.Domain.Quantities;
+using Pulperia.Domain.Sync;
 using Pulperia.Infrastructure.Persistence;
 using Pulperia.Infrastructure.Persistence.Entities;
 
@@ -185,6 +186,37 @@ public sealed class EfOperationStore : IOperationStore
         e.Version = r.Version;
         e.CreatedBy = r.CreatedBy;
         e.CreatedAt = r.CreatedAt;
+    }
+
+    public async Task RecordChangeAsync(
+        ChangeEntityType type, Guid entityId, CancellationToken cancellationToken = default)
+    {
+        var seq = await ChangeSequence.NextAsync(_db, _businessId, cancellationToken);
+        _db.ChangeLog.Add(new ChangeLogEntity { BusinessId = _businessId, Seq = seq, EntityType = type, EntityId = entityId });
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<T> InTransactionAsync<T>(Func<Task<T>> work, CancellationToken cancellationToken = default)
+    {
+        if (_db.Database.CurrentTransaction is not null)
+        {
+            return await work();
+        }
+
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var result = await work();
+            await transaction.CommitAsync(cancellationToken);
+            return result;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            // Lo que EF tenía por guardar o ya guardado en esta transacción ya no es verdad.
+            _db.ChangeTracker.Clear();
+            throw;
+        }
     }
 
     private static ClientRecord ToRecord(ClientEntity e) => new(

@@ -83,7 +83,7 @@ internal static class ClientOperations
         }
         if (current.Archived == archived)
         {
-            return OperationResult.Applied;
+            return OperationResult.AppliedWithoutChange;
         }
 
         await store.UpdateClientAsync(
