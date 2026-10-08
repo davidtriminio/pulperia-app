@@ -140,7 +140,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T180** Regla del precio anterior en el dominio de la API, contra los mismos vectores. RF: 90. Dep: T176. *Hecho cuando:* pasan los casos de `shared/vectors/price-change.json`.
 
 ## Fase 5 — Persistencia y aplicación de operaciones (API)
-- [ ] **T051** Persistencia de usuarios, negocios, pertenencias e invitaciones con migración. RF: 1, 2, 10. Dep: T049, T050. *Hecho cuando:* una prueba de integración contra PostgreSQL real crea y lee cada tabla.
+- [x] **T051** Persistencia de usuarios, negocios, pertenencias e invitaciones con migración. RF: 1, 2, 10. Dep: T049, T050. *Hecho cuando:* una prueba de integración contra PostgreSQL real crea y lee cada tabla.
 - [ ] **T052** Persistencia de clientes y productos. RF: 14, 24. *Hecho cuando:* integración contra PostgreSQL real.
 - [ ] **T053** Persistencia de fiados, ítems y abonos. RF: 28, 37. *Hecho cuando:* integración contra PostgreSQL real.
 - [ ] **T054** Persistencia de `change_log`, `processed_ops`, contador por negocio y `admin_audit`. RF: 53, 81. *Hecho cuando:* integración contra PostgreSQL real.
