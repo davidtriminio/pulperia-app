@@ -21,6 +21,7 @@ public sealed class OperationApplier(IOperationStore store)
                 "product.update" => await ProductOperations.UpdateAsync(store, operation, cancellationToken),
                 "product.archive" => await ProductOperations.ArchiveAsync(store, operation, cancellationToken),
                 "fiado.create" => await FiadoOperations.CreateAsync(store, operation, actor, cancellationToken),
+                "payment.create" => await PaymentOperations.CreateAsync(store, operation, actor, cancellationToken),
                 _ => OperationResult.Rejected(RejectionCodes.UnknownOperation),
             };
         }
