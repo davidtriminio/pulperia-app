@@ -1,3 +1,5 @@
+using Pulperia.Domain.Access;
+
 namespace Pulperia.Application.Operations;
 
 /// <summary>
@@ -9,6 +11,17 @@ public sealed class OperationApplier(IOperationStore store)
     public async Task<OperationResult> ApplyAsync(
         Operation operation, OperationActor actor, CancellationToken cancellationToken = default)
     {
+        if (OperationCatalog.RequiredPermission(operation.Type) is not { } permission)
+        {
+            return OperationResult.Rejected(RejectionCodes.UnknownOperation);
+        }
+        // El permiso va antes de mirar el contenido o si la entidad existe: un empleado no
+        // averigua nada de lo que no puede hacer.
+        if (!RolePermissions.Can(actor.Role, permission))
+        {
+            return OperationResult.Rejected(RejectionCodes.Forbidden);
+        }
+
         try
         {
             return operation.Type switch
@@ -38,6 +51,7 @@ public sealed class OperationApplier(IOperationStore store)
 public static class RejectionCodes
 {
     public const string UnknownOperation = "unknown_operation";
+    public const string Forbidden = "forbidden";
     public const string InvalidPayload = "invalid_payload";
     public const string EntityAlreadyExists = "entity_already_exists";
     public const string VersionConflict = "version_conflict";
