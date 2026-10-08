@@ -3,6 +3,7 @@ using Pulperia.Domain.Access;
 using Pulperia.Domain.Accounts;
 using Pulperia.Domain.Business;
 using Pulperia.Domain.Invitations;
+using Pulperia.Domain.Team;
 
 namespace Pulperia.Application.Management;
 
@@ -204,4 +205,32 @@ public sealed class ManagementService(IManagementStore store, TimeProvider clock
 
     private static InvitationView ToView(Invitation invitation) =>
         new(invitation.Id, invitation.BusinessId, invitation.Email, invitation.Status);
+
+    /// <summary>El equipo activo del negocio: dueños primero, luego por correo (RF-70).</summary>
+    public async Task<AccountResult<IReadOnlyList<TeamMemberView>>> ListTeamAsync(
+        Guid businessId, Role role, CancellationToken cancellationToken = default)
+    {
+        if (!RolePermissions.Can(role, Permission.ManageTeam))
+        {
+            return AccountResult<IReadOnlyList<TeamMemberView>>.Fail(Forbidden);
+        }
+        var team = await store.ListActiveTeamAsync(businessId, cancellationToken);
+        return AccountResult<IReadOnlyList<TeamMemberView>>.Ok(
+            team.OrderBy(m => m.Role).ThenBy(m => m.Email, StringComparer.Ordinal).ToList());
+    }
+
+    /// <summary>Un dueño promueve a un empleado activo a dueño (RF-70): recibe todos los permisos de dueño.</summary>
+    public async Task<AccountResult<Member>> PromoteAsync(
+        Guid businessId, Role role, Guid userId, CancellationToken cancellationToken = default)
+    {
+        if (!RolePermissions.Can(role, Permission.ManageTeam))
+        {
+            return AccountResult<Member>.Fail(Forbidden);
+        }
+        var result = await store.ChangeTeamAsync(
+            businessId, team => TeamRules.Promote(team, userId), clock.GetUtcNow().UtcDateTime, cancellationToken);
+        return result.IsValid
+            ? AccountResult<Member>.Ok(result.Team!.Single(m => m.UserId == userId))
+            : AccountResult<Member>.Fail(result.Error!.Value.Code());
+    }
 }
