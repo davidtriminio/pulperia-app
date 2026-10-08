@@ -137,7 +137,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [ ] **T048** Reglas de ajustes del negocio. RF: 7, 8, 9. Dep: T013. *Hecho cuando:* pasan los vectores de transiciones.
 - [ ] **T049** Reglas de equipo: promoción, baja y último dueño. RF: 70, 71. *Hecho cuando:* toda acción que dejaría el negocio sin dueño se rechaza.
 - [ ] **T050** Reglas de invitación: estados y transiciones. RF: 10, 67, 68, 69. *Hecho cuando:* solo se puede aceptar o rechazar una invitación pendiente y una cancelada no se acepta.
-- [ ] **T180** Regla del precio anterior en el dominio de la API, contra los mismos vectores. RF: 90. Dep: T176. *Hecho cuando:* pasan los casos de `shared/vectors/price-change.json`.
+- [x] **T180** Regla del precio anterior en el dominio de la API, contra los mismos vectores. RF: 90. Dep: T176. *Hecho cuando:* pasan los casos de `shared/vectors/price-change.json`.
 
 ## Fase 5 — Persistencia y aplicación de operaciones (API)
 - [ ] **T051** Persistencia de usuarios, negocios, pertenencias e invitaciones con migración. RF: 1, 2, 10. Dep: T049, T050. *Hecho cuando:* una prueba de integración contra PostgreSQL real crea y lee cada tabla.
