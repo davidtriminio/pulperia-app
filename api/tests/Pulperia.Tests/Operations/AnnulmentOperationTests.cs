@@ -65,7 +65,7 @@ public class AnnulmentOperationTests(PostgresFixture postgres)
         var fiadoId = await NewFiado(kit, clientId);
         await kit.Applier.ApplyAsync(Op("fiado.annul", fiadoId, at: Later), kit.Owner);
 
-        var second = await kit.Applier.ApplyAsync(Op("fiado.annul", fiadoId, at: Later.AddDays(5)), kit.Employee);
+        var second = await kit.Applier.ApplyAsync(Op("fiado.annul", fiadoId, at: Later.AddDays(5)), kit.Owner);
 
         Assert.True(second.IsApplied, second.Code);
         var fiado = await kit.GetFiado(fiadoId);
@@ -124,7 +124,7 @@ public class AnnulmentOperationTests(PostgresFixture postgres)
         var paymentId = await NewPayment(kit, clientId);
         await kit.Applier.ApplyAsync(Op("payment.annul", paymentId, at: Later), kit.Owner);
 
-        var second = await kit.Applier.ApplyAsync(Op("payment.annul", paymentId, at: Later.AddDays(5)), kit.Employee);
+        var second = await kit.Applier.ApplyAsync(Op("payment.annul", paymentId, at: Later.AddDays(5)), kit.Owner);
 
         Assert.True(second.IsApplied, second.Code);
         var payment = await kit.GetPayment(paymentId);
