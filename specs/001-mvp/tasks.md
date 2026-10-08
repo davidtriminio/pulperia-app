@@ -177,7 +177,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T079** Endpoint de cambios por cursor, paginado. RF: 52; RNF-7. *Hecho cuando:* devuelve solo lo posterior al cursor y en páginas.
 - [x] **T080** Descarga inicial desde cursor cero. RF: 58. *Hecho cuando:* un cursor vacío entrega todo el negocio y nada de otros negocios.
 - [x] **T081** Empleado removido: último lote y revocación. RF: 11, 12. *Hecho cuando:* su primer envío tras la baja se acepta, el siguiente se rechaza, y no hay límite de tiempo.
-- [ ] **T082** Prueba de fiado a cliente archivado por otro dispositivo. RF: 85. *Hecho cuando:* el fiado se acepta y el cliente sigue archivado con el saldo actualizado.
+- [x] **T082** Prueba de fiado a cliente archivado por otro dispositivo. RF: 85. *Hecho cuando:* el fiado se acepta y el cliente sigue archivado con el saldo actualizado.
 - [ ] **T083** Endpoint de operación individual para la web. RF: 59, 60. *Hecho cuando:* una operación enviada se aplica y devuelve su resultado al instante.
 - [ ] **T084** Consultas de lectura: clientes con saldo, historial, archivados, productos. RF: 22, 41, 42, 59. *Hecho cuando:* cada consulta respeta el aislamiento del negocio.
 - [ ] **T085** Consulta del resumen. RF: 63, 64, 65. Dep: T047. *Hecho cuando:* pasan los vectores de resumen desde el servidor.
