@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Pulperia.Application.Accounts;
+using Pulperia.Application.Management;
 using Pulperia.Domain.Business;
 using Pulperia.Infrastructure.Accounts;
+using Pulperia.Infrastructure.Management;
 using Pulperia.Infrastructure.Persistence;
 
 namespace Pulperia.Tests.Support;
@@ -29,6 +31,7 @@ public sealed class AccountKit : IAsyncDisposable
         Clock = new FixedClock(Start);
         Hasher = new PasswordHasher(iterations: 1_000);
         Service = new AccountService(new EfAccountStore(db), Hasher, Clock);
+        Management = new ManagementService(new EfManagementStore(db), Clock);
     }
 
     public PulperiaDbContext Db { get; }
@@ -38,6 +41,8 @@ public sealed class AccountKit : IAsyncDisposable
     public PasswordHasher Hasher { get; }
 
     public AccountService Service { get; }
+
+    public ManagementService Management { get; }
 
     public static async Task<AccountKit> CreateAsync(PostgresFixture postgres) =>
         new(await postgres.CreateDatabaseAsync());
