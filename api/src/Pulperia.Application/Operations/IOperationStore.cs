@@ -13,4 +13,14 @@ public interface IOperationStore
 
     /// <summary>Reemplaza los datos del cliente que tiene ese id.</summary>
     Task UpdateClientAsync(ClientRecord client, CancellationToken cancellationToken = default);
+
+    /// <summary>Los modos de montos y cantidades vigentes del negocio de esta instancia.</summary>
+    Task<BusinessModes> GetModesAsync(CancellationToken cancellationToken = default);
+
+    Task<ProductRecord?> FindProductAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task AddProductAsync(ProductRecord product, CancellationToken cancellationToken = default);
+
+    /// <summary>Reemplaza los datos del producto que tiene ese id. No hay forma de borrar uno (RF-27).</summary>
+    Task UpdateProductAsync(ProductRecord product, CancellationToken cancellationToken = default);
 }

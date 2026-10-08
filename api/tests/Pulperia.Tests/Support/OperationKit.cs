@@ -101,5 +101,7 @@ public sealed class OperationKit : IAsyncDisposable
 
     public Task<ClientEntity> GetClient(Guid id) => Db.Clients.AsNoTracking().SingleAsync(c => c.Id == id);
 
+    public Task<ProductEntity> GetProduct(Guid id) => Db.Products.AsNoTracking().SingleAsync(p => p.Id == id);
+
     public ValueTask DisposeAsync() => Db.DisposeAsync();
 }
