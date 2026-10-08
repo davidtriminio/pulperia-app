@@ -103,4 +103,17 @@ public sealed class EfManagementStore(PulperiaDbContext db) : IManagementStore
         await db.Invitations
             .Where(i => i.Id == invitationId && i.Status == InvitationStatus.Pending)
             .ExecuteUpdateAsync(s => s.SetProperty(i => i.Status, InvitationStatus.Rejected), cancellationToken) == 1;
+
+    public async Task<IReadOnlyList<Invitation>> ListPendingInvitationsOfBusinessAsync(
+        Guid businessId, CancellationToken cancellationToken = default) =>
+        (await db.Invitations.AsNoTracking()
+            .Where(i => i.BusinessId == businessId && i.Status == InvitationStatus.Pending)
+            .OrderBy(i => i.CreatedAt).ThenBy(i => i.Id)
+            .ToListAsync(cancellationToken))
+        .Select(i => i.ToDomain()).ToList();
+
+    public async Task<bool> CancelInvitationAsync(Guid invitationId, CancellationToken cancellationToken = default) =>
+        await db.Invitations
+            .Where(i => i.Id == invitationId && i.Status == InvitationStatus.Pending)
+            .ExecuteUpdateAsync(s => s.SetProperty(i => i.Status, InvitationStatus.Cancelled), cancellationToken) == 1;
 }

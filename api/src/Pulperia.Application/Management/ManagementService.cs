@@ -109,6 +109,44 @@ public sealed class ManagementService(IManagementStore store, TimeProvider clock
         return AccountResult<InvitationView>.Ok(ToView(invitation));
     }
 
+    /// <summary>Las invitaciones pendientes del negocio, para que el dueño pueda cancelarlas.</summary>
+    public async Task<AccountResult<IReadOnlyList<InvitationView>>> ListBusinessInvitationsAsync(
+        Guid businessId, Role role, CancellationToken cancellationToken = default)
+    {
+        if (!RolePermissions.Can(role, Permission.ManageTeam))
+        {
+            return AccountResult<IReadOnlyList<InvitationView>>.Fail(Forbidden);
+        }
+        var pending = await store.ListPendingInvitationsOfBusinessAsync(businessId, cancellationToken);
+        return AccountResult<IReadOnlyList<InvitationView>>.Ok(pending.Select(ToView).ToList());
+    }
+
+    /// <summary>
+    /// El dueño cancela una invitación pendiente de su negocio (RF-69). La de otro negocio se
+    /// trata como inexistente. Una cancelada ya no puede aceptarse.
+    /// </summary>
+    public async Task<AccountResult<InvitationView>> CancelInvitationAsync(
+        Guid businessId, Role role, Guid invitationId, CancellationToken cancellationToken = default)
+    {
+        if (!RolePermissions.Can(role, Permission.ManageTeam))
+        {
+            return AccountResult<InvitationView>.Fail(Forbidden);
+        }
+        if (await store.FindInvitationAsync(invitationId, cancellationToken) is not { } invitation
+            || invitation.BusinessId != businessId)
+        {
+            return AccountResult<InvitationView>.Fail("invitation_not_found");
+        }
+        var result = InvitationRules.Cancel(invitation);
+        if (!result.IsValid)
+        {
+            return AccountResult<InvitationView>.Fail(result.Error!.Value.Code());
+        }
+        return await store.CancelInvitationAsync(invitationId, cancellationToken)
+            ? AccountResult<InvitationView>.Ok(ToView(result.Invitation!))
+            : AccountResult<InvitationView>.Fail("invitation_not_pending");
+    }
+
     /// <summary>Las invitaciones pendientes del usuario, por el correo de su cuenta (RF-67).</summary>
     public async Task<IReadOnlyList<InvitationOffer>> ListInvitationsForUserAsync(
         Guid userId, CancellationToken cancellationToken = default) =>

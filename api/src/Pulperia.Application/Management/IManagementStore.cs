@@ -38,4 +38,11 @@ public interface IManagementStore
 
     /// <summary>Pasa la invitación de pendiente a rechazada; false si ya no estaba pendiente.</summary>
     Task<bool> RejectInvitationAsync(Guid invitationId, CancellationToken cancellationToken = default);
+
+    /// <summary>Las invitaciones pendientes del negocio, de la más antigua a la más reciente.</summary>
+    Task<IReadOnlyList<Invitation>> ListPendingInvitationsOfBusinessAsync(
+        Guid businessId, CancellationToken cancellationToken = default);
+
+    /// <summary>Pasa la invitación de pendiente a cancelada; false si ya no estaba pendiente.</summary>
+    Task<bool> CancelInvitationAsync(Guid invitationId, CancellationToken cancellationToken = default);
 }
