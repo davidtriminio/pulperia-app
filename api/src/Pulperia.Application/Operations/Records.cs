@@ -57,3 +57,12 @@ public sealed record FiadoRecord(
     DateTime? AnnulledAt,
     Guid? AnnulledBy,
     IReadOnlyList<FiadoItemRecord> Items);
+
+public sealed record PaymentRecord(
+    Guid Id,
+    Guid ClientId,
+    Money Amount,
+    DateTime OccurredAt,
+    Guid CreatedBy,
+    DateTime? AnnulledAt,
+    Guid? AnnulledBy);

@@ -124,6 +124,31 @@ public sealed class EfOperationStore : IOperationStore
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<PaymentRecord?> FindPaymentAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _db.Payments.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
+        return entity is null ? null : ToRecord(entity);
+    }
+
+    public async Task AddPaymentAsync(PaymentRecord payment, CancellationToken cancellationToken = default)
+    {
+        _db.Payments.Add(new PaymentEntity
+        {
+            Id = payment.Id,
+            BusinessId = _businessId,
+            ClientId = payment.ClientId,
+            Amount = payment.Amount.MinorUnits,
+            OccurredAt = payment.OccurredAt,
+            CreatedBy = payment.CreatedBy,
+            AnnulledAt = payment.AnnulledAt,
+            AnnulledBy = payment.AnnulledBy,
+        });
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static PaymentRecord ToRecord(PaymentEntity e) => new(
+        e.Id, e.ClientId, new Money(e.Amount), e.OccurredAt, e.CreatedBy, e.AnnulledAt, e.AnnulledBy);
+
     private static FiadoItemRecord ToRecord(FiadoItemEntity e) => new(
         e.Id, e.ProductId, e.Description, new Quantity(e.Quantity), e.Unit, new Money(e.UnitPrice), new Money(e.Subtotal));
 

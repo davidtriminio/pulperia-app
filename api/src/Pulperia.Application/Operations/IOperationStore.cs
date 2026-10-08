@@ -32,4 +32,8 @@ public interface IOperationStore
 
     /// <summary>Guarda el fiado con todos sus ítems en un solo guardado.</summary>
     Task AddFiadoAsync(FiadoRecord fiado, CancellationToken cancellationToken = default);
+
+    Task<PaymentRecord?> FindPaymentAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task AddPaymentAsync(PaymentRecord payment, CancellationToken cancellationToken = default);
 }

@@ -148,7 +148,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T056** Aplicar operaciones de cliente (crear, editar con versión, archivar, restaurar). RF: 14–23, 55, 73. Dep: T045, T052. *Hecho cuando:* una edición con versión desfasada se rechaza con código de conflicto.
 - [x] **T057** Aplicar operaciones de producto (crear, cambiar precio, archivar). RF: 24, 25, 26, 27, 86. *Hecho cuando:* no existe operación de borrar producto.
 - [x] **T058** Aplicar la creación de fiado. RF: 28–36, 49, 83, 84, 85, 87, 88. Dep: T043, T053. *Hecho cuando:* cada fiado guarda el usuario que lo registró y un fiado a un cliente archivado se acepta si lo originó un dispositivo que no conocía el archivado.
-- [ ] **T059** Aplicar la creación de abono. RF: 37, 38, 39, 49, 75. *Hecho cuando:* un abono mayor que la deuda se acepta y deja saldo a favor, y cada abono guarda el usuario que lo registró.
+- [x] **T059** Aplicar la creación de abono. RF: 37, 38, 39, 49, 75. *Hecho cuando:* un abono mayor que la deuda se acepta y deja saldo a favor, y cada abono guarda el usuario que lo registró.
 - [ ] **T060** Aplicar anulaciones de fiado y abono, idempotentes. RF: 43, 44, 46, 47, 49. *Hecho cuando:* cada anulación guarda usuario y fecha, y anular dos veces el mismo movimiento no cambia nada ni falla.
 - [ ] **T061** Comprobar permisos de rol en cada operación. RF: 13, 21, 45, 48. Dep: T046. *Hecho cuando:* un empleado que intenta anular o archivar recibe rechazo.
 - [ ] **T062** Registrar cada operación aplicada en `change_log` con su `seq`, de forma atómica. RF: 52. *Hecho cuando:* una falla a mitad de operación no deja `seq` huérfano.

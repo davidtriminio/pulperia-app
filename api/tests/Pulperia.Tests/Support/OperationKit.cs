@@ -146,5 +146,23 @@ public sealed class OperationKit : IAsyncDisposable
     public Task<List<FiadoItemEntity>> GetItems(Guid fiadoId) =>
         Db.FiadoItems.AsNoTracking().Where(i => i.FiadoId == fiadoId).OrderBy(i => i.Id).ToListAsync();
 
+    public static object PaymentPayload(Guid clientId, long amount) => new
+    {
+        clientId,
+        amount,
+        occurredAt = At.UtcDateTime.ToString("O"),
+    };
+
+    public Task<PaymentEntity> GetPayment(Guid id) => Db.Payments.AsNoTracking().SingleAsync(p => p.Id == id);
+
+    /// <summary>El saldo del cliente, calculado con las reglas del dominio sobre lo guardado.</summary>
+    public async Task<Pulperia.Domain.Ledger.Balance> BalanceOf(Guid clientId)
+    {
+        var fiados = await Db.Fiados.AsNoTracking().Where(f => f.ClientId == clientId).ToListAsync();
+        var payments = await Db.Payments.AsNoTracking().Where(p => p.ClientId == clientId).ToListAsync();
+        return Pulperia.Domain.Ledger.Balances.Compute(
+            fiados.Select(f => f.ToMovement()).Concat(payments.Select(p => p.ToMovement())));
+    }
+
     public ValueTask DisposeAsync() => Db.DisposeAsync();
 }
