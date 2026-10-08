@@ -57,12 +57,20 @@ internal static class ProductOperations
             return OperationResult.Rejected(RejectionCodes.VersionConflict);
         }
 
+        // Solo un precio distinto mueve el anterior y la fecha (RF-90, D-24); la fecha es la de la operación.
+        var history = PriceChanges.Apply(
+            current.Price,
+            new PriceHistory(current.PreviousPrice, current.PriceChangedAt),
+            valid.Product!.Price,
+            operation.CreatedAt);
         await store.UpdateProductAsync(
             current with
             {
-                Name = valid.Product!.Name,
+                Name = valid.Product.Name,
                 Price = valid.Product.Price,
                 Unit = valid.Product.Unit,
+                PreviousPrice = history.PreviousPrice,
+                PriceChangedAt = history.ChangedAt,
                 Version = current.Version + 1,
             },
             cancellationToken);
