@@ -37,7 +37,8 @@ public sealed class SyncService(OperationApplier applier, ISyncStore store, Time
         {
             return AccountResult<IReadOnlyList<OperationOutcome>>.Fail(BatchTooLarge);
         }
-        if (await store.FindMembershipAsync(userId, cancellationToken) is not { Status: MembershipStatus.Active } membership)
+        // Quien fue quitado conserva su rol para este último lote: sus operaciones se juzgan igual.
+        if (await store.FindMembershipAsync(userId, cancellationToken) is not { } membership)
         {
             return AccountResult<IReadOnlyList<OperationOutcome>>.Fail(Forbidden);
         }
@@ -46,16 +47,25 @@ public sealed class SyncService(OperationApplier applier, ISyncStore store, Time
         var outcomes = await store.InTransactionAsync(
             async () =>
             {
+                // Un removido tiene un único lote (RF-12), sin límite de tiempo. Se reclama dentro de la
+                // transacción del lote: si el lote falla, también se deshace y puede reintentar.
+                if (membership.Status == MembershipStatus.Removed
+                    && !await store.TryClaimFinalSyncAsync(userId, cancellationToken))
+                {
+                    return null;
+                }
                 await store.LockBusinessAsync(cancellationToken);
                 var results = new List<OperationOutcome>(operations.Count);
                 foreach (var operation in operations)
                 {
                     results.Add(await ApplyAsync(operation, actor, cancellationToken));
                 }
-                return (IReadOnlyList<OperationOutcome>)results;
+                return (IReadOnlyList<OperationOutcome>?)results;
             },
             cancellationToken);
-        return AccountResult<IReadOnlyList<OperationOutcome>>.Ok(outcomes);
+        return outcomes is null
+            ? AccountResult<IReadOnlyList<OperationOutcome>>.Fail(Forbidden)
+            : AccountResult<IReadOnlyList<OperationOutcome>>.Ok(outcomes);
     }
 
     /// <summary>

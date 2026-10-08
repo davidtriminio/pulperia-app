@@ -31,6 +31,14 @@ public sealed class EfSyncStore : ISyncStore
             .Select(m => new SyncMembership(m.Role, m.Status, m.FinalSyncUsed))
             .SingleOrDefaultAsync(cancellationToken);
 
+    public async Task<bool> TryClaimFinalSyncAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        await _db.Database.ExecuteSqlAsync(
+            $"""
+            UPDATE memberships SET final_sync_used = true
+            WHERE user_id = {userId} AND business_id = {_businessId} AND status = 'removed' AND final_sync_used = false
+            """,
+            cancellationToken) == 1;
+
     public async Task LockBusinessAsync(CancellationToken cancellationToken = default) =>
         _ = await _db.Database
             .SqlQuery<int>($"SELECT 1 AS \"Value\" FROM businesses WHERE id = {_businessId} FOR UPDATE")
