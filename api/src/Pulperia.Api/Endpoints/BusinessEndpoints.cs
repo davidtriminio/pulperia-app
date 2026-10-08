@@ -15,7 +15,7 @@ internal static class BusinessEndpoints
         businesses.MapPost("", CreateAsync);
     }
 
-    private static object Json(BusinessSummary business) => new
+    internal static object Json(BusinessSummary business) => new
     {
         id = business.Id,
         name = business.Name,
