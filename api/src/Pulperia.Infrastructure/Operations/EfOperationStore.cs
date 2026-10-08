@@ -196,28 +196,8 @@ public sealed class EfOperationStore : IOperationStore
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<T> InTransactionAsync<T>(Func<Task<T>> work, CancellationToken cancellationToken = default)
-    {
-        if (_db.Database.CurrentTransaction is not null)
-        {
-            return await work();
-        }
-
-        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-        try
-        {
-            var result = await work();
-            await transaction.CommitAsync(cancellationToken);
-            return result;
-        }
-        catch
-        {
-            await transaction.RollbackAsync(CancellationToken.None);
-            // Lo que EF tenía por guardar o ya guardado en esta transacción ya no es verdad.
-            _db.ChangeTracker.Clear();
-            throw;
-        }
-    }
+    public Task<T> InTransactionAsync<T>(Func<Task<T>> work, CancellationToken cancellationToken = default) =>
+        Transactions.RunAsync(_db, work, cancellationToken);
 
     private static ClientRecord ToRecord(ClientEntity e) => new(
         e.Id, e.Name, e.CharacterId, e.SkinId, e.BackgroundId, e.Phone, e.Address, e.Note,

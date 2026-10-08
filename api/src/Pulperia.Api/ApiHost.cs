@@ -43,6 +43,7 @@ public static class ApiHost
         app.MapAuthEndpoints();
         app.MapBusinessEndpoints();
         app.MapManagementEndpoints();
+        app.MapSyncEndpoints();
         return app;
     }
 
