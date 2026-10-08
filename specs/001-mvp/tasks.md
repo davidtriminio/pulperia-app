@@ -144,7 +144,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T052** Persistencia de clientes y productos. RF: 14, 24. *Hecho cuando:* integración contra PostgreSQL real.
 - [x] **T053** Persistencia de fiados, ítems y abonos. RF: 28, 37. *Hecho cuando:* integración contra PostgreSQL real.
 - [x] **T054** Persistencia de `change_log`, `processed_ops`, contador por negocio y `admin_audit`. RF: 53, 81. *Hecho cuando:* integración contra PostgreSQL real.
-- [ ] **T055** Aislamiento por `business_id`. RF: 50; RNF-6. *Hecho cuando:* una prueba con dos negocios demuestra que ninguna consulta devuelve datos del otro.
+- [x] **T055** Aislamiento por `business_id`. RF: 50; RNF-6. *Hecho cuando:* una prueba con dos negocios demuestra que ninguna consulta devuelve datos del otro.
 - [ ] **T056** Aplicar operaciones de cliente (crear, editar con versión, archivar, restaurar). RF: 14–23, 55, 73. Dep: T045, T052. *Hecho cuando:* una edición con versión desfasada se rechaza con código de conflicto.
 - [ ] **T057** Aplicar operaciones de producto (crear, cambiar precio, archivar). RF: 24, 25, 26, 27, 86. *Hecho cuando:* no existe operación de borrar producto.
 - [ ] **T058** Aplicar la creación de fiado. RF: 28–36, 49, 83, 84, 85, 87, 88. Dep: T043, T053. *Hecho cuando:* cada fiado guarda el usuario que lo registró y un fiado a un cliente archivado se acepta si lo originó un dispositivo que no conocía el archivado.

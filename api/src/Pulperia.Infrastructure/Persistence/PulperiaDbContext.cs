@@ -41,6 +41,82 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
 
     public DbSet<AdminAuditEntity> AdminAudits => Set<AdminAuditEntity>();
 
+    // Negocio activo de este contexto (RNF-6). Vacío significa "ninguno": las tablas de datos de
+    // negocio no devuelven nada, así que olvidarse de fijarlo falla cerrado y no abierto.
+    private Guid _businessId = Guid.Empty;
+
+    /// <summary>El negocio al que está limitado este contexto, o null si no se ha fijado.</summary>
+    public Guid? BusinessScope => _businessId == Guid.Empty ? null : _businessId;
+
+    /// <summary>
+    /// Limita este contexto a un negocio: sus consultas sobre clientes, productos, fiados, ítems,
+    /// abonos, cambios y operaciones solo devuelven filas de ese negocio, y guardar rechaza
+    /// escribir en otro (RF-50, RNF-6). Se fija una vez por petición y no puede cambiar. Las
+    /// cuentas, negocios, pertenencias, invitaciones y la auditoría quedan fuera del filtro: son
+    /// de cuentas y administración.
+    /// </summary>
+    public PulperiaDbContext WithBusiness(Guid businessId)
+    {
+        if (businessId == Guid.Empty)
+        {
+            throw new ArgumentException("El negocio no puede ser vacío.", nameof(businessId));
+        }
+        if (_businessId != Guid.Empty && _businessId != businessId)
+        {
+            throw new InvalidOperationException("Este contexto ya está limitado a otro negocio.");
+        }
+        _businessId = businessId;
+        return this;
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        EnforceBusinessScope();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        EnforceBusinessScope();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>
+    /// Con un negocio fijado, ninguna fila de datos de negocio puede crearse, cambiarse ni
+    /// borrarse a nombre de otro negocio (ni cambiarse de negocio).
+    /// </summary>
+    private void EnforceBusinessScope()
+    {
+        if (_businessId == Guid.Empty)
+        {
+            return;
+        }
+
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.State is EntityState.Unchanged or EntityState.Detached
+                || entry.Metadata.GetDeclaredQueryFilters().Count == 0)
+            {
+                continue;
+            }
+
+            var property = entry.Property(nameof(ClientEntity.BusinessId));
+            var current = (Guid)property.CurrentValue!;
+            var original = (Guid)property.OriginalValue!;
+            var crossesBusiness = entry.State switch
+            {
+                EntityState.Added => current != _businessId,
+                EntityState.Deleted => original != _businessId,
+                _ => current != _businessId || original != _businessId,
+            };
+            if (crossesBusiness)
+            {
+                throw new InvalidOperationException(
+                    $"No se puede escribir un registro de otro negocio ({entry.Metadata.ClrType.Name}).");
+            }
+        }
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureUsers(modelBuilder);
@@ -55,6 +131,7 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
         ConfigureChangeLog(modelBuilder);
         ConfigureProcessedOps(modelBuilder);
         ConfigureAdminAudit(modelBuilder);
+        ConfigureBusinessFilters(modelBuilder);
 
         SnakeCase.Apply(modelBuilder);
     }
@@ -272,6 +349,21 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
             e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.TargetUserId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => x.TargetUserId);
         });
+
+    /// <summary>
+    /// Filtro de negocio (RNF-6) en las siete tablas de datos de negocio. Si se agrega otra tabla
+    /// con <c>business_id</c> de datos, un test obliga a sumarla aquí.
+    /// </summary>
+    private void ConfigureBusinessFilters(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ClientEntity>().HasQueryFilter(x => x.BusinessId == _businessId);
+        modelBuilder.Entity<ProductEntity>().HasQueryFilter(x => x.BusinessId == _businessId);
+        modelBuilder.Entity<FiadoEntity>().HasQueryFilter(x => x.BusinessId == _businessId);
+        modelBuilder.Entity<FiadoItemEntity>().HasQueryFilter(x => x.BusinessId == _businessId);
+        modelBuilder.Entity<PaymentEntity>().HasQueryFilter(x => x.BusinessId == _businessId);
+        modelBuilder.Entity<ChangeLogEntity>().HasQueryFilter(x => x.BusinessId == _businessId);
+        modelBuilder.Entity<ProcessedOpEntity>().HasQueryFilter(x => x.BusinessId == _businessId);
+    }
 
     private static string MembershipStatusId(MembershipStatus status) => status switch
     {

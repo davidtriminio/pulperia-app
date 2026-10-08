@@ -124,7 +124,7 @@ public class CatalogPersistenceTests(PostgresFixture postgres)
         await db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(db.Database.GetConnectionString()!);
-        var read = await other.Clients.SingleAsync(c => c.Id == client.Id);
+        var read = await other.Clients.IgnoreQueryFilters().SingleAsync(c => c.Id == client.Id);
 
         Assert.Equal("Ana López", read.Name);
         Assert.Equal(("char-01", "skin-1", "bg-01"), (read.CharacterId, read.SkinId, read.BackgroundId));
@@ -148,7 +148,7 @@ public class CatalogPersistenceTests(PostgresFixture postgres)
         await db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(db.Database.GetConnectionString()!);
-        var read = await other.Clients.SingleAsync();
+        var read = await other.Clients.IgnoreQueryFilters().SingleAsync();
 
         Assert.Null(read.Phone);
         Assert.Null(read.Address);
@@ -169,7 +169,7 @@ public class CatalogPersistenceTests(PostgresFixture postgres)
         await db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(db.Database.GetConnectionString()!);
-        var read = await other.Clients.SingleAsync();
+        var read = await other.Clients.IgnoreQueryFilters().SingleAsync();
         Assert.True(read.Archived);
         Assert.Equal(2, read.Version);
     }
@@ -244,7 +244,7 @@ public class CatalogPersistenceTests(PostgresFixture postgres)
 
         await db.SaveChangesAsync();
 
-        Assert.Equal(2, await db.Clients.CountAsync());
+        Assert.Equal(2, await db.Clients.IgnoreQueryFilters().CountAsync());
     }
 
     [Fact]
@@ -301,7 +301,7 @@ public class CatalogPersistenceTests(PostgresFixture postgres)
         await db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(db.Database.GetConnectionString()!);
-        var read = await other.Products.SingleAsync(p => p.Id == product.Id);
+        var read = await other.Products.IgnoreQueryFilters().SingleAsync(p => p.Id == product.Id);
 
         Assert.Equal("Arroz", read.Name);
         Assert.Equal(2500, read.Price);
@@ -340,7 +340,7 @@ public class CatalogPersistenceTests(PostgresFixture postgres)
 
         await db.SaveChangesAsync();
 
-        Assert.Equal(10, await db.Products.CountAsync());
+        Assert.Equal(10, await db.Products.IgnoreQueryFilters().CountAsync());
     }
 
     [Fact]
@@ -397,7 +397,7 @@ public class CatalogPersistenceTests(PostgresFixture postgres)
         await db.SaveChangesAsync();
 
         await using var other = PostgresFixture.NewContext(db.Database.GetConnectionString()!);
-        var read = await other.Products.SingleAsync();
+        var read = await other.Products.IgnoreQueryFilters().SingleAsync();
         Assert.Equal(3000, read.Price);
         Assert.Equal(2500, read.PreviousPrice);
         Assert.Equal(Now.AddDays(1), read.PriceChangedAt);
@@ -443,7 +443,7 @@ public class CatalogPersistenceTests(PostgresFixture postgres)
 
         await db.SaveChangesAsync();
 
-        Assert.Equal(2, await db.Products.CountAsync());
+        Assert.Equal(2, await db.Products.IgnoreQueryFilters().CountAsync());
     }
 
     [Fact]
@@ -458,7 +458,7 @@ public class CatalogPersistenceTests(PostgresFixture postgres)
         product.Archived = true;
         await db.SaveChangesAsync();
 
-        Assert.True((await db.Products.SingleAsync()).Archived);
+        Assert.True((await db.Products.IgnoreQueryFilters().SingleAsync()).Archived);
     }
 
     [Fact]
