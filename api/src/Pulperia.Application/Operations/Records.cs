@@ -1,6 +1,7 @@
 using Pulperia.Domain.Amounts;
 using Pulperia.Domain.Business;
 using Pulperia.Domain.Catalog;
+using Pulperia.Domain.Quantities;
 
 namespace Pulperia.Application.Operations;
 
@@ -35,3 +36,24 @@ public sealed record ProductRecord(
 
 /// <summary>Los modos de montos y cantidades vigentes del negocio (RF-7, RF-8, RF-9).</summary>
 public sealed record BusinessModes(AmountMode Amount, QuantityMode Quantity);
+
+/// <summary>Un ítem de fiado: copia el precio y la unidad del momento de la compra (principio 4, RF-88).</summary>
+public sealed record FiadoItemRecord(
+    Guid Id,
+    Guid? ProductId,
+    string Description,
+    Quantity Quantity,
+    SaleUnit Unit,
+    Money UnitPrice,
+    Money Subtotal);
+
+/// <summary>Un fiado con sus ítems (ninguno si se registró solo con monto, RF-29).</summary>
+public sealed record FiadoRecord(
+    Guid Id,
+    Guid ClientId,
+    Money Total,
+    DateTime OccurredAt,
+    Guid CreatedBy,
+    DateTime? AnnulledAt,
+    Guid? AnnulledBy,
+    IReadOnlyList<FiadoItemRecord> Items);

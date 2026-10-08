@@ -103,5 +103,48 @@ public sealed class OperationKit : IAsyncDisposable
 
     public Task<ProductEntity> GetProduct(Guid id) => Db.Products.AsNoTracking().SingleAsync(p => p.Id == id);
 
+    /// <summary>Crea un cliente por la vía normal (la operación) y devuelve su id.</summary>
+    public async Task<Guid> NewClientAsync(string name = "Ana López")
+    {
+        var id = Guid.CreateVersion7();
+        var result = await Applier.ApplyAsync(Op("client.create", id, ClientPayload(name)), Owner);
+        return result.IsApplied ? id : throw new InvalidOperationException(result.Code);
+    }
+
+    /// <summary>Crea un producto por la vía normal (la operación) y devuelve su id.</summary>
+    public async Task<Guid> NewProductAsync(string name = "Arroz", long price = 2500, string unit = "pound")
+    {
+        var id = Guid.CreateVersion7();
+        var result = await Applier.ApplyAsync(Op("product.create", id, new { name, price, unit }), Owner);
+        return result.IsApplied ? id : throw new InvalidOperationException(result.Code);
+    }
+
+    /// <summary>Un ítem de fiado tal como lo encola el móvil.</summary>
+    public static object Item(
+        long quantity = 1000, long unitPrice = 2500, long? subtotal = null, Guid? productId = null,
+        string description = "Arroz", string unit = "pound", Guid? id = null) => new
+        {
+            id = id ?? Guid.CreateVersion7(),
+            productId,
+            description,
+            quantity,
+            unit,
+            unitPrice,
+            subtotal = subtotal ?? (quantity * unitPrice + 500) / 1000,
+        };
+
+    public static object FiadoPayload(Guid clientId, long total, params object[] items) => new
+    {
+        clientId,
+        total,
+        occurredAt = At.UtcDateTime.ToString("O"),
+        items,
+    };
+
+    public Task<FiadoEntity> GetFiado(Guid id) => Db.Fiados.AsNoTracking().SingleAsync(f => f.Id == id);
+
+    public Task<List<FiadoItemEntity>> GetItems(Guid fiadoId) =>
+        Db.FiadoItems.AsNoTracking().Where(i => i.FiadoId == fiadoId).OrderBy(i => i.Id).ToListAsync();
+
     public ValueTask DisposeAsync() => Db.DisposeAsync();
 }
