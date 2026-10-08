@@ -21,6 +21,8 @@ internal static class ManagementEndpoints
         business.MapGet("", GetSettingsAsync);
         business.MapPatch("", UpdateSettingsAsync);
         business.MapPost("/invitations", InviteAsync);
+        business.MapGet("/invitations", ListBusinessInvitationsAsync);
+        business.MapDelete("/invitations/{id:guid}", CancelInvitationAsync);
 
         // Las del invitado no llevan negocio activo: la invitación es de una persona, no de un negocio.
         var invitations = app.MapGroup("/api/invitations");
@@ -102,6 +104,23 @@ internal static class ManagementEndpoints
                 new { id = result.Value!.Id, email = result.Value.Email, status = result.Value.Status.Id() },
                 Http.Json, statusCode: StatusCodes.Status201Created)
             : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> ListBusinessInvitationsAsync(HttpContext context, ManagementService management)
+    {
+        var active = context.GetActiveBusiness();
+        var result = await management.ListBusinessInvitationsAsync(active.BusinessId, active.Role, context.RequestAborted);
+        return result.IsSuccess
+            ? Results.Json(
+                result.Value!.Select(i => new { id = i.Id, email = i.Email, status = i.Status.Id() }), Http.Json)
+            : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> CancelInvitationAsync(Guid id, HttpContext context, ManagementService management)
+    {
+        var active = context.GetActiveBusiness();
+        var result = await management.CancelInvitationAsync(active.BusinessId, active.Role, id, context.RequestAborted);
+        return result.IsSuccess ? Results.NoContent() : Failure(result.Codes);
     }
 
     private static async Task<IResult> ListInvitationsAsync(
