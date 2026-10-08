@@ -1,6 +1,6 @@
 # Tareas 001 — MVP: administrador de deudas (fiados) para pulperías
 
-Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cubre `spec.md` (RF-1 a RF-91, RNF-1 a RNF-8).
+Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cubre `spec.md` (RF-1 a RF-94, RNF-1 a RNF-8).
 
 ## Cómo se trabaja
 - **Una unidad de trabajo es un bloque** de tareas relacionadas, con una rama y un PR. Se trabaja el bloque entero, tarea a tarea, y se para al cerrarlo (en el paso del PR) o antes si algo bloquea: un test que no pasa, una laguna de la spec, una dependencia no aprobada o una tarea de más de 30 minutos.
@@ -166,6 +166,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T071** Quitar usuario con protección del último dueño. RF: 11, 71. *Hecho cuando:* el usuario quitado pierde acceso y no se puede quitar al último dueño.
 - [x] **T072** Rechazar gestión de equipo y negocio para empleados. RF: 13. *Hecho cuando:* todas las rutas de gestión devuelven rechazo a un empleado.
 - [x] **T073** Comando del servidor para restablecer una contraseña, con auditoría. RF: 81, 82. Dep: T054. *Hecho cuando:* cambia la contraseña, escribe en `admin_audit` quién y cuándo, y su salida no muestra datos de negocios.
+- [ ] **T183** Código de invitación: columna `code` (migración `CodigoDeInvitacion`, `email` opcional), código al crear la invitación con o sin correo, visible en el listado del dueño, y `POST /api/invitations/redeem` con límite de intentos. RF: 10, 92, 93, 94; D-28. Dep: T068, T069. *Hecho cuando:* una invitación sin correo se activa con su código desde una cuenta cualquiera y entra como empleado; una con correo también se puede activar por código desde otro correo; un código usado, cancelado o inexistente da el mismo rechazo sin revelar el negocio; el invitado no ve el código en su lista; y el undécimo intento fallido en un minuto se rechaza.
 
 ## Fase 7 — Sincronización y consultas (API)
 - [ ] **T074** Endpoint de envío de lote con resultado por operación. RF: 52. Dep: T056–T062. *Hecho cuando:* cada operación del lote devuelve aplicada, duplicada o rechazada con código.
@@ -209,6 +210,7 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [x] **T116** Resumen del negocio. RF: 63–66. *Hecho cuando:* muestra deuda total, saldo a favor total y mayores deudores, sin archivados.
 - [ ] **T117** Equipo: invitar, cancelar, promover y quitar. RF: 10, 11, 13, 69, 70, 71. *Hecho cuando:* solo los dueños ven la sección y el último dueño no se puede quitar.
 - [ ] **T118** Invitaciones recibidas: aceptar o rechazar. RF: 67, 68. *Hecho cuando:* se muestran al iniciar sesión y al aceptar el negocio aparece en la lista.
+- [ ] **T184** Código de invitación en el móvil: invitar con o sin correo, ver y compartir el código desde la lista de invitaciones del dueño, y canjear un código recibido. RF: 92, 93, 94. Dep: T117, T118, T183. *Hecho cuando:* el dueño comparte el código con la hoja de compartir del teléfono, quien lo escribe (con o sin guion, en minúsculas) entra al negocio, y un código inválido muestra el mismo mensaje en español.
 - [ ] **T119** Ajustes y nombre del negocio. RF: 7, 8, 9, 80. *Hecho cuando:* pasar de decimales a enteros no se ofrece.
 - [ ] **T120** Mensajes de error en español para cada código de la API. RNF-5. *Hecho cuando:* una prueba recorre todos los códigos y ninguno queda sin mensaje.
 - [x] **T121** Verificación del flujo principal en modo avión. RNF-1. *Hecho cuando:* en un dispositivo o emulador sin red se completa el flujo de clientes, fiados, abonos, anulación y resumen.
@@ -227,6 +229,7 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [ ] **T132** Catálogo. RF: 24–27, 86. *Hecho cuando:* alta, precio y archivado funcionan sin opción de borrar.
 - [ ] **T133** Resumen. RF: 63, 64, 65. *Hecho cuando:* coincide con el resultado del móvil para los mismos datos.
 - [ ] **T134** Equipo y ajustes del negocio. RF: 7–13, 67–71, 80. *Hecho cuando:* solo los dueños acceden y el empleado recibe rechazo.
+- [ ] **T185** Código de invitación en la web: invitar con o sin correo, ver y copiar el código, y canjear un código. RF: 92, 93, 94. Dep: T134, T183. *Hecho cuando:* el dueño copia el código de una invitación pendiente y quien lo canjea entra como empleado.
 - [ ] **T135** Efecto de los cambios hechos en la web sobre los móviles. RF: 62. *Hecho cuando:* una prueba entre web simulada y móvil simulado muestra el cambio tras sincronizar.
 
 ## Fase 11 — Despliegue y respaldo
@@ -238,7 +241,7 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [ ] **T141** Documentar el comando de restablecimiento de contraseña. RF: 81. *Hecho cuando:* un tercero lo ejecuta siguiendo solo la documentación.
 
 ## Fase 12 — Validación
-- [ ] **T142** Recorrido RF por RF: qué test cubre cada uno y su resultado. RF: 1–91. *Hecho cuando:* existe una tabla con los 91 RF y los 8 RNF, cada uno con test o demo y resultado.
+- [ ] **T142** Recorrido RF por RF: qué test cubre cada uno y su resultado. RF: 1–94. *Hecho cuando:* existe una tabla con los 94 RF y los 8 RNF, cada uno con test o demo y resultado.
 - [ ] **T143** Demo: flujo principal en modo avión. RNF-1. *Hecho cuando:* se completa sin errores en un teléfono o emulador sin red.
 - [ ] **T144** Demo: dos dispositivos con fiados concurrentes. RF: 54. *Hecho cuando:* el saldo coincide en los dos.
 - [ ] **T145** Demo: recuperación en dispositivo nuevo. RF: 58. *Hecho cuando:* se ven todos los datos del negocio.
