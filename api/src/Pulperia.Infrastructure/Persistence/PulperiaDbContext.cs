@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Pulperia.Domain.Access;
 using Pulperia.Domain.Business;
+using Pulperia.Domain.Catalog;
 using Pulperia.Domain.Invitations;
 using Pulperia.Domain.Team;
 using Pulperia.Infrastructure.Persistence.Entities;
@@ -22,12 +23,18 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
 
     public DbSet<InvitationEntity> Invitations => Set<InvitationEntity>();
 
+    public DbSet<ClientEntity> Clients => Set<ClientEntity>();
+
+    public DbSet<ProductEntity> Products => Set<ProductEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureUsers(modelBuilder);
         ConfigureBusinesses(modelBuilder);
         ConfigureMemberships(modelBuilder);
         ConfigureInvitations(modelBuilder);
+        ConfigureClients(modelBuilder);
+        ConfigureProducts(modelBuilder);
 
         SnakeCase.Apply(modelBuilder);
     }
@@ -97,6 +104,55 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
             e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict);
             // Las invitaciones pendientes de un correo se buscan al iniciar sesión (RF-67).
             e.HasIndex(x => new { x.Email, x.Status });
+            e.HasIndex(x => x.BusinessId);
+        });
+
+    private static void ConfigureClients(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<ClientEntity>(e =>
+        {
+            e.ToTable("clients", t =>
+            {
+                t.HasCheckConstraint("ck_clients_name_required", "btrim(name) <> ''");
+                t.HasCheckConstraint("ck_clients_note_length", "note IS NULL OR char_length(note) <= 300");
+                t.HasCheckConstraint("ck_clients_phone_format", "phone IS NULL OR phone ~ '^[2389][0-9]{7}$'");
+                t.HasCheckConstraint("ck_clients_version", "version >= 1");
+            });
+            e.HasKey(x => x.Id);
+            // El par (id, negocio) lo referencian fiados y abonos: así un fiado no puede
+            // apuntar a un cliente de otro negocio (RNF-6).
+            e.HasAlternateKey(x => new { x.Id, x.BusinessId });
+            e.Property(x => x.Name).IsRequired();
+            e.Property(x => x.CharacterId).IsRequired();
+            e.Property(x => x.SkinId).IsRequired();
+            e.Property(x => x.BackgroundId).IsRequired();
+            e.HasOne<BusinessEntity>().WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.BusinessId);
+        });
+
+    private static void ConfigureProducts(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<ProductEntity>(e =>
+        {
+            e.ToTable("products", t =>
+            {
+                t.HasCheckConstraint("ck_products_name_required", "btrim(name) <> ''");
+                t.HasCheckConstraint("ck_products_price", "price > 0");
+                t.HasCheckConstraint(
+                    "ck_products_unit",
+                    "unit IN ('unit', 'pound', 'ounce', 'kilo', 'dozen', 'liter', 'gallon', 'box', 'bag', 'pack')");
+                t.HasCheckConstraint("ck_products_previous_price", "previous_price IS NULL OR previous_price > 0");
+                // El precio anterior y la fecha del cambio van juntos o ninguno (D-24).
+                t.HasCheckConstraint(
+                    "ck_products_price_history_pair",
+                    "(previous_price IS NULL) = (price_changed_at IS NULL)");
+                t.HasCheckConstraint("ck_products_version", "version >= 1");
+            });
+            e.HasKey(x => x.Id);
+            e.HasAlternateKey(x => new { x.Id, x.BusinessId });
+            e.Property(x => x.Name).IsRequired();
+            e.Property(x => x.Unit).HasConversion(u => u.Id(), id => SaleUnits.TryFromId(id)!.Value);
+            e.HasOne<BusinessEntity>().WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => x.BusinessId);
         });
 
