@@ -40,6 +40,15 @@ public static class AdminCommands
         builder.Services.AddScoped<IAdminStore, EfAdminStore>();
         builder.Services.AddScoped<PasswordResetService>();
         configure?.Invoke(builder);
+        try
+        {
+            ApiHost.RequireConnectionString(builder.Configuration);
+        }
+        catch (InvalidOperationException ex)
+        {
+            await errors.WriteLineAsync(ex.Message);
+            return 1;
+        }
 
         using var host = builder.Build();
         await using var scope = host.Services.CreateAsyncScope();

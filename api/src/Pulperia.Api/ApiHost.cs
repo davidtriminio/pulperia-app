@@ -31,6 +31,7 @@ public static class ApiHost
         builder.Services.AddScoped<ManagementService>();
 
         configure?.Invoke(builder);
+        RequireConnectionString(builder.Configuration);
 
         var app = builder.Build();
         if (app.Environment.IsDevelopment())
@@ -42,5 +43,16 @@ public static class ApiHost
         app.MapBusinessEndpoints();
         app.MapManagementEndpoints();
         return app;
+    }
+
+    /// <summary>Falla al arrancar, con el remedio, en vez de en la primera petición.</summary>
+    internal static void RequireConnectionString(IConfiguration configuration)
+    {
+        if (string.IsNullOrWhiteSpace(configuration.GetConnectionString("Pulperia")))
+        {
+            throw new InvalidOperationException(
+                "Falta la cadena de conexión a PostgreSQL. Defínela en la misma terminal donde ejecutas la API, por ejemplo: "
+                + "$env:ConnectionStrings__Pulperia = \"Host=127.0.0.1;Port=5440;Database=pulperia;Username=pulperia;Password=dev\"");
+        }
     }
 }
