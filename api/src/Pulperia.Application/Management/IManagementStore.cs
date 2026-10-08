@@ -1,4 +1,5 @@
 using Pulperia.Domain.Invitations;
+using Pulperia.Domain.Team;
 
 namespace Pulperia.Application.Management;
 
@@ -45,4 +46,20 @@ public interface IManagementStore
 
     /// <summary>Pasa la invitación de pendiente a cancelada; false si ya no estaba pendiente.</summary>
     Task<bool> CancelInvitationAsync(Guid invitationId, CancellationToken cancellationToken = default);
+
+    /// <summary>Los miembros con pertenencia activa en el negocio, con su correo.</summary>
+    Task<IReadOnlyList<TeamMemberView>> ListActiveTeamAsync(Guid businessId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Aplica un cambio de equipo de forma atómica: bloquea el negocio, carga todas sus
+    /// pertenencias, deja que la regla del dominio decida y, solo si es válida, guarda lo que
+    /// cambió. El bloqueo hace que dos cambios simultáneos se esperen entre sí, así que la regla
+    /// del último dueño no se burla con dos bajas a la vez. Quitar a alguien deja constancia de
+    /// la fecha y reinicia su "último lote" (RF-11, RF-12).
+    /// </summary>
+    Task<TeamResult> ChangeTeamAsync(
+        Guid businessId,
+        Func<IReadOnlyList<Member>, TeamResult> change,
+        DateTime now,
+        CancellationToken cancellationToken = default);
 }

@@ -1,5 +1,6 @@
 using Pulperia.Application.Accounts;
 using Pulperia.Application.Management;
+using Pulperia.Domain.Access;
 using Pulperia.Domain.Business;
 using Pulperia.Domain.Invitations;
 
@@ -23,6 +24,8 @@ internal static class ManagementEndpoints
         business.MapPost("/invitations", InviteAsync);
         business.MapGet("/invitations", ListBusinessInvitationsAsync);
         business.MapDelete("/invitations/{id:guid}", CancelInvitationAsync);
+        business.MapGet("/team", ListTeamAsync);
+        business.MapPost("/team/{userId:guid}/promote", PromoteAsync);
 
         // Las del invitado no llevan negocio activo: la invitación es de una persona, no de un negocio.
         var invitations = app.MapGroup("/api/invitations");
@@ -37,6 +40,7 @@ internal static class ManagementEndpoints
         {
             "forbidden" or "invitation_not_invitee" => StatusCodes.Status403Forbidden,
             var code when code.EndsWith("_not_found") => StatusCodes.Status404NotFound,
+            var code when code.StartsWith("team_") => StatusCodes.Status409Conflict,
             var code when code.EndsWith("_already_pending") || code is "already_member" || code.EndsWith("_not_pending")
                 => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status400BadRequest,
@@ -121,6 +125,24 @@ internal static class ManagementEndpoints
         var active = context.GetActiveBusiness();
         var result = await management.CancelInvitationAsync(active.BusinessId, active.Role, id, context.RequestAborted);
         return result.IsSuccess ? Results.NoContent() : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> ListTeamAsync(HttpContext context, ManagementService management)
+    {
+        var active = context.GetActiveBusiness();
+        var result = await management.ListTeamAsync(active.BusinessId, active.Role, context.RequestAborted);
+        return result.IsSuccess
+            ? Results.Json(result.Value!.Select(m => new { userId = m.UserId, email = m.Email, role = m.Role.Id() }), Http.Json)
+            : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> PromoteAsync(Guid userId, HttpContext context, ManagementService management)
+    {
+        var active = context.GetActiveBusiness();
+        var result = await management.PromoteAsync(active.BusinessId, active.Role, userId, context.RequestAborted);
+        return result.IsSuccess
+            ? Results.Json(new { userId = result.Value!.UserId, role = result.Value.Role.Id() }, Http.Json)
+            : Failure(result.Codes);
     }
 
     private static async Task<IResult> ListInvitationsAsync(

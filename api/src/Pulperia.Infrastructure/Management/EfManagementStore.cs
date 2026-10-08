@@ -116,4 +116,50 @@ public sealed class EfManagementStore(PulperiaDbContext db) : IManagementStore
         await db.Invitations
             .Where(i => i.Id == invitationId && i.Status == InvitationStatus.Pending)
             .ExecuteUpdateAsync(s => s.SetProperty(i => i.Status, InvitationStatus.Cancelled), cancellationToken) == 1;
+
+    public async Task<IReadOnlyList<TeamMemberView>> ListActiveTeamAsync(
+        Guid businessId, CancellationToken cancellationToken = default) =>
+        await db.Memberships.AsNoTracking()
+            .Where(m => m.BusinessId == businessId && m.Status == MembershipStatus.Active)
+            .Join(db.Users, m => m.UserId, u => u.Id, (m, u) => new TeamMemberView(u.Id, u.Email, m.Role))
+            .ToListAsync(cancellationToken);
+
+    public async Task<TeamResult> ChangeTeamAsync(
+        Guid businessId, Func<IReadOnlyList<Member>, TeamResult> change, DateTime now,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        // NO KEY UPDATE: los cambios de equipo se esperan entre sí, pero no frenan a quien solo
+        // inserta filas que apuntan al negocio.
+        await db.Database
+            .SqlQuery<int>($"SELECT 1 AS \"Value\" FROM businesses WHERE id = {businessId} FOR NO KEY UPDATE")
+            .ToListAsync(cancellationToken);
+
+        var entities = await db.Memberships.Where(m => m.BusinessId == businessId).ToListAsync(cancellationToken);
+        var result = change(entities.Select(e => e.ToDomain()).ToList());
+        if (!result.IsValid)
+        {
+            return result;
+        }
+
+        foreach (var member in result.Team!)
+        {
+            var entity = entities.Single(e => e.UserId == member.UserId);
+            if (entity.Role == member.Role && entity.Status == member.Status)
+            {
+                continue;
+            }
+            if (entity.Status == MembershipStatus.Active && member.Status == MembershipStatus.Removed)
+            {
+                entity.RemovedAt = now;
+                entity.FinalSyncUsed = false;
+            }
+            entity.Role = member.Role;
+            entity.Status = member.Status;
+        }
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return result;
+    }
 }

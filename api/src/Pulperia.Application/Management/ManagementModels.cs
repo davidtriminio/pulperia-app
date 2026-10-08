@@ -1,3 +1,4 @@
+using Pulperia.Domain.Access;
 using Pulperia.Domain.Business;
 using Pulperia.Domain.Invitations;
 
@@ -14,3 +15,6 @@ public sealed record InvitationView(Guid Id, Guid BusinessId, string Email, Invi
 
 /// <summary>Una invitación pendiente tal como la ve quien la recibe (RF-67).</summary>
 public sealed record InvitationOffer(Guid Id, Guid BusinessId, string BusinessName, string Email);
+
+/// <summary>Un miembro activo del equipo, con el correo de su cuenta (RF-70).</summary>
+public sealed record TeamMemberView(Guid UserId, string Email, Role Role);
