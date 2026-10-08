@@ -22,6 +22,8 @@ public sealed class OperationApplier(IOperationStore store)
                 "product.archive" => await ProductOperations.ArchiveAsync(store, operation, cancellationToken),
                 "fiado.create" => await FiadoOperations.CreateAsync(store, operation, actor, cancellationToken),
                 "payment.create" => await PaymentOperations.CreateAsync(store, operation, actor, cancellationToken),
+                "fiado.annul" => await AnnulmentOperations.AnnulFiadoAsync(store, operation, actor, cancellationToken),
+                "payment.annul" => await AnnulmentOperations.AnnulPaymentAsync(store, operation, actor, cancellationToken),
                 _ => OperationResult.Rejected(RejectionCodes.UnknownOperation),
             };
         }
@@ -42,6 +44,8 @@ public static class RejectionCodes
     public const string BaseVersionRequired = "base_version_required";
     public const string ClientNotFound = "client_not_found";
     public const string ProductNotFound = "product_not_found";
+    public const string FiadoNotFound = "fiado_not_found";
+    public const string PaymentNotFound = "payment_not_found";
     public const string DuplicateItemId = "duplicate_item_id";
     public const string ItemUnitUnknown = "item_unit_unknown";
     public const string SubtotalMismatch = "subtotal_mismatch";

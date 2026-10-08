@@ -146,6 +146,22 @@ public sealed class EfOperationStore : IOperationStore
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task AnnulFiadoAsync(Guid id, DateTime at, Guid by, CancellationToken cancellationToken = default)
+    {
+        var entity = await _db.Fiados.SingleAsync(f => f.Id == id, cancellationToken);
+        entity.AnnulledAt = at;
+        entity.AnnulledBy = by;
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AnnulPaymentAsync(Guid id, DateTime at, Guid by, CancellationToken cancellationToken = default)
+    {
+        var entity = await _db.Payments.SingleAsync(p => p.Id == id, cancellationToken);
+        entity.AnnulledAt = at;
+        entity.AnnulledBy = by;
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
     private static PaymentRecord ToRecord(PaymentEntity e) => new(
         e.Id, e.ClientId, new Money(e.Amount), e.OccurredAt, e.CreatedBy, e.AnnulledAt, e.AnnulledBy);
 

@@ -36,4 +36,10 @@ public interface IOperationStore
     Task<PaymentRecord?> FindPaymentAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task AddPaymentAsync(PaymentRecord payment, CancellationToken cancellationToken = default);
+
+    /// <summary>Marca el fiado como anulado, con la fecha y el usuario. No toca nada más (RF-46).</summary>
+    Task AnnulFiadoAsync(Guid id, DateTime at, Guid by, CancellationToken cancellationToken = default);
+
+    /// <summary>Marca el abono como anulado, con la fecha y el usuario. No toca nada más (RF-46).</summary>
+    Task AnnulPaymentAsync(Guid id, DateTime at, Guid by, CancellationToken cancellationToken = default);
 }
