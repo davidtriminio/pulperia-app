@@ -233,4 +233,23 @@ public sealed class ManagementService(IManagementStore store, TimeProvider clock
             ? AccountResult<Member>.Ok(result.Team!.Single(m => m.UserId == userId))
             : AccountResult<Member>.Fail(result.Error!.Value.Code());
     }
+
+    /// <summary>
+    /// Un dueño quita a un miembro activo (RF-11, RF-71): pierde el acceso al negocio y nunca se
+    /// puede quitar al último dueño, ni siquiera a sí mismo. Su último lote pendiente lo decide
+    /// la sincronización (RF-12).
+    /// </summary>
+    public async Task<AccountResult<Member>> RemoveAsync(
+        Guid businessId, Role role, Guid userId, CancellationToken cancellationToken = default)
+    {
+        if (!RolePermissions.Can(role, Permission.ManageTeam))
+        {
+            return AccountResult<Member>.Fail(Forbidden);
+        }
+        var result = await store.ChangeTeamAsync(
+            businessId, team => TeamRules.Remove(team, userId), clock.GetUtcNow().UtcDateTime, cancellationToken);
+        return result.IsValid
+            ? AccountResult<Member>.Ok(result.Team!.Single(m => m.UserId == userId))
+            : AccountResult<Member>.Fail(result.Error!.Value.Code());
+    }
 }

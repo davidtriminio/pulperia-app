@@ -26,6 +26,7 @@ internal static class ManagementEndpoints
         business.MapDelete("/invitations/{id:guid}", CancelInvitationAsync);
         business.MapGet("/team", ListTeamAsync);
         business.MapPost("/team/{userId:guid}/promote", PromoteAsync);
+        business.MapDelete("/team/{userId:guid}", RemoveAsync);
 
         // Las del invitado no llevan negocio activo: la invitación es de una persona, no de un negocio.
         var invitations = app.MapGroup("/api/invitations");
@@ -143,6 +144,13 @@ internal static class ManagementEndpoints
         return result.IsSuccess
             ? Results.Json(new { userId = result.Value!.UserId, role = result.Value.Role.Id() }, Http.Json)
             : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> RemoveAsync(Guid userId, HttpContext context, ManagementService management)
+    {
+        var active = context.GetActiveBusiness();
+        var result = await management.RemoveAsync(active.BusinessId, active.Role, userId, context.RequestAborted);
+        return result.IsSuccess ? Results.NoContent() : Failure(result.Codes);
     }
 
     private static async Task<IResult> ListInvitationsAsync(
