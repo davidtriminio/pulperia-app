@@ -1,6 +1,6 @@
 # Tareas 001 — MVP: administrador de deudas (fiados) para pulperías
 
-Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cubre `spec.md` (RF-1 a RF-94, RNF-1 a RNF-8).
+Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cubre `spec.md` (RF-1 a RF-101, RNF-1 a RNF-8).
 
 ## Cómo se trabaja
 - **Una unidad de trabajo es un bloque** de tareas relacionadas, con una rama y un PR. Se trabaja el bloque entero, tarea a tarea, y se para al cerrarlo (en el paso del PR) o antes si algo bloquea: un test que no pasa, una laguna de la spec, una dependencia no aprobada o una tarea de más de 30 minutos.
@@ -232,6 +232,21 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [ ] **T185** Código de invitación en la web: invitar con o sin correo, ver y copiar el código, y canjear un código. RF: 92, 93, 94. Dep: T134, T183. *Hecho cuando:* el dueño copia el código de una invitación pendiente y quien lo canjea entra como empleado.
 - [ ] **T135** Efecto de los cambios hechos en la web sobre los móviles. RF: 62. *Hecho cuando:* una prueba entre web simulada y móvil simulado muestra el cambio tras sincronizar.
 
+## Fase 10b — Administración de la plataforma (super administrador)
+Añade RF-95 a RF-101 y D-29. Va después de la sincronización y de la web, antes del despliegue. El panel nunca muestra datos de un negocio: solo metadatos y cifras agregadas.
+
+- [ ] **T186** Migración `SuperAdministrador` y reglas de dominio: `is_super_admin` y suspensión en cuentas y negocios, `admin_audit` ampliada y solo de inserción, y la regla del último super administrador. RF: 95, 98, 99, 101. Dep: T054, T073. *Hecho cuando:* pruebas de dominio y de integración comprueban que no se puede retirar la marca al último super administrador, que la auditoría rechaza editar y borrar, y que los estados de suspensión y reactivación solo permiten transiciones válidas.
+- [ ] **T187** Comandos del servidor `admin grant-superadmin` y `admin revoke-superadmin`. RF: 95, 101. Dep: T186. *Hecho cuando:* marcar y retirar funciona por correo, queda auditado quién y cuándo, retirar al último se rechaza, y la salida no muestra datos de negocios.
+- [ ] **T188** Rutas `/api/admin` solo para super administradores, con renovación de sesión más corta. RF: 96. Dep: T186, T064. *Hecho cuando:* un usuario normal y un token sin sesión reciben rechazo en todas las rutas de administración (una prueba recorre las rutas reales, como T072), un super administrador pasa, y su renovación caduca a las 12 horas.
+- [ ] **T189** Listado y búsqueda de negocios y cuentas, y ficha de cada uno, con cifras agregadas. RF: 97, 82. Dep: T188. *Hecho cuando:* se encuentran por nombre o correo con paginación, la última sincronización y los conteos son correctos, y una prueba inspecciona todos los campos de todas las respuestas y comprueba que no hay nombres de clientes ni de productos, montos ni deudas.
+- [ ] **T190** Suspender y reactivar un negocio con motivo. RF: 98, 101. Dep: T188, T074. *Hecho cuando:* un negocio suspendido rechaza con `business_suspended` sus peticiones, sus lotes y su pull sin perder datos, al reactivarlo todo vuelve a funcionar y la cola pendiente se aplica, y queda auditado con el motivo.
+- [ ] **T191** Suspender y reactivar una cuenta con motivo. RF: 99, 101. Dep: T188. *Hecho cuando:* la cuenta suspendida no inicia sesión (`account_suspended`), sus sesiones abiertas dejan de servir, sus negocios siguen intactos, y al reactivarla puede entrar; queda auditado.
+- [ ] **T192** Restablecer la contraseña de una cuenta desde el panel. RF: 100, 81. Dep: T188, T073. *Hecho cuando:* devuelve una contraseña nueva una sola vez, cierra las sesiones de la cuenta, queda auditado y el resultado no incluye datos de negocios.
+- [ ] **T193** Consulta de la auditoría con paginación y filtros por cuenta, negocio y acción. RF: 101. Dep: T189–T192. *Hecho cuando:* muestra quién, cuándo, qué, sobre qué y el motivo de cada acción de los comandos y del panel, de la más reciente a la más antigua.
+- [ ] **T194** Mensajes en español para `business_suspended` y `account_suspended` en el móvil y la web, sin perder lo que el teléfono ya tiene. RF: 98, 99; RNF-5. Dep: T190, T191, T120. *Hecho cuando:* un negocio suspendido muestra el aviso, el teléfono sigue funcionando sin conexión y la cola se conserva hasta reactivarse.
+- [ ] **T195** Panel web `/admin`: acceso solo para super administradores, listados y ficha de negocios y cuentas. RF: 96, 97. Dep: T189, T123. *Hecho cuando:* un usuario normal no ve ni abre la ruta, un super administrador busca y ve las cifras, y ninguna pantalla muestra datos de fiados.
+- [ ] **T196** Panel web `/admin`: suspender, reactivar, restablecer contraseña y ver la auditoría. RF: 98, 99, 100, 101. Dep: T190–T193, T195. *Hecho cuando:* cada acción pide el motivo, confirma antes de ejecutar, muestra la contraseña nueva una sola vez y aparece en la auditoría.
+
 ## Fase 11 — Despliegue y respaldo
 - [ ] **T136** Docker Compose con API y PostgreSQL. RF: —. *Hecho cuando:* `docker compose up` deja la API respondiendo y migrada.
 - [ ] **T137** Entrega de la web estática desde el despliegue. RF: 59. *Hecho cuando:* la web carga y llega a la API.
@@ -241,7 +256,7 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [ ] **T141** Documentar el comando de restablecimiento de contraseña. RF: 81. *Hecho cuando:* un tercero lo ejecuta siguiendo solo la documentación.
 
 ## Fase 12 — Validación
-- [ ] **T142** Recorrido RF por RF: qué test cubre cada uno y su resultado. RF: 1–94. *Hecho cuando:* existe una tabla con los 94 RF y los 8 RNF, cada uno con test o demo y resultado.
+- [ ] **T142** Recorrido RF por RF: qué test cubre cada uno y su resultado. RF: 1–101. *Hecho cuando:* existe una tabla con los 101 RF y los 8 RNF, cada uno con test o demo y resultado.
 - [ ] **T143** Demo: flujo principal en modo avión. RNF-1. *Hecho cuando:* se completa sin errores en un teléfono o emulador sin red.
 - [ ] **T144** Demo: dos dispositivos con fiados concurrentes. RF: 54. *Hecho cuando:* el saldo coincide en los dos.
 - [ ] **T145** Demo: recuperación en dispositivo nuevo. RF: 58. *Hecho cuando:* se ven todos los datos del negocio.
@@ -250,4 +265,5 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [ ] **T148** Demo: ajustes de negocio con enteros y con decimales. RF: 7, 8, 9, 34, 83. *Hecho cuando:* dos negocios muestran los montos esperados.
 - [ ] **T149** Demo: respaldo y restauración. RNF-8. *Hecho cuando:* existen las 3 últimas copias y una se restaura.
 - [ ] **T150** Demo: restablecimiento de contraseña. RF: 81, 82. *Hecho cuando:* la cuenta entra y queda el registro.
-- [ ] **T151** Veredicto final: ¿spec cumplida? RF: todos. *Hecho cuando:* se emite el veredicto con los resultados de T142–T150.
+- [ ] **T197** Demo: super administrador. RF: 95–101. Dep: T187, T193, T196. *Hecho cuando:* se marca una cuenta con el comando, entra al panel, ve un negocio con sus cifras sin datos de fiados, lo suspende y su sincronización se rechaza, lo reactiva, y las acciones aparecen en la auditoría.
+- [ ] **T151** Veredicto final: ¿spec cumplida? RF: todos. *Hecho cuando:* se emite el veredicto con los resultados de T142–T150 y T197.
