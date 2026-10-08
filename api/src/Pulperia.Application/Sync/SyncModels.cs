@@ -32,5 +32,11 @@ public sealed record OperationOutcome(Guid OpId, OutcomeStatus Status, IReadOnly
         new(opId, OutcomeStatus.Rejected, codes);
 }
 
+/// <summary>
+/// Una operación ya procesada (tabla <c>processed_ops</c>): <c>applied</c> o los códigos del rechazo
+/// separados por coma, y si fue en el negocio de la sincronización o en otro.
+/// </summary>
+public sealed record ProcessedOp(string Result, bool InThisBusiness);
+
 /// <summary>La pertenencia de un usuario al negocio de la sincronización (RF-6, RF-12).</summary>
 public sealed record SyncMembership(Role Role, MembershipStatus Status, bool FinalSyncUsed);

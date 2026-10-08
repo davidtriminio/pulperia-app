@@ -18,6 +18,15 @@ public interface ISyncStore
     Task LockBusinessAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// La operación ya procesada con ese <c>op_id</c>, en este negocio o en otro (el identificador es
+    /// único en toda la tabla); null si es nueva.
+    /// </summary>
+    Task<ProcessedOp?> FindProcessedOpAsync(Guid opId, CancellationToken cancellationToken = default);
+
+    /// <summary>Deja constancia de que la operación se procesó, para no repetirla (RF-53).</summary>
+    Task AddProcessedOpAsync(Guid opId, string result, DateTime processedAt, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Ejecuta el trabajo de forma atómica; si falla, se deshace todo. Si ya hay una transacción
     /// abierta, el trabajo se une a ella.
     /// </summary>

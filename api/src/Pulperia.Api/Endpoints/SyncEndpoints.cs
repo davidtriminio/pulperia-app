@@ -25,10 +25,10 @@ internal static class SyncEndpoints
     }
 
     /// <summary>Un servicio de sincronización limitado al negocio de la petición (RNF-6).</summary>
-    private static SyncService CreateService(PulperiaDbContext db, Guid businessId)
+    private static SyncService CreateService(PulperiaDbContext db, TimeProvider clock, Guid businessId)
     {
         db.WithBusiness(businessId);
-        return new SyncService(new OperationApplier(new EfOperationStore(db)), new EfSyncStore(db));
+        return new SyncService(new OperationApplier(new EfOperationStore(db)), new EfSyncStore(db), clock);
     }
 
     private static IResult Failure(IReadOnlyList<string> codes) => Http.Error(
@@ -39,7 +39,7 @@ internal static class SyncEndpoints
         },
         codes);
 
-    private static async Task<IResult> PushAsync(HttpContext context, PulperiaDbContext db)
+    private static async Task<IResult> PushAsync(HttpContext context, PulperiaDbContext db, TimeProvider clock)
     {
         var caller = context.GetBusinessCaller();
         if (await Http.ReadBodyAsync<PushBody>(context) is not { Operations: { } items })
@@ -58,7 +58,7 @@ internal static class SyncEndpoints
             operations.Add(new Operation(opId, item.Type, entityId, item.Payload, item.BaseVersion, createdAt));
         }
 
-        var result = await CreateService(db, caller.BusinessId)
+        var result = await CreateService(db, clock, caller.BusinessId)
             .PushAsync(caller.UserId, operations, context.RequestAborted);
         return result.IsSuccess
             ? Results.Json(new { results = result.Value!.Select(Json) }, Http.Json)

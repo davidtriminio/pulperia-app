@@ -8,13 +8,17 @@ namespace Pulperia.Application.Sync;
 /// La sincronización de un dispositivo con un negocio: recibe lotes de operaciones y devuelve el
 /// resultado de cada una (RF-52). Es la única vía de escritura del móvil (D-4).
 /// </summary>
-public sealed class SyncService(OperationApplier applier, ISyncStore store)
+public sealed class SyncService(OperationApplier applier, ISyncStore store, TimeProvider clock)
 {
+    private const string AppliedResult = "applied";
+    private const char CodeSeparator = ',';
+
     /// <summary>Operaciones por lote, para que un envío no sea ilimitado (el móvil envía por tandas).</summary>
     public const int MaxBatchSize = 500;
 
     public const string Forbidden = "forbidden";
     public const string BatchTooLarge = "batch_too_large";
+    public const string OpIdInUse = "op_id_in_use";
 
     /// <summary>
     /// Aplica el lote en orden y en una sola transacción con el negocio bloqueado (plan 4.2): o se
@@ -49,10 +53,31 @@ public sealed class SyncService(OperationApplier applier, ISyncStore store)
         return AccountResult<IReadOnlyList<OperationOutcome>>.Ok(outcomes);
     }
 
+    /// <summary>
+    /// Una operación ya procesada devuelve su resultado original sin tocar nada (RF-53); una nueva
+    /// se aplica y se anota, con su resultado, en la misma transacción.
+    /// </summary>
     private async Task<OperationOutcome> ApplyAsync(
         Operation operation, OperationActor actor, CancellationToken cancellationToken)
     {
+        if (await store.FindProcessedOpAsync(operation.OpId, cancellationToken) is { } known)
+        {
+            // El mismo id en otro negocio no es un reenvío: no se aplica ni se cuenta nada de él.
+            if (!known.InThisBusiness)
+            {
+                return OperationOutcome.Rejected(operation.OpId, [OpIdInUse]);
+            }
+            return known.Result == AppliedResult
+                ? OperationOutcome.Duplicate(operation.OpId)
+                : OperationOutcome.Rejected(operation.OpId, known.Result.Split(CodeSeparator));
+        }
+
         var result = await applier.ApplyAsync(operation, actor, cancellationToken);
+        await store.AddProcessedOpAsync(
+            operation.OpId,
+            result.IsApplied ? AppliedResult : string.Join(CodeSeparator, result.Details),
+            clock.GetUtcNow().UtcDateTime,
+            cancellationToken);
         return result.IsApplied
             ? OperationOutcome.Applied(operation.OpId)
             : OperationOutcome.Rejected(operation.OpId, result.Details);
