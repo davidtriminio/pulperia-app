@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Pulperia.Application.Management;
 using Pulperia.Domain.Access;
 using Pulperia.Domain.Invitations;
@@ -41,12 +42,34 @@ public sealed class EfManagementStore(PulperiaDbContext db) : IManagementStore
             i => i.BusinessId == businessId && i.Email == normalizedEmail && i.Status == InvitationStatus.Pending,
             cancellationToken);
 
-    public async Task AddInvitationAsync(
+    public async Task<bool> TryAddInvitationAsync(
         Invitation invitation, Guid createdBy, DateTime createdAt, CancellationToken cancellationToken = default)
     {
         db.Invitations.Add(InvitationEntity.FromDomain(invitation, createdBy, createdAt));
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
+        {
+            // El índice único del código es el árbitro: el llamador genera otro.
+            db.ChangeTracker.Clear();
+            return false;
+        }
     }
+
+    public async Task<Invitation?> FindPendingInvitationByCodeAsync(string code, CancellationToken cancellationToken = default)
+    {
+        var entity = await db.Invitations.AsNoTracking()
+            .SingleOrDefaultAsync(i => i.Code == code && i.Status == InvitationStatus.Pending, cancellationToken);
+        return entity?.ToDomain();
+    }
+
+    public async Task<bool> IsActiveMemberAsync(Guid userId, Guid businessId, CancellationToken cancellationToken = default) =>
+        await db.Memberships.AsNoTracking().AnyAsync(
+            m => m.UserId == userId && m.BusinessId == businessId && m.Status == MembershipStatus.Active,
+            cancellationToken);
 
     public async Task<Invitation?> FindInvitationAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -60,7 +83,7 @@ public sealed class EfManagementStore(PulperiaDbContext db) : IManagementStore
             .Where(i => i.Email == normalizedEmail && i.Status == InvitationStatus.Pending)
             .Join(db.Businesses, i => i.BusinessId, b => b.Id, (i, b) => new { i, b })
             .OrderBy(x => x.i.CreatedAt)
-            .Select(x => new InvitationOffer(x.i.Id, x.b.Id, x.b.Name, x.i.Email))
+            .Select(x => new InvitationOffer(x.i.Id, x.b.Id, x.b.Name, x.i.Email!))
             .ToListAsync(cancellationToken);
 
     public async Task<bool> AcceptInvitationAsync(
@@ -78,15 +101,18 @@ public sealed class EfManagementStore(PulperiaDbContext db) : IManagementStore
 
         var businessId = await db.Invitations.AsNoTracking().Where(i => i.Id == invitationId)
             .Select(i => i.BusinessId).SingleAsync(cancellationToken);
-        var updated = await db.Memberships
-            .Where(m => m.UserId == userId && m.BusinessId == businessId)
+        // Un removido vuelve como empleado; quien ya es miembro activo conserva su rol (no se degrada a un dueño).
+        var reactivated = await db.Memberships
+            .Where(m => m.UserId == userId && m.BusinessId == businessId && m.Status == MembershipStatus.Removed)
             .ExecuteUpdateAsync(
                 s => s.SetProperty(m => m.Role, Role.Employee)
                     .SetProperty(m => m.Status, MembershipStatus.Active)
                     .SetProperty(m => m.RemovedAt, (DateTime?)null)
                     .SetProperty(m => m.FinalSyncUsed, false),
                 cancellationToken);
-        if (updated == 0)
+        var alreadyThere = reactivated > 0
+            || await db.Memberships.AnyAsync(m => m.UserId == userId && m.BusinessId == businessId, cancellationToken);
+        if (!alreadyThere)
         {
             db.Memberships.Add(new MembershipEntity
             {

@@ -13,7 +13,11 @@ public sealed class InvitationEntity
     public Guid BusinessId { get; set; }
 
     /// <summary>Correo ya normalizado (sin espacios exteriores y en minúsculas).</summary>
-    public string Email { get; set; } = "";
+    /// <summary>Null en una invitación solo por código (RF-92).</summary>
+    public string? Email { get; set; }
+
+    /// <summary>El código de un solo uso, normalizado y único (D-28).</summary>
+    public string Code { get; set; } = "";
 
     public InvitationStatus Status { get; set; } = InvitationStatus.Pending;
 
@@ -26,10 +30,11 @@ public sealed class InvitationEntity
         Id = invitation.Id,
         BusinessId = invitation.BusinessId,
         Email = invitation.Email,
+        Code = invitation.Code ?? throw new ArgumentException("La invitación no tiene código.", nameof(invitation)),
         Status = invitation.Status,
         CreatedBy = createdBy,
         CreatedAt = createdAt,
     };
 
-    public Invitation ToDomain() => new(Id, BusinessId, Email, Status);
+    public Invitation ToDomain() => new(Id, BusinessId, Email, Status, Code);
 }

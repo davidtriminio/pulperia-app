@@ -20,8 +20,14 @@ public interface IManagementStore
 
     Task<bool> HasPendingInvitationAsync(Guid businessId, string normalizedEmail, CancellationToken cancellationToken = default);
 
-    Task AddInvitationAsync(
+    /// <summary>Guarda la invitación; false, sin guardar nada, si su código ya existe (para generar otro).</summary>
+    Task<bool> TryAddInvitationAsync(
         Invitation invitation, Guid createdBy, DateTime createdAt, CancellationToken cancellationToken = default);
+
+    /// <summary>La invitación pendiente que tiene ese código normalizado, o null.</summary>
+    Task<Invitation?> FindPendingInvitationByCodeAsync(string code, CancellationToken cancellationToken = default);
+
+    Task<bool> IsActiveMemberAsync(Guid userId, Guid businessId, CancellationToken cancellationToken = default);
 
     Task<Invitation?> FindInvitationAsync(Guid id, CancellationToken cancellationToken = default);
 
@@ -31,7 +37,8 @@ public interface IManagementStore
 
     /// <summary>
     /// Pasa la invitación de pendiente a aceptada y deja al usuario como empleado activo del
-    /// negocio (si estaba removido, se reactiva), todo en una transacción. Devuelve false, sin
+    /// negocio (si estaba removido, se reactiva; si ya era miembro activo, conserva su rol),
+    /// todo en una transacción. Devuelve false, sin
     /// cambiar nada, si la invitación ya no estaba pendiente: de dos aceptaciones simultáneas
     /// solo una gana.
     /// </summary>
