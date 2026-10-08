@@ -28,6 +28,7 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - H13: Como dueño o empleado quiero guardar el teléfono, la dirección y una nota de cada cliente para recordar quién es y cómo localizarlo.
 - H14: Como dueño quiero promover a un empleado a dueño para que un socio comparta la administración y el negocio nunca quede sin administrador.
 - H15: Como usuario que olvidó su contraseña quiero que el administrador del servidor pueda restablecerla para no perder el acceso a mi negocio.
+- H16: Como dueño quiero invitar a una persona dándole un código por el medio que prefiera (por ejemplo WhatsApp o en persona), aunque no use el correo con el que la invito, para que entre a mi negocio sin depender del correo.
 
 ## Requisitos funcionales (criterios de aceptación en EARS)
 
@@ -86,6 +87,9 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - RF-89: EL SISTEMA tratará la unidad solo como una etiqueta: el precio unitario es por esa unidad y la cantidad se expresa en ella, sin convertir entre unidades y sin cambiar el cálculo del subtotal ni las reglas de cantidad del negocio (RF-35, RF-84).
 - RF-90: CUANDO un usuario cambia el precio de un producto, EL SISTEMA guardará junto al producto el precio anterior y la fecha del cambio (sustituyendo los que hubiera) y los mostrará en el catálogo; cambiar solo el nombre o la unidad no los modifica.
 - RF-91: SI el nombre de un producto, con su unidad, coincide con el de otro producto no archivado del negocio (ignorando mayúsculas y espacios exteriores), ENTONCES EL SISTEMA avisará de la coincidencia y permitirá continuar solo si el usuario lo confirma, u ofrecerá ir a cambiar el precio del existente; aplica al crear un producto y al cambiar su nombre o su unidad.
+- RF-92: CUANDO un dueño crea una invitación, con o sin el correo de la persona, EL SISTEMA le asignará un código de invitación de un solo uso, que el dueño podrá ver mientras la invitación esté pendiente para entregarlo a la persona por el medio que prefiera.
+- RF-93: CUANDO una persona con sesión iniciada canjea el código de una invitación pendiente, EL SISTEMA la agregará al negocio con el rol de empleado y marcará la invitación como aceptada, sin importar si su correo coincide con el invitado ni si ya pertenece a otros negocios.
+- RF-94: SI el código no existe, ya se usó o su invitación fue cancelada, ENTONCES EL SISTEMA rechazará el canje con el mismo mensaje, sin revelar nada de ningún negocio, y limitará los intentos fallidos de cada usuario.
 
 ### Fiados
 - RF-28: CUANDO un usuario registra un fiado con uno o más ítems (descripción, cantidad y precio unitario), EL SISTEMA guardará cada ítem con la cantidad y el precio unitario vigentes en ese momento.
@@ -173,6 +177,7 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - Teléfono con otro formato (menos o más de 8 dígitos, prefijo distinto de 2, 3, 8 o 9, letras): se rechaza (RF-77).
 - Cambio de montos de decimales a enteros: no se permite, para no dejar saldos inconsistentes (RF-9).
 - Acción en la web mientras otro móvil tiene cambios sin sincronizar sobre el mismo registro: gana el servidor (RF-62).
+- Código de invitación compartido por error: cualquier persona con sesión que lo canjee antes entra como empleado; el dueño lo evita cancelando la invitación mientras esté pendiente (RF-69) y puede quitar al empleado después (RF-71).
 
 ## Fuera de alcance
 - Límite de crédito por cliente, con aviso o bloqueo.
