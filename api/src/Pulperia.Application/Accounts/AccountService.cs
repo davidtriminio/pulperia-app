@@ -150,4 +150,12 @@ public sealed class AccountService(IAccountStore store, PasswordHasher hasher, T
             .OrderBy(b => b.Name, StringComparer.OrdinalIgnoreCase)
             .ThenBy(b => b.Id)
             .ToList();
+
+    /// <summary>
+    /// El rol del usuario en el negocio, o null si no tiene una pertenencia activa en él (RF-6, RF-50).
+    /// Lo exige cada petición a un negocio.
+    /// </summary>
+    public Task<Role?> AuthorizeBusinessAsync(
+        Guid userId, Guid businessId, CancellationToken cancellationToken = default) =>
+        store.FindActiveRoleAsync(userId, businessId, cancellationToken);
 }

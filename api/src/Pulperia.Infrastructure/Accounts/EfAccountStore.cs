@@ -119,4 +119,11 @@ public sealed class EfAccountStore(PulperiaDbContext db) : IAccountStore
             .Join(db.Businesses, m => m.BusinessId, b => b.Id,
                 (m, b) => new BusinessSummary(b.Id, b.Name, m.Role, b.AmountMode, b.QuantityMode))
             .ToListAsync(cancellationToken);
+
+    public async Task<Role?> FindActiveRoleAsync(
+        Guid userId, Guid businessId, CancellationToken cancellationToken = default) =>
+        await db.Memberships.AsNoTracking()
+            .Where(m => m.UserId == userId && m.BusinessId == businessId && m.Status == MembershipStatus.Active)
+            .Select(m => (Role?)m.Role)
+            .SingleOrDefaultAsync(cancellationToken);
 }

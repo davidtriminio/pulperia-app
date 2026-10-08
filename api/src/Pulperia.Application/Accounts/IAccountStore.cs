@@ -1,3 +1,4 @@
+using Pulperia.Domain.Access;
 using Pulperia.Domain.Business;
 
 namespace Pulperia.Application.Accounts;
@@ -66,4 +67,7 @@ public interface IAccountStore
 
     /// <summary>Los negocios en los que el usuario tiene una pertenencia activa, con su rol.</summary>
     Task<IReadOnlyList<BusinessSummary>> ListBusinessesAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>El rol del usuario en el negocio si su pertenencia está activa; null si no pertenece o fue removido.</summary>
+    Task<Role?> FindActiveRoleAsync(Guid userId, Guid businessId, CancellationToken cancellationToken = default);
 }
