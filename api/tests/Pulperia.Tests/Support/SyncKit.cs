@@ -101,6 +101,15 @@ public sealed class SyncKit : IAsyncDisposable
         return body;
     }
 
+    /// <summary>El saldo del cliente en el servidor, calculado con las reglas del dominio sobre lo guardado.</summary>
+    public async Task<Pulperia.Domain.Ledger.Balance> BalanceOfAsync(Guid clientId)
+    {
+        var fiados = await Host.Db.Fiados.IgnoreQueryFilters().AsNoTracking().Where(f => f.ClientId == clientId).ToListAsync();
+        var payments = await Host.Db.Payments.IgnoreQueryFilters().AsNoTracking().Where(p => p.ClientId == clientId).ToListAsync();
+        return Pulperia.Domain.Ledger.Balances.Compute(
+            fiados.Select(f => f.ToMovement()).Concat(payments.Select(p => p.ToMovement())));
+    }
+
     public static string Status(JsonElement result) => result.GetProperty("status").GetString()!;
 
     public static string? Code(JsonElement result) =>
