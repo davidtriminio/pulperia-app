@@ -54,6 +54,25 @@ public sealed class QueryService(IQueryStore store)
             .ThenBy(p => p.Id.ToString(), StringComparer.Ordinal)
             .ToList();
 
+    /// <summary>
+    /// El resumen del negocio (RF-63, RF-64, RF-65), con las reglas del dominio y los mismos
+    /// vectores que el móvil. <paramref name="debtorLimit"/> recorta solo la lista de deudores,
+    /// nunca los totales.
+    /// </summary>
+    public async Task<SummaryResult> SummaryAsync(int? debtorLimit = null, CancellationToken cancellationToken = default)
+    {
+        var clients = await store.ListClientTotalsAsync(archived: null, cancellationToken);
+        var summary = Summaries.Summarize(
+            clients.Select(t => new ClientBalance(t.Client.Id.ToString(), BalanceOf(t), t.Client.Archived)));
+
+        var names = clients.ToDictionary(t => t.Client.Id.ToString(), t => t.Client.Name);
+        var debtors = summary.Debtors
+            .Take(debtorLimit ?? int.MaxValue)
+            .Select(d => new DebtorLine(Guid.Parse(d.ClientId), names[d.ClientId], d.Debt))
+            .ToList();
+        return new SummaryResult(summary.DebtTotal, summary.CreditTotal, debtors);
+    }
+
     private static Balance BalanceOf(ClientTotals totals) => Balances.Compute(
     [
         new LedgerMovement(MovementKind.Fiado, totals.FiadoTotal, Annulled: false),
