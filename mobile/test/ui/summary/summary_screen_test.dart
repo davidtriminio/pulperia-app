@@ -15,6 +15,7 @@ import 'package:pulperia_mobile/ui/summary/summary_screen.dart';
 import 'package:pulperia_mobile/ui/theme.dart';
 
 import '../../support/db_fixtures.dart';
+import '../../support/fake_api.dart';
 
 void main() {
   late AppDatabase db;
@@ -82,6 +83,8 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          pulperiaApiProvider.overrideWithValue(FakeApi()),
+          syncWaitProvider.overrideWithValue((_) async {}),
           activeSessionProvider.overrideWithValue(devSessionFor()!),
         ],
         child: MaterialApp(
@@ -232,6 +235,8 @@ void main() {
         ProviderScope(
           overrides: [
             appDatabaseProvider.overrideWithValue(db),
+            pulperiaApiProvider.overrideWithValue(FakeApi()),
+            syncWaitProvider.overrideWithValue((_) async {}),
             activeSessionProvider.overrideWithValue(devSessionFor()!),
             sessionStoreProvider.overrideWithValue(devSignedInStore()),
           ],

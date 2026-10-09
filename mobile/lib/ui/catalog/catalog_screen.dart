@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../app/sync_controller.dart';
 import '../../data/local/app_database.dart';
 import '../../domain/business/amount_mode.dart';
 import '../../domain/catalog/sale_unit.dart';
@@ -16,6 +17,7 @@ import 'product_form_screen.dart';
 
 /// Productos del catálogo del negocio activo que se pueden ofrecer al fiar.
 final activeProductsProvider = FutureProvider<List<Product>>((ref) {
+  ref.watch(localDataRevisionProvider);
   final repository = ref.watch(productRepositoryProvider);
   final businessId = ref.watch(activeBusinessIdProvider);
   return repository.activeProducts(businessId);
@@ -27,6 +29,7 @@ final activeProductsProvider = FutureProvider<List<Product>>((ref) {
 final frequentProductsProvider = FutureProvider.autoDispose<List<Product>>((
   ref,
 ) {
+  ref.watch(localDataRevisionProvider);
   final repository = ref.watch(productRepositoryProvider);
   final businessId = ref.watch(activeBusinessIdProvider);
   return repository.frequentProducts(businessId);

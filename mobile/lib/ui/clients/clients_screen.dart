@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../app/sync_controller.dart';
 import '../../data/repositories/client_repository.dart';
 import '../../domain/business/amount_mode.dart';
 import '../../l10n/strings.dart';
@@ -12,6 +13,7 @@ import 'client_tile.dart';
 
 /// Clientes no archivados del negocio activo con su saldo.
 final activeClientsProvider = FutureProvider<List<ClientWithBalance>>((ref) {
+  ref.watch(localDataRevisionProvider);
   final repository = ref.watch(clientRepositoryProvider);
   final businessId = ref.watch(activeBusinessIdProvider);
   return repository.activeClients(businessId);
@@ -21,6 +23,7 @@ final activeClientsProvider = FutureProvider<List<ClientWithBalance>>((ref) {
 /// cada vez que se abre la vista de archivados.
 final archivedClientsProvider =
     FutureProvider.autoDispose<List<ClientWithBalance>>((ref) {
+      ref.watch(localDataRevisionProvider);
       final repository = ref.watch(clientRepositoryProvider);
       final businessId = ref.watch(activeBusinessIdProvider);
       return repository.archivedClients(businessId);

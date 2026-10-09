@@ -238,6 +238,7 @@ abstract final class Strings {
 
   static const menu = 'Menú';
   static const switchBusiness = 'Cambiar de negocio';
+  static const syncNow = 'Sincronizar ahora';
   static const logout = 'Cerrar sesión';
   static const logoutConfirmTitle = '¿Cerrar sesión?';
   static const logoutConfirmBody = 'Para volver a entrar necesitarás conexión.';

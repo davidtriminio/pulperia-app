@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/providers.dart';
+import '../app/sync_controller.dart';
 import '../l10n/strings.dart';
 import 'auth/business_chooser_screen.dart';
 import 'auth/logout.dart';
 import 'catalog/catalog_screen.dart';
 import 'clients/clients_screen.dart';
 import 'summary/summary_screen.dart';
+import 'sync/sync_triggers.dart';
 
 /// Estructura principal: barra superior con el negocio activo y navegación
 /// inferior entre las secciones.
@@ -18,7 +20,7 @@ class HomeShell extends ConsumerStatefulWidget {
   ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-enum _MenuAction { switchBusiness, logout }
+enum _MenuAction { syncNow, switchBusiness, logout }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
@@ -34,6 +36,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             key: const ValueKey('home-menu'),
             tooltip: Strings.menu,
             onSelected: (action) => switch (action) {
+              _MenuAction.syncNow =>
+                ref
+                    .read(syncControllerProvider.notifier)
+                    .request(SyncTrigger.manual),
               _MenuAction.switchBusiness => Navigator.of(context).push<void>(
                 MaterialPageRoute(
                   builder: (_) => const BusinessChooserScreen(asRoute: true),
@@ -42,6 +48,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               _MenuAction.logout => confirmLogout(context, ref),
             },
             itemBuilder: (_) => const [
+              PopupMenuItem(
+                key: ValueKey('menu-sync'),
+                value: _MenuAction.syncNow,
+                child: Text(Strings.syncNow),
+              ),
               PopupMenuItem(
                 key: ValueKey('menu-switch-business'),
                 value: _MenuAction.switchBusiness,
@@ -56,9 +67,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _index,
-        children: const [ClientsScreen(), SummaryScreen(), CatalogScreen()],
+      body: SyncTriggers(
+        child: IndexedStack(
+          index: _index,
+          children: const [ClientsScreen(), SummaryScreen(), CatalogScreen()],
+        ),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,

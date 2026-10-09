@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../app/sync_controller.dart';
 import '../../data/local/app_database.dart';
 import '../../domain/avatar/avatar.dart';
 import '../../domain/business/amount_mode.dart';
@@ -25,6 +26,7 @@ typedef SummaryView = ({BusinessSummary summary, Map<String, Client> clients});
 /// aún no sincronizados (RF-66). Depende de la lista de clientes: cada vez que
 /// un fiado, abono, anulación o archivado la invalida, se recalcula.
 final businessSummaryProvider = FutureProvider<SummaryView>((ref) async {
+  ref.watch(localDataRevisionProvider);
   final clients = await ref.watch(activeClientsProvider.future);
   final businessId = ref.watch(activeBusinessIdProvider);
   final summary = await ref.watch(summaryQueriesProvider).summaryOf(businessId);
