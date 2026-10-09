@@ -11,7 +11,13 @@ namespace Pulperia.Tests.Support;
 /// </summary>
 public sealed class PostgresFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:17-alpine").Build();
+    /// <summary>
+    /// Espejo de la imagen oficial en Amazon ECR Public: Docker Hub limita las descargas sin cuenta
+    /// y hacía fallar el CI al bajar la imagen.
+    /// </summary>
+    private const string Image = "public.ecr.aws/docker/library/postgres:17-alpine";
+
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder(Image).Build();
 
     public const string Collection = "postgres";
 
