@@ -1,0 +1,654 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API de la app de pulperías",
+    "version": "1.0.0",
+    "description": "Contrato escrito a mano (D-17). Los clientes HTTP del móvil y de la web se escriben contra este archivo, y una prueba de la API comprueba que las respuestas reales lo cumplen. Dinero: entero en la unidad menor (centavos de lempira). Cantidades: enteros en milésimas. Fechas: ISO 8601 en UTC. Todo objeto declara todas sus propiedades: una propiedad que no esté aquí no existe. Las rutas de un negocio exigen el token de acceso y la cabecera X-Business-Id; sin la cabecera responden 400 business_required y si el usuario no es miembro activo, 403 forbidden. Los errores devuelven un código estable (RNF-5) que los clientes traducen al español."
+  },
+  "servers": [{ "url": "http://localhost:5109" }],
+  "security": [{ "bearer": [] }],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Crear una cuenta con su primer negocio (RF-1, RF-2, RF-78). No devuelve tokens: hay que iniciar sesión después.",
+        "security": [],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterRequest" } } } },
+        "responses": {
+          "201": { "description": "Cuenta y negocio creados.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Registered" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Iniciar sesión (RF-3). No distingue entre correo desconocido y contraseña errónea (invalid_credentials).",
+        "security": [],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } } },
+        "responses": {
+          "200": { "description": "Sesión iniciada.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Tokens" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "summary": "Renovar la sesión (RF-4). Reemplaza los dos tokens; el de renovación anterior deja de servir.",
+        "security": [],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RefreshRequest" } } } },
+        "responses": {
+          "200": { "description": "Tokens nuevos.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Tokens" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Cerrar la sesión del token de acceso enviado.",
+        "responses": {
+          "204": { "description": "Sesión cerrada." },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/businesses": {
+      "get": {
+        "summary": "Negocios del usuario con su rol en cada uno (RF-5, RF-6).",
+        "responses": {
+          "200": { "description": "Lista de negocios.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/BusinessSummary" } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Crear un negocio adicional; quien lo crea es su dueño (RF-79).",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateBusinessRequest" } } } },
+        "responses": {
+          "201": { "description": "Negocio creado.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BusinessSummary" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/business": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
+      "get": {
+        "summary": "Ajustes del negocio activo (solo dueño).",
+        "responses": {
+          "200": { "description": "Ajustes.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BusinessSettings" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "patch": {
+        "summary": "Cambiar nombre y modos del negocio (solo dueño, RF-7 a RF-9, RF-80). Solo cambia lo enviado.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SettingsRequest" } } } },
+        "responses": {
+          "200": { "description": "Ajustes resultantes.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BusinessSettings" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/business/invitations": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
+      "post": {
+        "summary": "Invitar a un empleado, con correo o solo por código (RF-10, RF-92). Solo dueño.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InviteRequest" } } } },
+        "responses": {
+          "201": { "description": "Invitación creada, con su código de un solo uso.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Invitation" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      },
+      "get": {
+        "summary": "Invitaciones del negocio (solo dueño).",
+        "responses": {
+          "200": { "description": "Lista de invitaciones.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Invitation" } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/business/invitations/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }, { "$ref": "#/components/parameters/Id" }],
+      "delete": {
+        "summary": "Cancelar una invitación pendiente (RF-69). Solo dueño.",
+        "responses": {
+          "204": { "description": "Invitación cancelada." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/business/team": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
+      "get": {
+        "summary": "Miembros activos del negocio (RF-70). Solo dueño.",
+        "responses": {
+          "200": { "description": "Equipo.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/TeamMember" } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/business/team/{userId}/promote": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }, { "$ref": "#/components/parameters/UserId" }],
+      "post": {
+        "summary": "Promover a un empleado a dueño (RF-70). Solo dueño.",
+        "responses": {
+          "200": { "description": "Miembro promovido.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromotedMember" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/business/team/{userId}": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }, { "$ref": "#/components/parameters/UserId" }],
+      "delete": {
+        "summary": "Quitar a un miembro (RF-11, RF-71). No se puede quitar al último dueño.",
+        "responses": {
+          "204": { "description": "Miembro quitado." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/invitations": {
+      "get": {
+        "summary": "Invitaciones pendientes dirigidas al correo del usuario (RF-67). No trae el código.",
+        "responses": {
+          "200": { "description": "Invitaciones recibidas.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/InvitationOffer" } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/invitations/redeem": {
+      "post": {
+        "summary": "Entrar a un negocio con el código de una invitación (RF-93). Máximo 10 intentos por minuto (D-28).",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RedeemRequest" } } } },
+        "responses": {
+          "200": { "description": "El usuario entró como empleado.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BusinessSummary" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" }
+        }
+      }
+    },
+    "/api/invitations/{id}/accept": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "post": {
+        "summary": "Aceptar una invitación recibida (RF-68). Entra como empleado.",
+        "responses": {
+          "200": { "description": "El usuario entró como empleado.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BusinessSummary" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/invitations/{id}/reject": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "post": {
+        "summary": "Rechazar una invitación recibida (RF-68).",
+        "responses": {
+          "204": { "description": "Invitación rechazada." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/sync/push": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
+      "post": {
+        "summary": "Enviar un lote de operaciones (RF-52, RF-53). Hasta 500, en una transacción; cada una tiene su resultado. Un empleado removido puede enviar un único último lote (RF-12).",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PushRequest" } } } },
+        "responses": {
+          "200": { "description": "Un resultado por operación, en el mismo orden.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PushResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/sync/pull": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
+      "get": {
+        "summary": "Cambios posteriores a un cursor, paginados (RF-52, RF-58). Cursor cero es la descarga inicial.",
+        "parameters": [
+          { "name": "cursor", "in": "query", "required": false, "description": "Último seq recibido; por omisión 0.", "schema": { "type": "integer", "minimum": 0 } },
+          { "name": "limit", "in": "query", "required": false, "description": "Registros por página; por omisión 200, máximo 500.", "schema": { "type": "integer", "minimum": 1 } }
+        ],
+        "responses": {
+          "200": { "description": "Una página de cambios.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PullResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/operations": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
+      "post": {
+        "summary": "Enviar una sola operación, para la web (RF-59, RF-60). Mismas reglas e idempotencia que el lote; sin createdAt usa la hora del servidor. Solo miembros activos.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SingleOperation" } } } },
+        "responses": {
+          "200": { "description": "El resultado de la operación.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OperationResult" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/clients": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
+      "get": {
+        "summary": "Clientes con su saldo, por nombre (RF-22, RF-42). Con archived=true, los archivados.",
+        "parameters": [{ "name": "archived", "in": "query", "required": false, "description": "true o false; por omisión false.", "schema": { "type": "boolean" } }],
+        "responses": {
+          "200": { "description": "Lista de clientes.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ClientWithBalance" } } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/clients/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }, { "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "summary": "Un cliente con su saldo y su historial cronológico, anulados incluidos (RF-41, D-18).",
+        "responses": {
+          "200": { "description": "El cliente y sus movimientos.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClientDetail" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/products": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
+      "get": {
+        "summary": "Productos del catálogo, por nombre. Con archived=true, los archivados.",
+        "parameters": [{ "name": "archived", "in": "query", "required": false, "description": "true o false; por omisión false.", "schema": { "type": "boolean" } }],
+        "responses": {
+          "200": { "description": "Lista de productos.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/summary": {
+      "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
+      "get": {
+        "summary": "Resumen del negocio: deuda total, saldo a favor total y clientes que más deben (RF-63 a RF-65).",
+        "parameters": [{ "name": "limit", "in": "query", "required": false, "description": "Cuántos deudores devolver; por omisión todos. No recorta los totales.", "schema": { "type": "integer", "minimum": 1 } }],
+        "responses": {
+          "200": { "description": "El resumen.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SummaryResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": { "bearer": { "type": "http", "scheme": "bearer", "description": "Token de acceso opaco, de 15 minutos (D-27)." } },
+    "parameters": {
+      "BusinessId": { "name": "X-Business-Id", "in": "header", "required": true, "description": "Negocio activo de la petición (RF-6, RF-50).", "schema": { "type": "string", "format": "uuid" } },
+      "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+      "UserId": { "name": "userId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+    },
+    "responses": {
+      "BadRequest": { "description": "Petición mal formada o rechazada por una regla (código estable).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Unauthorized": { "description": "Falta la sesión, caducó o las credenciales no sirven.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Forbidden": { "description": "El usuario no pertenece al negocio o su rol no permite la acción.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NotFound": { "description": "No existe en el negocio o el usuario no puede verlo.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Conflict": { "description": "La acción choca con el estado actual.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "TooManyRequests": { "description": "Demasiados intentos.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": ["code", "codes"],
+        "properties": {
+          "code": { "type": "string", "description": "El código principal, estable." },
+          "codes": { "type": "array", "items": { "type": "string" }, "description": "Todos los problemas encontrados; el primero es code." }
+        }
+      },
+      "Role": { "type": "string", "enum": ["owner", "employee"] },
+      "AmountMode": { "type": "string", "enum": ["integer", "two_decimals"] },
+      "QuantityMode": { "type": "string", "enum": ["integer", "fractional"] },
+      "BalanceLabel": { "type": "string", "enum": ["debt", "credit", "settled"] },
+
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["email", "password", "businessName", "amountMode", "quantityMode"],
+        "properties": {
+          "email": { "type": "string" },
+          "password": { "type": "string" },
+          "businessName": { "type": "string" },
+          "amountMode": { "$ref": "#/components/schemas/AmountMode" },
+          "quantityMode": { "$ref": "#/components/schemas/QuantityMode" }
+        }
+      },
+      "Registered": {
+        "type": "object",
+        "required": ["userId", "businessId"],
+        "properties": { "userId": { "type": "string", "format": "uuid" }, "businessId": { "type": "string", "format": "uuid" } }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": { "email": { "type": "string" }, "password": { "type": "string" } }
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "required": ["refreshToken"],
+        "properties": { "refreshToken": { "type": "string" } }
+      },
+      "Tokens": {
+        "type": "object",
+        "required": ["userId", "accessToken", "accessExpiresAt", "refreshToken", "refreshExpiresAt"],
+        "properties": {
+          "userId": { "type": "string", "format": "uuid" },
+          "accessToken": { "type": "string" },
+          "accessExpiresAt": { "type": "string", "format": "date-time" },
+          "refreshToken": { "type": "string" },
+          "refreshExpiresAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CreateBusinessRequest": {
+        "type": "object",
+        "required": ["name", "amountMode", "quantityMode"],
+        "properties": {
+          "name": { "type": "string" },
+          "amountMode": { "$ref": "#/components/schemas/AmountMode" },
+          "quantityMode": { "$ref": "#/components/schemas/QuantityMode" }
+        }
+      },
+      "BusinessSummary": {
+        "type": "object",
+        "required": ["id", "name", "role", "amountMode", "quantityMode"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "role": { "$ref": "#/components/schemas/Role" },
+          "amountMode": { "$ref": "#/components/schemas/AmountMode" },
+          "quantityMode": { "$ref": "#/components/schemas/QuantityMode" }
+        }
+      },
+      "BusinessSettings": {
+        "type": "object",
+        "required": ["name", "amountMode", "quantityMode"],
+        "properties": {
+          "name": { "type": "string" },
+          "amountMode": { "$ref": "#/components/schemas/AmountMode" },
+          "quantityMode": { "$ref": "#/components/schemas/QuantityMode" }
+        }
+      },
+      "SettingsRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "amountMode": { "$ref": "#/components/schemas/AmountMode" },
+          "quantityMode": { "$ref": "#/components/schemas/QuantityMode" }
+        }
+      },
+      "InviteRequest": {
+        "type": "object",
+        "properties": { "email": { "type": "string", "nullable": true, "description": "Sin correo, la invitación es solo por código." } }
+      },
+      "Invitation": {
+        "type": "object",
+        "required": ["id", "email", "code", "status"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "nullable": true },
+          "code": { "type": "string", "description": "Código de un solo uso, XXXXXXXX (D-28)." },
+          "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "cancelled"] }
+        }
+      },
+      "InvitationOffer": {
+        "type": "object",
+        "required": ["id", "businessId", "businessName", "email"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "businessId": { "type": "string", "format": "uuid" },
+          "businessName": { "type": "string" },
+          "email": { "type": "string" }
+        }
+      },
+      "RedeemRequest": {
+        "type": "object",
+        "required": ["code"],
+        "properties": { "code": { "type": "string" } }
+      },
+      "TeamMember": {
+        "type": "object",
+        "required": ["userId", "email", "role"],
+        "properties": {
+          "userId": { "type": "string", "format": "uuid" },
+          "email": { "type": "string" },
+          "role": { "$ref": "#/components/schemas/Role" }
+        }
+      },
+      "PromotedMember": {
+        "type": "object",
+        "required": ["userId", "role"],
+        "properties": { "userId": { "type": "string", "format": "uuid" }, "role": { "$ref": "#/components/schemas/Role" } }
+      },
+
+      "Client": {
+        "type": "object",
+        "required": ["id", "name", "characterId", "skinId", "backgroundId", "phone", "address", "note", "archived", "version", "createdBy", "createdAt", "updatedAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "characterId": { "type": "string" },
+          "skinId": { "type": "string" },
+          "backgroundId": { "type": "string" },
+          "phone": { "type": "string", "nullable": true },
+          "address": { "type": "string", "nullable": true },
+          "note": { "type": "string", "nullable": true },
+          "archived": { "type": "boolean" },
+          "version": { "type": "integer" },
+          "createdBy": { "type": "string", "format": "uuid" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ClientWithBalance": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Client" },
+          {
+            "type": "object",
+            "required": ["balance", "balanceLabel"],
+            "properties": {
+              "balance": { "type": "integer", "description": "Positivo es deuda y negativo es saldo a favor, en la unidad menor (RF-42)." },
+              "balanceLabel": { "$ref": "#/components/schemas/BalanceLabel" }
+            }
+          }
+        ]
+      },
+      "ClientDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ClientWithBalance" },
+          {
+            "type": "object",
+            "required": ["movements"],
+            "properties": {
+              "movements": { "type": "array", "items": { "$ref": "#/components/schemas/Movement" }, "description": "Del más antiguo al más reciente: fecha del dispositivo, luego serverSeq, luego id (D-18)." }
+            }
+          }
+        ]
+      },
+      "Movement": {
+        "type": "object",
+        "required": ["kind", "id", "amount", "occurredAt", "serverSeq", "createdBy", "annulledAt", "annulledBy"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["fiado", "payment"] },
+          "id": { "type": "string", "format": "uuid" },
+          "amount": { "type": "integer" },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "serverSeq": { "type": "integer", "description": "Orden de llegada al servidor." },
+          "createdBy": { "type": "string", "format": "uuid" },
+          "annulledAt": { "type": "string", "format": "date-time", "nullable": true },
+          "annulledBy": { "type": "string", "format": "uuid", "nullable": true },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/FiadoItem" }, "description": "Solo en los fiados." }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "required": ["id", "name", "price", "unit", "previousPrice", "priceChangedAt", "archived", "version", "createdBy", "createdAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "price": { "type": "integer" },
+          "unit": { "type": "string" },
+          "previousPrice": { "type": "integer", "nullable": true },
+          "priceChangedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "archived": { "type": "boolean" },
+          "version": { "type": "integer" },
+          "createdBy": { "type": "string", "format": "uuid" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "FiadoItem": {
+        "type": "object",
+        "required": ["id", "productId", "description", "quantity", "unit", "unitPrice", "subtotal"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "productId": { "type": "string", "format": "uuid", "nullable": true },
+          "description": { "type": "string" },
+          "quantity": { "type": "integer", "description": "En milésimas." },
+          "unit": { "type": "string" },
+          "unitPrice": { "type": "integer" },
+          "subtotal": { "type": "integer" }
+        }
+      },
+      "Fiado": {
+        "type": "object",
+        "required": ["id", "clientId", "total", "occurredAt", "serverSeq", "createdBy", "annulledAt", "annulledBy", "items"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "clientId": { "type": "string", "format": "uuid" },
+          "total": { "type": "integer" },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "serverSeq": { "type": "integer", "nullable": true, "description": "El seq de su creación: su orden de llegada (D-18)." },
+          "createdBy": { "type": "string", "format": "uuid" },
+          "annulledAt": { "type": "string", "format": "date-time", "nullable": true },
+          "annulledBy": { "type": "string", "format": "uuid", "nullable": true },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/FiadoItem" } }
+        }
+      },
+      "Payment": {
+        "type": "object",
+        "required": ["id", "clientId", "amount", "occurredAt", "serverSeq", "createdBy", "annulledAt", "annulledBy"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "clientId": { "type": "string", "format": "uuid" },
+          "amount": { "type": "integer" },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "serverSeq": { "type": "integer", "nullable": true, "description": "El seq de su creación: su orden de llegada (D-18)." },
+          "createdBy": { "type": "string", "format": "uuid" },
+          "annulledAt": { "type": "string", "format": "date-time", "nullable": true },
+          "annulledBy": { "type": "string", "format": "uuid", "nullable": true }
+        }
+      },
+
+      "BatchOperation": {
+        "type": "object",
+        "required": ["opId", "type", "entityId", "createdAt"],
+        "properties": {
+          "opId": { "type": "string", "format": "uuid", "description": "Identificador de la operación; reenviarlo no repite nada (RF-53)." },
+          "type": { "type": "string", "enum": ["client.create", "client.update", "client.archive", "client.restore", "product.create", "product.update", "product.archive", "fiado.create", "fiado.annul", "payment.create", "payment.annul"] },
+          "entityId": { "type": "string", "format": "uuid" },
+          "payload": { "type": "object", "additionalProperties": true, "description": "Los datos de la operación, según su tipo." },
+          "baseVersion": { "type": "integer", "nullable": true, "description": "Versión sobre la que se edita (D-8)." },
+          "createdAt": { "type": "string", "format": "date-time", "description": "Cuándo se creó en el dispositivo (D-18)." }
+        }
+      },
+      "SingleOperation": {
+        "type": "object",
+        "required": ["opId", "type", "entityId"],
+        "properties": {
+          "opId": { "type": "string", "format": "uuid" },
+          "type": { "$ref": "#/components/schemas/BatchOperation/properties/type" },
+          "entityId": { "type": "string", "format": "uuid" },
+          "payload": { "type": "object", "additionalProperties": true },
+          "baseVersion": { "type": "integer", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time", "description": "Opcional: sin ella se usa la hora del servidor." }
+        }
+      },
+      "PushRequest": {
+        "type": "object",
+        "required": ["operations"],
+        "properties": { "operations": { "type": "array", "maxItems": 500, "items": { "$ref": "#/components/schemas/BatchOperation" } } }
+      },
+      "OperationResult": {
+        "type": "object",
+        "required": ["opId", "status"],
+        "properties": {
+          "opId": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["applied", "duplicate", "rejected"] },
+          "code": { "type": "string", "description": "Solo si fue rechazada." },
+          "codes": { "type": "array", "items": { "type": "string" }, "description": "Solo si fue rechazada." }
+        }
+      },
+      "PushResponse": {
+        "type": "object",
+        "required": ["results"],
+        "properties": { "results": { "type": "array", "items": { "$ref": "#/components/schemas/OperationResult" } } }
+      },
+      "ChangeEntry": {
+        "type": "object",
+        "required": ["seq", "type", "entity"],
+        "properties": {
+          "seq": { "type": "integer" },
+          "type": { "type": "string", "enum": ["client", "product", "fiado", "payment"] },
+          "entity": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/Client" },
+              { "$ref": "#/components/schemas/Product" },
+              { "$ref": "#/components/schemas/Fiado" },
+              { "$ref": "#/components/schemas/Payment" }
+            ],
+            "description": "La versión actual completa del registro, según type."
+          }
+        }
+      },
+      "PullResponse": {
+        "type": "object",
+        "required": ["cursor", "hasMore", "changes"],
+        "properties": {
+          "cursor": { "type": "integer", "description": "El cursor a pedir en la siguiente página." },
+          "hasMore": { "type": "boolean" },
+          "changes": { "type": "array", "items": { "$ref": "#/components/schemas/ChangeEntry" } }
+        }
+      },
+      "SummaryResponse": {
+        "type": "object",
+        "required": ["debtTotal", "creditTotal", "debtors"],
+        "properties": {
+          "debtTotal": { "type": "integer" },
+          "creditTotal": { "type": "integer" },
+          "debtors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["clientId", "name", "debt"],
+              "properties": {
+                "clientId": { "type": "string", "format": "uuid" },
+                "name": { "type": "string" },
+                "debt": { "type": "integer" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
