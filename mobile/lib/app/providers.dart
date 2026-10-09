@@ -18,6 +18,7 @@ import '../data/sync/sync_service.dart';
 import '../domain/access/access.dart';
 import 'session_controller.dart';
 import 'session_state.dart';
+import 'sync_controller.dart';
 
 /// La base local. No tiene valor por omisión: `main` (o un test) la abre y la
 /// sobrescribe, para no abrir una base vacía por accidente.
@@ -76,12 +77,18 @@ final sessionServiceProvider = Provider<SessionService>(
   ),
 );
 
+/// Cómo espera la sincronización entre reintentos; los tests lo hacen instantáneo.
+final syncWaitProvider = Provider<Future<void> Function(Duration)>(
+  (ref) => Future<void>.delayed,
+);
+
 /// La sincronización con el servidor (plan, sección 4).
 final syncServiceProvider = Provider<SyncService>(
   (ref) => SyncService(
     sessions: ref.watch(sessionServiceProvider),
     api: ref.watch(pulperiaApiProvider),
     db: ref.watch(appDatabaseProvider),
+    wait: ref.watch(syncWaitProvider),
   ),
 );
 
@@ -140,6 +147,7 @@ final activeBusinessIdProvider = Provider<String>(
 /// El negocio activo, leído de la base local (con sus modos de montos y
 /// cantidades).
 final activeBusinessProvider = FutureProvider<Business>((ref) {
+  ref.watch(localDataRevisionProvider);
   final db = ref.watch(appDatabaseProvider);
   final id = ref.watch(activeBusinessIdProvider);
   return (db.select(db.businesses)..where((b) => b.id.equals(id))).getSingle();

@@ -52,6 +52,7 @@ void main() {
           pulperiaApiProvider.overrideWithValue(api),
           sessionStoreProvider.overrideWithValue(store),
           clockProvider.overrideWithValue(() => api.now),
+          syncWaitProvider.overrideWithValue((_) async {}),
         ],
         child: const PulperiaApp(),
       ),
@@ -493,6 +494,18 @@ void main() {
       },
     );
 
+    testWidgets('sincronizar ahora desde el menú inicia una sincronización', (
+      tester,
+    ) async {
+      await signInWithTwoBusinesses(tester);
+      final before = api.count('pull');
+
+      await tapKey(tester, 'home-menu');
+      await tapKey(tester, 'menu-sync');
+
+      expect(api.count('pull'), before + 1);
+    });
+
     testWidgets('cerrar sesión pide confirmación', (tester) async {
       await signInWithTwoBusinesses(tester);
 
@@ -513,6 +526,7 @@ void main() {
     testWidgets(
       'con cambios sin enviar no se cierra la sesión y se avisa cuántos',
       (tester) async {
+        api.failures['push'] = const ApiException(403, 'forbidden');
         await tester.runAsync(() async {
           await insertBusiness(db, 'b-1', name: 'Pulpería Ana');
           await insertOutboxOp(db, 'op-1', 'b-1');
@@ -537,6 +551,7 @@ void main() {
     testWidgets('con un solo cambio pendiente el aviso va en singular', (
       tester,
     ) async {
+      api.failures['push'] = const ApiException(403, 'forbidden');
       await tester.runAsync(() async {
         await insertBusiness(db, 'b-1', name: 'Pulpería Ana');
         await insertOutboxOp(db, 'op-1', 'b-1');

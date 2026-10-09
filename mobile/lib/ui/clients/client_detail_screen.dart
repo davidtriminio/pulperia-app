@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../app/sync_controller.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/annul_result.dart';
 import '../../data/repositories/client_repository.dart';
@@ -31,6 +32,7 @@ final clientHistoryProvider = FutureProvider.family<ClientHistory?, String>((
   ref,
   clientId,
 ) {
+  ref.watch(localDataRevisionProvider);
   final queries = ref.watch(ledgerQueriesProvider);
   final businessId = ref.watch(activeBusinessIdProvider);
   return queries.historyOf(businessId, clientId);

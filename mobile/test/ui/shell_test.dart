@@ -10,6 +10,7 @@ import '../support/dev_session.dart';
 import 'package:pulperia_mobile/l10n/strings.dart';
 
 import '../support/db_fixtures.dart';
+import '../support/fake_api.dart';
 
 void main() {
   late AppDatabase db;
@@ -25,6 +26,8 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          pulperiaApiProvider.overrideWithValue(FakeApi()),
+          syncWaitProvider.overrideWithValue((_) async {}),
           sessionStoreProvider.overrideWithValue(devSignedInStore()),
         ],
         child: const PulperiaApp(),

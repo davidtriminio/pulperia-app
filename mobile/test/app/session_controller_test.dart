@@ -38,6 +38,7 @@ void main() {
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
         pulperiaApiProvider.overrideWithValue(api),
+        syncWaitProvider.overrideWithValue((_) async {}),
         sessionStoreProvider.overrideWithValue(store),
         clockProvider.overrideWithValue(() => api.now),
       ],
@@ -263,6 +264,7 @@ void main() {
           overrides: [
             appDatabaseProvider.overrideWithValue(db),
             pulperiaApiProvider.overrideWithValue(api),
+            syncWaitProvider.overrideWithValue((_) async {}),
             sessionStoreProvider.overrideWithValue(store),
           ],
           child: const PulperiaApp(),

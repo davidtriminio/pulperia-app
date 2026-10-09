@@ -5,6 +5,7 @@ import 'package:pulperia_mobile/app.dart';
 import 'package:pulperia_mobile/app/providers.dart';
 
 import 'support/db_fixtures.dart';
+import 'support/fake_api.dart';
 import 'support/dev_session.dart';
 
 void main() {
@@ -16,6 +17,8 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          pulperiaApiProvider.overrideWithValue(FakeApi()),
+          syncWaitProvider.overrideWithValue((_) async {}),
           activeSessionProvider.overrideWithValue(devSessionFor()!),
         ],
         child: const PulperiaApp(),
