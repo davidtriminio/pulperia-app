@@ -83,6 +83,14 @@ class SyncController extends Notifier<SyncStatus> {
       ref.read(localDataRevisionProvider.notifier).bump();
     }
     state = SyncStatus(last: outcome);
+    if (outcome is SyncFailed && outcome.reason == SyncFailure.removed) {
+      // Sus datos ya se borraron: se sale del negocio y se avisa.
+      ref
+          .read(removedBusinessProvider.notifier)
+          .set(session is SignedIn ? session.active?.name : null);
+      await ref.read(sessionControllerProvider.notifier).leaveActiveBusiness();
+      ref.read(localDataRevisionProvider.notifier).bump();
+    }
     return outcome;
   }
 }
@@ -114,3 +122,16 @@ final pendingChangesProvider = StreamProvider<int>((ref) async* {
     yield await count();
   }
 });
+
+/// El nombre del negocio al que el usuario perdió el acceso (RF-11), para
+/// avisárselo al elegir negocio. Null si no hay nada que avisar.
+final removedBusinessProvider = NotifierProvider<RemovedBusiness, String?>(
+  RemovedBusiness.new,
+);
+
+class RemovedBusiness extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? name) => state = name;
+}

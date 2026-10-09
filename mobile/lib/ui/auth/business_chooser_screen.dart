@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../app/sync_controller.dart';
 import '../../app/session_state.dart';
 import '../../data/remote/models.dart';
 import '../../domain/access/access.dart';
@@ -81,6 +82,7 @@ class _BusinessChooserScreenState extends ConsumerState<BusinessChooserScreen> {
     }
     final state = ref.watch(sessionControllerProvider).value;
     final activeId = state is SignedIn ? state.active?.id : null;
+    final removedName = ref.watch(removedBusinessProvider);
     return AuthPage(
       key: const ValueKey('business-chooser'),
       title: Strings.chooseBusinessTitle,
@@ -93,6 +95,13 @@ class _BusinessChooserScreenState extends ConsumerState<BusinessChooserScreen> {
             )
           : null,
       children: [
+        if (removedName != null) ...[
+          KeyedSubtree(
+            key: const ValueKey('removed-notice'),
+            child: ErrorBanner(Strings.businessRemoved(removedName)),
+          ),
+          const SizedBox(height: 12),
+        ],
         FutureBuilder<List<RemoteBusiness>>(
           future: _businesses,
           builder: (context, snapshot) {

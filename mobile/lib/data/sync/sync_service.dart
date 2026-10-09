@@ -79,6 +79,9 @@ enum SyncFailure {
 
   /// No hay sesión utilizable: hay que iniciar sesión para sincronizar (D-10).
   sessionExpired,
+
+  /// Ya no perteneces al negocio (RF-11): sus datos locales se borraron.
+  removed,
 }
 
 final class SyncFailed extends SyncOutcome {
@@ -146,6 +149,9 @@ class SyncService {
       if (e.status == 401) {
         return const SyncFailed(SyncFailure.sessionExpired);
       }
+      if (e.status == 403 && e.code == forbiddenCode) {
+        return _confirmRemoval(businessId, e);
+      }
       // Un 5xx, un tiempo agotado o una respuesta que no es el contrato son
       // del servidor y pasan solos; lo demás (403, 401...) es que no nos deja.
       final transient =
@@ -159,6 +165,65 @@ class SyncService {
           : SyncFailed(SyncFailure.refused, code: e.code);
     }
   }
+
+  /// Código con el que el servidor niega el acceso al negocio.
+  static const forbiddenCode = 'forbidden';
+
+  /// El servidor negó el acceso: si de verdad ya no pertenecemos al negocio
+  /// (RF-11), se borran sus datos locales, y el último lote ya se envió antes
+  /// (RF-12). Se comprueba con la lista de negocios del usuario para no borrar
+  /// por un 403 que sea otra cosa; si no se puede comprobar, no se borra.
+  Future<SyncOutcome> _confirmRemoval(String businessId, ApiException e) async {
+    final List<RemoteBusiness> mine;
+    try {
+      mine = await api.listBusinesses(await sessions.accessToken());
+    } on SessionExpiredException {
+      return const SyncFailed(SyncFailure.sessionExpired);
+    } on NetworkException {
+      return const SyncFailed(SyncFailure.network);
+    } on ApiException catch (other) {
+      return other.status == 401
+          ? const SyncFailed(SyncFailure.sessionExpired)
+          : SyncFailed(SyncFailure.server, code: other.code);
+    }
+    if (mine.any((b) => b.id == businessId)) {
+      return SyncFailed(SyncFailure.refused, code: e.code);
+    }
+    await purgeBusiness(businessId);
+    return const SyncFailed(SyncFailure.removed);
+  }
+
+  /// Borra todo lo que el teléfono guarda de un negocio: sus datos, su cola,
+  /// su cursor y la pertenencia (RF-11).
+  Future<void> purgeBusiness(String businessId) => db.transaction(() async {
+    await (db.delete(
+      db.fiadoItems,
+    )..where((t) => t.businessId.equals(businessId))).go();
+    await (db.delete(
+      db.fiados,
+    )..where((t) => t.businessId.equals(businessId))).go();
+    await (db.delete(
+      db.payments,
+    )..where((t) => t.businessId.equals(businessId))).go();
+    await (db.delete(
+      db.products,
+    )..where((t) => t.businessId.equals(businessId))).go();
+    await (db.delete(
+      db.clients,
+    )..where((t) => t.businessId.equals(businessId))).go();
+    await (db.delete(
+      db.outboxOps,
+    )..where((t) => t.businessId.equals(businessId))).go();
+    await (db.delete(
+      db.syncStates,
+    )..where((t) => t.businessId.equals(businessId))).go();
+    await (db.delete(
+      db.memberships,
+    )..where((t) => t.businessId.equals(businessId))).go();
+    await (db.delete(
+      db.businesses,
+    )..where((t) => t.id.equals(businessId))).go();
+  });
 
   /// Como [attempt], pero si falla la red o el servidor espera un poco y
   /// vuelve a intentar, hasta agotar [retryDelays]. Lo que no se arregla

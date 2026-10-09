@@ -111,6 +111,13 @@ class SessionController extends AsyncNotifier<SessionState> {
     await chooseBusiness(created);
   }
 
+  /// Deja de trabajar con el negocio activo (por ejemplo, porque ya no
+  /// pertenece a él): el usuario vuelve a elegir negocio.
+  Future<void> leaveActiveBusiness() async {
+    await ref.read(sessionServiceProvider).saveActiveBusiness(null);
+    state = AsyncData(_withActive(null));
+  }
+
   SessionState _withActive(RemoteBusiness? business) {
     final current = _signedIn;
     return SignedIn(

@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/app/providers.dart';
 import 'package:pulperia_mobile/app/sync_controller.dart';
 import 'package:pulperia_mobile/data/local/app_database.dart';
+import 'package:pulperia_mobile/app/session_state.dart';
+import 'package:pulperia_mobile/data/remote/models.dart';
 import 'package:pulperia_mobile/data/session/session_store.dart';
 import 'package:pulperia_mobile/data/sync/sync_service.dart';
 
@@ -117,5 +119,27 @@ void main() {
 
       expect(c.read(localDataRevisionProvider), before);
     });
+  });
+
+  group('baja del negocio (RF-11)', () {
+    test(
+      'al perder el acceso se borran los datos, se sale del negocio y se avisa',
+      () async {
+        await insertClient(db, 'c-1', 'b-1');
+        api.failures['pull'] = const ApiException(403, 'forbidden');
+        api.businesses = [];
+        final c = await container();
+
+        await c.read(syncControllerProvider.notifier).request(SyncTrigger.open);
+
+        expect(await db.select(db.clients).get(), isEmpty);
+        expect(await db.select(db.businesses).get(), isEmpty);
+        final state = c.read(sessionControllerProvider).value;
+        expect(state, isA<SignedIn>());
+        expect((state! as SignedIn).active, isNull);
+        expect(store.session?.activeBusiness, isNull);
+        expect(c.read(removedBusinessProvider), 'Pulpería Ana');
+      },
+    );
   });
 }
