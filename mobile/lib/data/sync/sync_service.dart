@@ -425,6 +425,61 @@ class SyncService {
             ..orderBy([(o) => OrderingTerm.asc(o.localSeq)]))
           .get();
 
+  /// Descarta un cambio rechazado por el servidor (el usuario ya lo vio). Un
+  /// fiado o abono rechazado se borra del teléfono, porque el servidor nunca lo
+  /// tuvo y sumaría al saldo para siempre; un cliente o producto creado y
+  /// rechazado se borra si nada lo usa; en una edición rechazada se vuelve a
+  /// pedir al servidor su versión (cursor en cero). Devuelve false si no hay
+  /// un cambio rechazado con ese id: lo pendiente no se descarta.
+  Future<bool> discardRejected(String opId) => db.transaction(() async {
+    final op =
+        await (db.select(db.outboxOps)
+              ..where((o) => o.opId.equals(opId) & o.status.equals('rejected')))
+            .getSingleOrNull();
+    if (op == null) {
+      return false;
+    }
+    final business = op.businessId;
+    final entity = op.entityId;
+    switch (op.type) {
+      case 'fiado.create':
+        await (db.delete(
+          db.fiadoItems,
+        )..where((t) => t.fiadoId.equals(entity))).go();
+        await (db.delete(db.fiados)..where((t) => t.id.equals(entity))).go();
+      case 'payment.create':
+        await (db.delete(db.payments)..where((t) => t.id.equals(entity))).go();
+      case 'client.create':
+        final used =
+            (await (db.select(
+              db.fiados,
+            )..where((t) => t.clientId.equals(entity))).get()).isNotEmpty ||
+            (await (db.select(
+              db.payments,
+            )..where((t) => t.clientId.equals(entity))).get()).isNotEmpty;
+        if (!used) {
+          await (db.delete(db.clients)..where((t) => t.id.equals(entity))).go();
+        }
+      case 'product.create':
+        final used = (await (db.select(
+          db.fiadoItems,
+        )..where((t) => t.productId.equals(entity))).get()).isNotEmpty;
+        if (!used) {
+          await (db.delete(
+            db.products,
+          )..where((t) => t.id.equals(entity))).go();
+        }
+      default:
+        // Edición, archivado, restauración o anulación: la base local pudo
+        // quedar distinta de la del servidor, así que se vuelve a bajar.
+        await (db.update(db.syncStates)
+              ..where((t) => t.businessId.equals(business)))
+            .write(const SyncStatesCompanion(cursor: Value(0)));
+    }
+    await (db.delete(db.outboxOps)..where((o) => o.opId.equals(opId))).go();
+    return true;
+  });
+
   /// La siguiente tanda: las pendientes en orden de creación, hasta el tope.
   /// De varias ediciones seguidas sobre el mismo registro solo va la primera:
   /// las demás parten de una versión que el servidor decide si existió, así

@@ -239,6 +239,12 @@ abstract final class Strings {
   static const menu = 'Menú';
   static const switchBusiness = 'Cambiar de negocio';
   static const syncNow = 'Sincronizar ahora';
+  static const menuRejected = 'Cambios no aplicados';
+  static const rejectedTitle = 'Cambios no aplicados';
+  static const rejectedIntro =
+      'El servidor no aceptó estos cambios y no se vuelven a enviar solos. Puedes descartarlos.';
+  static const rejectedEmpty = 'No hay cambios sin aplicar.';
+  static const rejectedDiscard = 'Descartar';
   static const codeCopied = 'Código copiado';
   static const copyCode = 'Copiar código';
   static const inviteEmailOptional = 'Correo (opcional)';

@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' show TableUpdateQuery;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/sync/sync_service.dart';
+import '../data/local/app_database.dart';
 import 'providers.dart';
 import 'session_state.dart';
 
@@ -135,3 +136,19 @@ class RemovedBusiness extends Notifier<String?> {
 
   void set(String? name) => state = name;
 }
+
+/// Los cambios del negocio activo que el servidor rechazó, en orden de
+/// creación. Se actualiza sola cuando cambia la cola.
+final rejectedChangesProvider = StreamProvider<List<OutboxOp>>((ref) async* {
+  final db = ref.watch(appDatabaseProvider);
+  final businessId = ref.watch(activeBusinessIdProvider);
+  Future<List<OutboxOp>> load() =>
+      ref.read(syncServiceProvider).rejectedOperations(businessId);
+
+  yield await load();
+  await for (final _ in db.tableUpdates(
+    TableUpdateQuery.onTable(db.outboxOps),
+  )) {
+    yield await load();
+  }
+});
