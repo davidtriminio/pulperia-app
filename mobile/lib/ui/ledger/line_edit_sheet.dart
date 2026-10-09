@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/error_banner.dart';
 import '../../domain/business/amount_mode.dart';
 import '../../domain/business/quantity_mode.dart';
 import '../../domain/catalog/sale_unit.dart';
@@ -185,7 +186,7 @@ class _LineEditSheetState extends State<_LineEditSheet> {
                       labelText: Strings.fieldQuantity,
                       prefixIcon: const Icon(Icons.numbers),
                       suffixText: _unit.abbreviation,
-                      errorText: _quantityError,
+                      error: fieldError(_quantityError),
                       errorMaxLines: 3,
                     ),
                   ),
@@ -203,7 +204,7 @@ class _LineEditSheetState extends State<_LineEditSheet> {
                       labelText: Strings.fieldUnitPrice,
                       prefixIcon: const Icon(Icons.payments_outlined),
                       prefixText: 'L ',
-                      errorText: _priceError,
+                      error: fieldError(_priceError),
                       errorMaxLines: 3,
                     ),
                   ),

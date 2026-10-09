@@ -106,9 +106,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         inputFormatters: [LengthLimitingTextInputFormatter(254)],
         decoration: InputDecoration(
           labelText: Strings.fieldEmail,
-          errorText: _emailError == null
-              ? null
-              : accountErrorText(_emailError!),
+          error: fieldError(
+            _emailError == null ? null : accountErrorText(_emailError!),
+          ),
         ),
       ),
       const SizedBox(height: 14),
@@ -122,9 +122,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         decoration: InputDecoration(
           labelText: Strings.fieldPassword,
           helperText: Strings.passwordHint,
-          errorText: _passwordError == null
-              ? null
-              : accountErrorText(_passwordError!),
+          error: fieldError(
+            _passwordError == null ? null : accountErrorText(_passwordError!),
+          ),
           suffixIcon: IconButton(
             key: const ValueKey('auth-password-toggle'),
             tooltip: _showPassword
@@ -148,9 +148,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         inputFormatters: [LengthLimitingTextInputFormatter(InputLimits.name)],
         decoration: InputDecoration(
           labelText: Strings.fieldBusinessName,
-          errorText: _businessError == null
-              ? null
-              : accountErrorText(_businessError!),
+          error: fieldError(
+            _businessError == null ? null : accountErrorText(_businessError!),
+          ),
         ),
       ),
       const SizedBox(height: 20),

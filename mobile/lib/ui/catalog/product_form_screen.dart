@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../widgets/error_banner.dart';
 import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/product_repository.dart';
@@ -252,7 +253,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 labelText: Strings.fieldProductName,
-                errorText: _nameError,
+                error: fieldError(_nameError),
               ),
             ),
             const SizedBox(height: 12),
@@ -266,7 +267,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               decoration: InputDecoration(
                 labelText: Strings.fieldPrice,
                 prefixText: 'L ',
-                errorText: _priceError,
+                error: fieldError(_priceError),
               ),
             ),
             const SizedBox(height: 16),

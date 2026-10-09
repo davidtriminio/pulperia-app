@@ -82,9 +82,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         inputFormatters: [LengthLimitingTextInputFormatter(254)],
         decoration: InputDecoration(
           labelText: Strings.fieldEmail,
-          errorText: _emailError == null
-              ? null
-              : accountErrorText(_emailError!),
+          error: fieldError(
+            _emailError == null ? null : accountErrorText(_emailError!),
+          ),
         ),
       ),
       const SizedBox(height: 14),
@@ -98,9 +98,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         inputFormatters: [LengthLimitingTextInputFormatter(maxPasswordLength)],
         decoration: InputDecoration(
           labelText: Strings.fieldPassword,
-          errorText: _passwordError == null
-              ? null
-              : accountErrorText(_passwordError!),
+          error: fieldError(
+            _passwordError == null ? null : accountErrorText(_passwordError!),
+          ),
           suffixIcon: IconButton(
             key: const ValueKey('auth-password-toggle'),
             tooltip: _showPassword

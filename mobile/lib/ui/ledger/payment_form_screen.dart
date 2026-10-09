@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../widgets/error_banner.dart';
 import '../../app/providers.dart';
 import '../../data/repositories/payment_repository.dart';
 import '../../domain/business/amount_mode.dart';
@@ -198,7 +199,7 @@ class _PaymentFormScreenState extends ConsumerState<PaymentFormScreen> {
                   decoration: InputDecoration(
                     labelText: Strings.fieldPaymentAmount,
                     prefixText: 'L ',
-                    errorText: _error,
+                    error: fieldError(_error),
                     errorMaxLines: 3,
                   ),
                 ),

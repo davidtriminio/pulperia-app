@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../widgets/error_banner.dart';
 import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/fiado_repository.dart';
@@ -267,7 +268,7 @@ class _FiadoFormScreenState extends ConsumerState<FiadoFormScreen> {
                       decoration: InputDecoration(
                         labelText: Strings.fieldTotal,
                         prefixText: 'L ',
-                        errorText: _totalError,
+                        error: fieldError(_totalError),
                         errorMaxLines: 3,
                       ),
                     ),

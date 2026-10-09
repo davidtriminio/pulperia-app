@@ -6,6 +6,8 @@ import '../../domain/business/quantity_mode.dart';
 import '../../l10n/strings.dart';
 import '../theme.dart';
 
+export '../widgets/error_banner.dart';
+
 /// El texto en español de un error de validación de cuenta o negocio.
 String accountErrorText(AccountError error) => switch (error) {
   AccountError.emailRequired => Strings.emailRequired,
@@ -89,33 +91,6 @@ class AuthPage extends StatelessWidget {
       ),
     );
   }
-}
-
-/// El error de la acción (credenciales malas, sin conexión...) justo encima del
-/// botón, con el color de error de la app.
-class ErrorBanner extends StatelessWidget {
-  const ErrorBanner(this.text, {super.key});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: AppColors.debt.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: AppColors.debt.withValues(alpha: 0.5)),
-    ),
-    child: Row(
-      children: [
-        const Icon(Icons.error_outline, color: AppColors.debt),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(text, style: const TextStyle(color: AppColors.debt)),
-        ),
-      ],
-    ),
-  );
 }
 
 /// El botón principal de un formulario: mientras se trabaja se ve el progreso

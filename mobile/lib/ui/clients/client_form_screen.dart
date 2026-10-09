@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../widgets/error_banner.dart';
 import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/client_repository.dart';
@@ -242,12 +243,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
                 _avatar == null ? Strings.chooseAvatar : Strings.changeAvatar,
               ),
             ),
-            for (final message in avatarErrors)
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
+            if (avatarErrors.isNotEmpty) ErrorBanner.all(avatarErrors),
             const SizedBox(height: 16),
             TextField(
               key: const ValueKey('field-name'),
@@ -256,7 +252,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
                 labelText: Strings.fieldName,
-                errorText: _errors[ClientField.name],
+                error: fieldError(_errors[ClientField.name]),
               ),
             ),
             const SizedBox(height: 12),
@@ -267,7 +263,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 labelText: Strings.fieldPhone,
-                errorText: _errors[ClientField.phone],
+                error: fieldError(_errors[ClientField.phone]),
               ),
             ),
             const SizedBox(height: 12),
@@ -290,7 +286,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 labelText: Strings.fieldNote,
-                errorText: _errors[ClientField.note],
+                error: fieldError(_errors[ClientField.note]),
               ),
             ),
             Align(
