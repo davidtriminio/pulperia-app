@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/remote/models.dart';
 import '../data/session/session_store.dart';
 import '../domain/business/amount_mode.dart';
 import '../domain/business/quantity_mode.dart';
@@ -28,6 +29,7 @@ class SessionController extends AsyncNotifier<SessionState> {
         .read(sessionServiceProvider)
         .login(email, password);
     state = AsyncData(_stateOf(stored));
+    await _chooseOnlyBusiness();
   }
 
   /// Crea la cuenta con su primer negocio e inicia sesión (RF-1, RF-2, RF-78).
@@ -48,11 +50,87 @@ class SessionController extends AsyncNotifier<SessionState> {
           quantityMode: quantityMode,
         );
     state = AsyncData(_stateOf(stored));
+    await _chooseOnlyBusiness();
   }
 
   /// Cierra la sesión de este teléfono.
   Future<void> logout() async {
     await ref.read(sessionServiceProvider).logout();
     state = const AsyncData(SignedOut());
+  }
+
+  SignedIn get _signedIn => switch (state.value) {
+    final SignedIn current => current,
+    _ => throw StateError('No hay sesión iniciada'),
+  };
+
+  /// Los negocios del usuario (RF-5): los del servidor si hay red, y si no los
+  /// guardados en el teléfono. Con red, además, pone al día el negocio activo
+  /// (nombre, rol, modos) y lo quita si el usuario ya no pertenece a él.
+  Future<List<RemoteBusiness>> loadBusinesses() async {
+    final service = ref.read(businessServiceProvider);
+    final List<RemoteBusiness> list;
+    try {
+      list = await service.refresh();
+    } on NetworkException {
+      return service.local();
+    }
+    await _reconcileActive(list);
+    return list;
+  }
+
+  /// Elige el negocio con el que trabajar (RF-6). Todo lo que se muestra y se
+  /// escribe pasa a ser de ese negocio.
+  Future<void> chooseBusiness(RemoteBusiness business) async {
+    await ref.read(businessServiceProvider).select(business);
+    state = AsyncData(_withActive(business));
+  }
+
+  /// Crea un negocio adicional (RF-79) y lo elige. Requiere conexión.
+  Future<void> createBusiness({
+    required String name,
+    required AmountMode amountMode,
+    required QuantityMode quantityMode,
+  }) async {
+    final created = await ref
+        .read(businessServiceProvider)
+        .create(name: name, amountMode: amountMode, quantityMode: quantityMode);
+    await chooseBusiness(created);
+  }
+
+  SessionState _withActive(RemoteBusiness? business) {
+    final current = _signedIn;
+    return SignedIn(
+      userId: current.userId,
+      email: current.email,
+      active: business,
+    );
+  }
+
+  Future<void> _reconcileActive(List<RemoteBusiness> list) async {
+    final active = _signedIn.active;
+    if (active == null) {
+      return;
+    }
+    final fresh = list.where((b) => b.id == active.id).firstOrNull;
+    if (fresh == null) {
+      await ref.read(sessionServiceProvider).saveActiveBusiness(null);
+      state = AsyncData(_withActive(null));
+    } else if (fresh.toJson().toString() != active.toJson().toString()) {
+      await chooseBusiness(fresh);
+    }
+  }
+
+  /// Si el usuario tiene un solo negocio no hace falta preguntarle cuál. Si no
+  /// se puede saber (sin red), la pantalla de elección lo resuelve después.
+  Future<void> _chooseOnlyBusiness() async {
+    try {
+      final list = await loadBusinesses();
+      if (list.length == 1 && _signedIn.active == null) {
+        await chooseBusiness(list.single);
+      }
+    } on Object {
+      // Se queda sin negocio elegido; la pantalla de elección lo carga.
+    }
   }
 }

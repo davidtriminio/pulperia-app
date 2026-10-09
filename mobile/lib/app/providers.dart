@@ -11,6 +11,7 @@ import '../data/repositories/payment_repository.dart';
 import '../data/repositories/product_repository.dart';
 import '../data/repositories/summary_queries.dart';
 import '../data/remote/api_client.dart';
+import '../data/session/business_service.dart';
 import '../data/session/session_service.dart';
 import '../data/session/session_store.dart';
 import '../domain/access/access.dart';
@@ -70,6 +71,15 @@ final sessionServiceProvider = Provider<SessionService>(
   (ref) => SessionService(
     api: ref.watch(pulperiaApiProvider),
     store: ref.watch(sessionStoreProvider),
+    now: ref.watch(clockProvider),
+  ),
+);
+
+final businessServiceProvider = Provider<BusinessService>(
+  (ref) => BusinessService(
+    sessions: ref.watch(sessionServiceProvider),
+    api: ref.watch(pulperiaApiProvider),
+    db: ref.watch(appDatabaseProvider),
     now: ref.watch(clockProvider),
   ),
 );
