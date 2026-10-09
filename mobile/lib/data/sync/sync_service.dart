@@ -6,6 +6,7 @@ import '../local/app_database.dart';
 import '../remote/api_client.dart';
 import '../remote/models.dart';
 import '../session/session_service.dart';
+import 'change_applier.dart';
 
 /// Hay cambios hechos en este teléfono que aún no llegaron al servidor, así
 /// que no se puede cerrar la sesión: otro usuario los enviaría con su nombre
@@ -32,6 +33,14 @@ final class PushReport {
 
   /// De las rechazadas, las que fueron por conflicto de versión (RF-55).
   final int conflicts;
+}
+
+/// Lo que pasó al recibir los cambios del servidor.
+final class PullReport {
+  const PullReport({this.received = 0});
+
+  /// Cuántos registros entregó el servidor.
+  final int received;
 }
 
 /// La sincronización de un negocio con el servidor (plan, sección 4): envía la
@@ -121,6 +130,56 @@ class SyncService {
       }
     }
     return PushReport(sent: sent, rejected: rejected, conflicts: conflicts);
+  }
+
+  /// Recibe los cambios de los demás dispositivos desde el cursor guardado
+  /// (RF-52): pide todas las páginas y las aplica juntas, con el cursor nuevo,
+  /// en una sola transacción (todo o nada). Con cursor cero es la descarga
+  /// inicial (RF-58).
+  ///
+  /// Si algo falla antes de aplicar, no queda nada a medias y el cursor no
+  /// avanza; la excepción sube a quien llamó.
+  Future<PullReport> pullChanges(String businessId, {int? pageSize}) async {
+    final start = await _cursorOf(businessId);
+    final changes = <RemoteChange>[];
+    var cursor = start;
+    while (true) {
+      final page = await api.pull(
+        await sessions.accessToken(),
+        businessId,
+        cursor: cursor,
+        limit: pageSize,
+      );
+      changes.addAll(page.changes);
+      if (page.hasMore && page.cursor <= cursor) {
+        // Un servidor que promete más sin avanzar nos dejaría dando vueltas.
+        throw const ApiException(200, ApiException.invalidResponse);
+      }
+      cursor = page.cursor;
+      if (!page.hasMore) {
+        break;
+      }
+    }
+
+    await db.transaction(() async {
+      await ChangeApplier(db).apply(businessId, changes);
+      await db
+          .into(db.syncStates)
+          .insertOnConflictUpdate(
+            SyncStatesCompanion.insert(
+              businessId: businessId,
+              cursor: Value(cursor),
+            ),
+          );
+    });
+    return PullReport(received: changes.length);
+  }
+
+  Future<int> _cursorOf(String businessId) async {
+    final row = await (db.select(
+      db.syncStates,
+    )..where((s) => s.businessId.equals(businessId))).getSingleOrNull();
+    return row?.cursor ?? 0;
   }
 
   Future<List<OutboxOp>> _nextBatch(String businessId) =>
