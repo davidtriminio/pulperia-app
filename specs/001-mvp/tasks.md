@@ -196,7 +196,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T096** Indicador de cambios sin sincronizar. RF: 57. *Hecho cuando:* se muestra con operaciones pendientes y desaparece al vaciarse la cola.
 - [x] **T097** Token de renovación caducado sin conexión. RF: 4; D-10. *Hecho cuando:* la app sigue usable, la cola se conserva y se pide iniciar sesión solo para sincronizar.
 - [x] **T098** Baja del negocio: borrar sus datos locales tras el último lote. RF: 11, 12. *Hecho cuando:* tras la baja no queda ningún dato de ese negocio en el dispositivo.
-- [ ] **T099** Prueba de extremo a extremo con dos dispositivos simulados. RF: 47, 54, 85. *Hecho cuando:* fiados concurrentes, anulación con abono y fiado a cliente archivado terminan con el mismo saldo en ambos.
+- [x] **T099** Prueba de extremo a extremo con dos dispositivos simulados. RF: 47, 54, 85. *Hecho cuando:* fiados concurrentes, anulación con abono y fiado a cliente archivado terminan con el mismo saldo en ambos.
 
 ## Fase 9 — Interfaz del móvil (resto)
 Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.

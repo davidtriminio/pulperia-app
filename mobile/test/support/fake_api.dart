@@ -94,7 +94,7 @@ class FakeApi implements PulperiaApi {
   /// Resultado de cada operación del lote; null (o sin función) es "aplicada".
   OperationResult? Function(PushOperation op)? pushResult;
 
-  void _enter(String name) {
+  void enter(String name) {
     calls.add(name);
     if (offline) {
       throw const NetworkException('sin red');
@@ -128,7 +128,7 @@ class FakeApi implements PulperiaApi {
     required AmountMode amountMode,
     required QuantityMode quantityMode,
   }) async {
-    _enter('register');
+    enter('register');
     passwords[email] = password;
     businesses = [
       ...businesses,
@@ -145,7 +145,7 @@ class FakeApi implements PulperiaApi {
 
   @override
   Future<ApiTokens> login(String email, String password) async {
-    _enter('login');
+    enter('login');
     if (passwords.isNotEmpty && passwords[email] != password) {
       throw const ApiException(401, 'invalid_credentials', [
         'invalid_credentials',
@@ -156,18 +156,18 @@ class FakeApi implements PulperiaApi {
 
   @override
   Future<ApiTokens> refresh(String refreshToken) async {
-    _enter('refresh');
+    enter('refresh');
     return _newTokens();
   }
 
   @override
   Future<void> logout(String accessToken) async {
-    _enter('logout');
+    enter('logout');
   }
 
   @override
   Future<List<RemoteBusiness>> listBusinesses(String accessToken) async {
-    _enter('listBusinesses');
+    enter('listBusinesses');
     return List.of(businesses);
   }
 
@@ -178,7 +178,7 @@ class FakeApi implements PulperiaApi {
     required AmountMode amountMode,
     required QuantityMode quantityMode,
   }) async {
-    _enter('createBusiness');
+    enter('createBusiness');
     final business = RemoteBusiness(
       id: 'b-${businesses.length + 1}',
       name: name,
@@ -196,7 +196,7 @@ class FakeApi implements PulperiaApi {
     String businessId,
     List<PushOperation> operations,
   ) async {
-    _enter('push');
+    enter('push');
     pushed.add(operations);
     return [
       for (final o in operations)
@@ -212,7 +212,7 @@ class FakeApi implements PulperiaApi {
     required int cursor,
     int? limit,
   }) async {
-    _enter('pull');
+    enter('pull');
     pulledFrom.add(cursor);
     final after = serverChanges.where((c) => c.seq > cursor).toList()
       ..sort((a, b) => a.seq.compareTo(b.seq));
