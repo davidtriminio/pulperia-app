@@ -185,7 +185,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 
 ## Fase 8 — Sesión y sincronización del móvil
 - [x] **T087** Cliente HTTP y modelos del contrato. RF: —. Dep: T086. *Hecho cuando:* tests contra respuestas de ejemplo del contrato.
-- [ ] **T088** Sesión: registro, inicio de sesión y token en almacenamiento seguro. RF: 1, 2, 3, 78. *Hecho cuando:* la sesión sobrevive a reiniciar la app, sin conexión falla el primer inicio con mensaje en español y se elimina la sesión simulada de T040a.
+- [x] **T088** Sesión: registro, inicio de sesión y token en almacenamiento seguro. RF: 1, 2, 3, 78. *Hecho cuando:* la sesión sobrevive a reiniciar la app, sin conexión falla el primer inicio con mensaje en español y se elimina la sesión simulada de T040a.
 - [ ] **T089** Negocios del usuario: listar, elegir y cambiar el activo. RF: 5, 6, 79. *Hecho cuando:* los datos mostrados corresponden siempre al negocio activo.
 - [ ] **T090** Envío de la cola. RF: 52, 53, 56. *Hecho cuando:* aplicadas y duplicadas salen de la cola y rechazadas quedan visibles con su código.
 - [ ] **T091** Recepción de cambios por cursor. RF: 52. *Hecho cuando:* aplicar dos veces la misma página no duplica nada.

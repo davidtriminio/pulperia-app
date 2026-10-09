@@ -172,4 +172,19 @@ abstract final class Strings {
   static const summaryTopDebtors = 'Mayores deudores';
   static const summaryNoDebtors = 'Nadie debe nada por ahora';
   static const catalogEmpty = 'Aún no hay productos';
+
+  // Sesión y errores de la API (T088; el recorrido completo de códigos es T120).
+  static const errorOffline =
+      'Sin conexión. Conéctate a internet para continuar.';
+  static const errorUnexpected = 'Algo salió mal. Inténtalo de nuevo.';
+  static const errorInvalidCredentials = 'Correo o contraseña incorrectos';
+  static const errorEmailTaken = 'Ya existe una cuenta con ese correo';
+  static const errorEmailInvalid = 'El correo no es válido';
+  static const errorPasswordTooShort = 'La contraseña es muy corta';
+  static const errorPasswordTooLong = 'La contraseña es muy larga';
+  static const errorBusinessNameRequired =
+      'El nombre del negocio es obligatorio';
+  static const errorSessionExpired =
+      'Tu sesión terminó. Inicia sesión de nuevo.';
+  static const signInRequired = 'Inicia sesión para continuar';
 }

@@ -5,6 +5,7 @@ import 'package:pulperia_mobile/app.dart';
 import 'package:pulperia_mobile/app/providers.dart';
 
 import '../support/db_fixtures.dart';
+import '../support/dev_session.dart';
 
 void main() {
   testWidgets('los textos propios de Flutter salen en español', (tester) async {
@@ -13,7 +14,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          activeSessionProvider.overrideWithValue(devSessionFor()!),
+        ],
         child: const PulperiaApp(),
       ),
     );

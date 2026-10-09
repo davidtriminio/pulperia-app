@@ -34,6 +34,14 @@ final class ApiTokens {
   final DateTime accessExpiresAt;
   final String refreshToken;
   final DateTime refreshExpiresAt;
+
+  Map<String, dynamic> toJson() => {
+    'userId': userId,
+    'accessToken': accessToken,
+    'accessExpiresAt': accessExpiresAt.toUtc().toIso8601String(),
+    'refreshToken': refreshToken,
+    'refreshExpiresAt': refreshExpiresAt.toUtc().toIso8601String(),
+  };
 }
 
 /// Lo que devuelve el registro: no trae tokens, hay que iniciar sesión después.
@@ -73,6 +81,14 @@ final class RemoteBusiness {
   final Role role;
   final AmountMode amountMode;
   final QuantityMode quantityMode;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'role': role.id,
+    'amountMode': amountMode.id,
+    'quantityMode': quantityMode.id,
+  };
 }
 
 /// Una operación de la cola tal como viaja en un lote (plan 4.1).

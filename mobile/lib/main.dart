@@ -5,13 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
 import 'app/providers.dart';
 import 'data/local/app_database.dart';
-import 'dev/dev_session.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final db = AppDatabase(driftDatabase(name: 'pulperia'));
-  // Solo en depuración: negocio y usuario de prueba hasta la sesión real (T088).
-  await seedDevSession(db, devSessionFor());
   runApp(
     ProviderScope(
       overrides: [appDatabaseProvider.overrideWithValue(db)],
