@@ -43,6 +43,18 @@ final class PullReport {
   final int received;
 }
 
+/// El resultado de una vuelta de sincronización.
+final class SyncReport {
+  const SyncReport({required this.push, required this.pull});
+
+  final PushReport push;
+  final PullReport pull;
+
+  /// ¿Cambió algo en la base local que la pantalla deba volver a leer?
+  bool get changedLocalData =>
+      push.sent > 0 || push.rejected > 0 || pull.received > 0;
+}
+
 /// La sincronización de un negocio con el servidor (plan, sección 4): envía la
 /// cola de cambios locales por lotes y recibe los cambios de los demás por
 /// cursor. No conoce la interfaz ni Riverpod.
@@ -59,6 +71,18 @@ class SyncService {
   final SessionService sessions;
   final PulperiaApi api;
   final AppDatabase db;
+
+  /// Una vuelta completa de sincronización de un negocio: primero envía lo
+  /// pendiente y después recibe lo de los demás, para que una edición local
+  /// rechazada por conflicto ya encuentre la versión del servidor al recibir
+  /// (RF-55). En un dispositivo nuevo la cola está vacía y el cursor en cero,
+  /// así que esto es la descarga inicial (RF-58). Si algo falla, la
+  /// excepción sube y la cola queda como estaba (RF-56).
+  Future<SyncReport> sync(String businessId) async {
+    final push = await pushPending(businessId);
+    final pull = await pullChanges(businessId);
+    return SyncReport(push: push, pull: pull);
+  }
 
   /// Operaciones pendientes de enviar (RF-57): las de un negocio, o las de
   /// todos si no se indica. Las rechazadas no cuentan: ya no se reenvían.
