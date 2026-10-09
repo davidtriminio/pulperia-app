@@ -54,6 +54,12 @@ class SessionController extends AsyncNotifier<SessionState> {
     await _chooseOnlyBusiness();
   }
 
+  /// Vuelve a entrar con la contraseña cuando la sesión caducó sin conexión
+  /// (D-10); no cierra nada ni toca la cola.
+  Future<void> reauthenticate(String password) async {
+    await ref.read(sessionServiceProvider).reauthenticate(password);
+  }
+
   /// Cierra la sesión de este teléfono. Con cambios sin enviar no se puede:
   /// otro usuario los enviaría con su nombre, así que primero hay que
   /// sincronizar (lanza [PendingChangesException] con cuántos faltan).

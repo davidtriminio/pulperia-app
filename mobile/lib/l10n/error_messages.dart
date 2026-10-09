@@ -8,6 +8,7 @@ import 'strings.dart';
 String errorMessage(Object error) => switch (error) {
   NetworkException() => Strings.errorOffline,
   SessionExpiredException() => Strings.errorSessionExpired,
+  WrongAccountException() => Strings.errorWrongAccount,
   ApiException(:final code) => _byCode[code] ?? Strings.errorUnexpected,
   _ => Strings.errorUnexpected,
 };

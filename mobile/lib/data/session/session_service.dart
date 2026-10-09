@@ -13,6 +13,14 @@ class SessionExpiredException implements Exception {
   String toString() => 'SessionExpiredException';
 }
 
+/// Se intentó volver a entrar con una cuenta distinta de la del teléfono.
+class WrongAccountException implements Exception {
+  const WrongAccountException();
+
+  @override
+  String toString() => 'WrongAccountException';
+}
+
 /// La sesión del usuario en este teléfono: registrarse, iniciar y cerrar sesión
 /// y mantener el token de acceso vigente. No conoce la interfaz ni Riverpod.
 class SessionService {
@@ -64,6 +72,24 @@ class SessionService {
     );
     await _store.write(session);
     return session;
+  }
+
+  /// Vuelve a entrar con la contraseña cuando el token de renovación caducó
+  /// sin conexión (D-10): reemplaza los tokens y conserva el negocio activo y
+  /// todo lo demás del teléfono, incluida la cola. Solo vale para el mismo
+  /// usuario: otro enviaría los cambios pendientes con su nombre.
+  Future<StoredSession> reauthenticate(String password) async {
+    final session = await _store.read();
+    if (session == null) {
+      throw const SessionExpiredException();
+    }
+    final tokens = await _api.login(session.email, password);
+    if (tokens.userId != session.userId) {
+      throw const WrongAccountException();
+    }
+    final renewed = session.copyWith(tokens: tokens);
+    await _store.write(renewed);
+    return renewed;
   }
 
   /// Cierra la sesión. Avisa al servidor si puede, pero la sesión del teléfono

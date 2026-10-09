@@ -143,6 +143,9 @@ class SyncService {
     } on NetworkException {
       return const SyncFailed(SyncFailure.network);
     } on ApiException catch (e) {
+      if (e.status == 401) {
+        return const SyncFailed(SyncFailure.sessionExpired);
+      }
       // Un 5xx, un tiempo agotado o una respuesta que no es el contrato son
       // del servidor y pasan solos; lo demás (403, 401...) es que no nos deja.
       final transient =
