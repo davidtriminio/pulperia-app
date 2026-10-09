@@ -191,7 +191,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T091** Recepción de cambios por cursor. RF: 52. *Hecho cuando:* aplicar dos veces la misma página no duplica nada.
 - [x] **T092** Descarga inicial en dispositivo nuevo. RF: 58. *Hecho cuando:* un dispositivo vacío queda con los mismos datos del negocio.
 - [x] **T093** Conflicto de versión: descartar la edición local y avisar. RF: 55. *Hecho cuando:* tras un rechazo por conflicto el registro local queda como el del servidor y se registra el aviso.
-- [ ] **T094** Fallo de red o de servidor conserva la cola y reintenta. RF: 56. *Hecho cuando:* tras un fallo simulado, las operaciones siguen pendientes y se envían luego.
+- [x] **T094** Fallo de red o de servidor conserva la cola y reintenta. RF: 56. *Hecho cuando:* tras un fallo simulado, las operaciones siguen pendientes y se envían luego.
 - [ ] **T095** Disparadores de sincronización: al abrir, al recuperar conexión y manual. RF: 52. *Hecho cuando:* cada disparador inicia exactamente una sincronización.
 - [ ] **T096** Indicador de cambios sin sincronizar. RF: 57. *Hecho cuando:* se muestra con operaciones pendientes y desaparece al vaciarse la cola.
 - [ ] **T097** Token de renovación caducado sin conexión. RF: 4; D-10. *Hecho cuando:* la app sigue usable, la cola se conserva y se pide iniciar sesión solo para sincronizar.

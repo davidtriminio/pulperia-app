@@ -55,11 +55,61 @@ final class SyncReport {
       push.sent > 0 || push.rejected > 0 || pull.received > 0;
 }
 
+/// Cómo terminó un intento de sincronizar.
+sealed class SyncOutcome {
+  const SyncOutcome();
+}
+
+final class SyncSucceeded extends SyncOutcome {
+  const SyncSucceeded(this.report);
+
+  final SyncReport report;
+}
+
+/// Por qué no se pudo sincronizar.
+enum SyncFailure {
+  /// Sin conexión o sin respuesta a tiempo.
+  network,
+
+  /// El servidor falló o respondió algo ilegible: se reintenta más tarde.
+  server,
+
+  /// El servidor no admite la petición (sin permiso, negocio dado de baja...).
+  refused,
+
+  /// No hay sesión utilizable: hay que iniciar sesión para sincronizar (D-10).
+  sessionExpired,
+}
+
+final class SyncFailed extends SyncOutcome {
+  const SyncFailed(this.reason, {this.code});
+
+  final SyncFailure reason;
+
+  /// El código del servidor, cuando lo hubo.
+  final String? code;
+
+  /// ¿Tiene sentido volver a intentarlo sin que el usuario haga nada?
+  bool get retryable =>
+      reason == SyncFailure.network || reason == SyncFailure.server;
+}
+
 /// La sincronización de un negocio con el servidor (plan, sección 4): envía la
 /// cola de cambios locales por lotes y recibe los cambios de los demás por
 /// cursor. No conoce la interfaz ni Riverpod.
 class SyncService {
-  SyncService({required this.sessions, required this.api, required this.db});
+  SyncService({
+    required this.sessions,
+    required this.api,
+    required this.db,
+    Future<void> Function(Duration)? wait,
+  }) : _wait = wait ?? Future<void>.delayed;
+
+  /// Esperas entre un intento y el siguiente cuando falla la red o el
+  /// servidor (RF-56): son los reintentos que se hacen en la misma
+  /// sincronización; si todos fallan, se vuelve a intentar con el siguiente
+  /// disparador (al abrir, al recuperar conexión, a mano).
+  static const retryDelays = [Duration(seconds: 2), Duration(seconds: 6)];
 
   /// El servidor rechaza lotes de más operaciones que esto (`batch_too_large`).
   static const maxBatch = 500;
@@ -71,6 +121,56 @@ class SyncService {
   final SessionService sessions;
   final PulperiaApi api;
   final AppDatabase db;
+  final Future<void> Function(Duration) _wait;
+
+  final Map<String, Future<SyncOutcome>> _running = {};
+
+  /// Una vuelta de sincronización que no lanza: cualquier fallo se devuelve
+  /// como [SyncFailed], con la cola intacta (RF-56). Si ya hay una vuelta en
+  /// marcha para ese negocio se comparte su resultado en vez de empezar otra.
+  Future<SyncOutcome> attempt(String businessId) =>
+      _running[businessId] ??= _attempt(businessId).whenComplete(() {
+        // Sin devolver el valor de `remove`: `whenComplete` esperaría a esa
+        // misma vuelta y no terminaría nunca.
+        _running.remove(businessId);
+      });
+
+  Future<SyncOutcome> _attempt(String businessId) async {
+    try {
+      return SyncSucceeded(await sync(businessId));
+    } on SessionExpiredException {
+      return const SyncFailed(SyncFailure.sessionExpired);
+    } on NetworkException {
+      return const SyncFailed(SyncFailure.network);
+    } on ApiException catch (e) {
+      // Un 5xx, un tiempo agotado o una respuesta que no es el contrato son
+      // del servidor y pasan solos; lo demás (403, 401...) es que no nos deja.
+      final transient =
+          e.status >= 500 ||
+          e.status == 408 ||
+          e.status == 429 ||
+          e.code == ApiException.invalidResponse ||
+          e.code == ApiException.unexpectedResponse;
+      return transient
+          ? SyncFailed(SyncFailure.server, code: e.code)
+          : SyncFailed(SyncFailure.refused, code: e.code);
+    }
+  }
+
+  /// Como [attempt], pero si falla la red o el servidor espera un poco y
+  /// vuelve a intentar, hasta agotar [retryDelays]. Lo que no se arregla
+  /// reintentando (sesión caducada, petición rechazada) no se reintenta.
+  Future<SyncOutcome> syncWithRetries(String businessId) async {
+    var outcome = await attempt(businessId);
+    for (final delay in retryDelays) {
+      if (outcome is! SyncFailed || !outcome.retryable) {
+        break;
+      }
+      await _wait(delay);
+      outcome = await attempt(businessId);
+    }
+    return outcome;
+  }
 
   /// Una vuelta completa de sincronización de un negocio: primero envía lo
   /// pendiente y después recibe lo de los demás, para que una edición local
