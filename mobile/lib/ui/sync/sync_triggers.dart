@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../app/sync_controller.dart';
+import '../../l10n/strings.dart';
 
 /// Pone en marcha la sincronización del negocio activo: al abrirlo y cada vez
 /// que se recupera la conexión (RF-52). El disparo manual está en el menú.
@@ -36,6 +37,16 @@ class _SyncTriggersState extends ConsumerState<SyncTriggers> {
       // Solo el paso de sin conexión a con conexión.
       if (previous?.value == false && next.value == true) {
         _request(SyncTrigger.reconnect);
+      }
+    });
+    ref.listen(syncControllerProvider, (previous, next) {
+      if (next.conflicts > 0 && !identical(previous?.last, next.last)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            key: const ValueKey('sync-conflicts'),
+            content: Text(Strings.conflictsDiscarded(next.conflicts)),
+          ),
+        );
       }
     });
     ref.listen(activeBusinessIdProvider, (previous, next) {

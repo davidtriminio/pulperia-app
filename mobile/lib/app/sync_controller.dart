@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:drift/drift.dart' show TableUpdateQuery;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/sync/sync_service.dart';
@@ -94,3 +95,22 @@ final onlineProvider = StreamProvider<bool>(
     (results) => results.any((r) => r != ConnectivityResult.none),
   ),
 );
+
+/// Cuántos cambios del negocio activo faltan por enviar (RF-57). Se actualiza
+/// sola cuando cambia la cola, tanto al guardar algo como al sincronizar.
+///
+/// Escucha los avisos de cambio de la tabla en vez de una consulta observada
+/// de Drift: así no deja temporizadores pendientes al cerrarse en los tests.
+final pendingChangesProvider = StreamProvider<int>((ref) async* {
+  final db = ref.watch(appDatabaseProvider);
+  final businessId = ref.watch(activeBusinessIdProvider);
+  Future<int> count() =>
+      ref.read(syncServiceProvider).pendingCount(businessId: businessId);
+
+  yield await count();
+  await for (final _ in db.tableUpdates(
+    TableUpdateQuery.onTable(db.outboxOps),
+  )) {
+    yield await count();
+  }
+});
