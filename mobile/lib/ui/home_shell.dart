@@ -12,6 +12,7 @@ import 'business/team_screen.dart';
 import 'catalog/catalog_screen.dart';
 import 'clients/clients_screen.dart';
 import 'summary/summary_screen.dart';
+import 'sync/rejected_changes_screen.dart';
 import 'sync/sync_indicator.dart';
 import 'sync/sync_triggers.dart';
 
@@ -24,7 +25,7 @@ class HomeShell extends ConsumerStatefulWidget {
   ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-enum _MenuAction { syncNow, settings, team, switchBusiness, logout }
+enum _MenuAction { syncNow, rejected, settings, team, switchBusiness, logout }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
@@ -33,6 +34,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   Widget build(BuildContext context) {
     final business = ref.watch(activeBusinessProvider);
     final role = ref.watch(activeUserProvider).role;
+    final hasRejected =
+        (ref.watch(rejectedChangesProvider).value ?? const []).isNotEmpty;
     return Scaffold(
       appBar: AppBar(
         title: Text(business.maybeWhen(data: (b) => b.name, orElse: () => '')),
@@ -46,6 +49,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 ref
                     .read(syncControllerProvider.notifier)
                     .request(SyncTrigger.manual),
+              _MenuAction.rejected => Navigator.of(context).push<void>(
+                MaterialPageRoute(
+                  builder: (_) => const RejectedChangesScreen(),
+                ),
+              ),
               _MenuAction.settings => Navigator.of(context).push<void>(
                 MaterialPageRoute(
                   builder: (_) => const BusinessSettingsScreen(),
@@ -67,6 +75,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 value: _MenuAction.syncNow,
                 child: Text(Strings.syncNow),
               ),
+              if (hasRejected)
+                const PopupMenuItem(
+                  key: ValueKey('menu-rejected'),
+                  value: _MenuAction.rejected,
+                  child: Text(Strings.menuRejected),
+                ),
               if (can(role, Permission.manageTeam))
                 const PopupMenuItem(
                   key: ValueKey('menu-team'),
