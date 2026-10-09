@@ -18,6 +18,8 @@ internal static class QueryEndpoints
         clients.MapGet("", ListClientsAsync);
         clients.MapGet("/{id:guid}", GetClientAsync);
 
+        app.MapGet("/api/summary", SummaryAsync).RequireBusiness().RequirePermission(Permission.ViewSummary);
+
         // Ver el catálogo no tiene permiso propio: todo miembro lo necesita para fiar (RF-48).
         app.MapGet("/api/products", ListProductsAsync).RequireBusiness();
     }
@@ -81,6 +83,34 @@ internal static class QueryEndpoints
             movement["items"] = e.Items.Select(EntityJson.Item).ToList();
         }
         return movement;
+    }
+
+    /// <summary>
+    /// <c>GET /api/summary?limit=N</c>: deuda total, saldo a favor total y los clientes que más deben
+    /// (RF-63 a RF-65). Sin <c>limit</c> trae a todos; con él, solo los N mayores.
+    /// </summary>
+    private static async Task<IResult> SummaryAsync(HttpContext context, PulperiaDbContext db)
+    {
+        int? limit = null;
+        var text = context.Request.Query["limit"].ToString();
+        if (text.Length > 0)
+        {
+            if (!int.TryParse(text, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var parsed) || parsed <= 0)
+            {
+                return Http.InvalidRequest();
+            }
+            limit = parsed;
+        }
+
+        var summary = await CreateService(db, context.GetActiveBusiness().BusinessId).SummaryAsync(limit, context.RequestAborted);
+        return Results.Json(
+            new
+            {
+                debtTotal = summary.DebtTotal.MinorUnits,
+                creditTotal = summary.CreditTotal.MinorUnits,
+                debtors = summary.Debtors.Select(d => new { clientId = d.ClientId, name = d.Name, debt = d.Debt.MinorUnits }).ToList(),
+            },
+            Http.Json);
     }
 
     private static async Task<IResult> ListProductsAsync(HttpContext context, PulperiaDbContext db)
