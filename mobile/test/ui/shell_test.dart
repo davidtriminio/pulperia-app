@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/app.dart';
 import 'package:pulperia_mobile/app/providers.dart';
 import 'package:pulperia_mobile/data/local/app_database.dart';
-import 'package:pulperia_mobile/dev/dev_session.dart';
+
+import '../support/dev_session.dart';
+
 import 'package:pulperia_mobile/l10n/strings.dart';
 
 import '../support/db_fixtures.dart';
@@ -21,14 +23,21 @@ void main() {
     );
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          sessionStoreProvider.overrideWithValue(devSignedInStore()),
+        ],
         child: const PulperiaApp(),
       ),
     );
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 100)),
-    );
-    await tester.pump();
+    // Dos vueltas: primero la sesión se restaura y se arma la pantalla de trabajo;
+    // luego esa pantalla lee el negocio activo de la base.
+    for (var i = 0; i < 2; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+    }
   }
 
   Iterable<String> visibleTexts(WidgetTester tester) => tester

@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 
 import '../data/ids.dart';
 import '../data/local/app_database.dart';
@@ -8,8 +10,12 @@ import '../data/repositories/ledger_queries.dart';
 import '../data/repositories/payment_repository.dart';
 import '../data/repositories/product_repository.dart';
 import '../data/repositories/summary_queries.dart';
-import '../dev/dev_session.dart';
+import '../data/remote/api_client.dart';
+import '../data/session/session_service.dart';
+import '../data/session/session_store.dart';
 import '../domain/access/access.dart';
+import 'session_controller.dart';
+import 'session_state.dart';
 
 /// La base local. No tiene valor por omisión: `main` (o un test) la abre y la
 /// sobrescribe, para no abrir una base vacía por accidente.
@@ -26,14 +32,71 @@ final clockProvider = Provider<DateTime Function()>(
       () => DateTime.now().toUtc(),
 );
 
-/// Sesión activa. Hasta la sesión real (T088) es la simulada de depuración;
-/// en modo release no hay ninguna y la app no puede arrancar sin ella.
-final activeSessionProvider = Provider<DevSession>((ref) {
-  final session = devSessionFor();
-  if (session == null) {
-    throw StateError('No hay sesión: la sesión real llega con T088');
+/// Dirección del servidor. Se fija al compilar con
+/// `--dart-define=API_BASE_URL=https://...`. En depuración, sin ella, se usa la
+/// API local vista desde el emulador de Android; una compilación de producción
+/// exige definirla (D-31).
+final apiBaseUrlProvider = Provider<Uri>((ref) {
+  const configured = String.fromEnvironment('API_BASE_URL');
+  if (configured.isNotEmpty) {
+    return Uri.parse(configured);
   }
-  return session;
+  if (kDebugMode) {
+    return Uri.parse('http://10.0.2.2:5109');
+  }
+  throw StateError('Falta --dart-define=API_BASE_URL');
+});
+
+final httpClientProvider = Provider<http.Client>((ref) {
+  final client = http.Client();
+  ref.onDispose(client.close);
+  return client;
+});
+
+/// El servidor (D-17). Los tests lo sobrescriben con uno falso.
+final pulperiaApiProvider = Provider<PulperiaApi>(
+  (ref) => HttpPulperiaApi(
+    ref.watch(httpClientProvider),
+    baseUrl: ref.watch(apiBaseUrlProvider),
+  ),
+);
+
+/// Dónde se guarda la sesión: el almacenamiento seguro del sistema (D-31).
+final sessionStoreProvider = Provider<SessionStore>(
+  (ref) => SecureSessionStore(),
+);
+
+final sessionServiceProvider = Provider<SessionService>(
+  (ref) => SessionService(
+    api: ref.watch(pulperiaApiProvider),
+    store: ref.watch(sessionStoreProvider),
+    now: ref.watch(clockProvider),
+  ),
+);
+
+/// La sesión de este teléfono (RF-3).
+final sessionControllerProvider =
+    AsyncNotifierProvider<SessionController, SessionState>(
+      SessionController.new,
+    );
+
+/// Usuario, negocio y rol con los que se trabaja. Solo existe con sesión
+/// iniciada y un negocio elegido; la interfaz solo construye pantallas de
+/// trabajo en ese caso.
+final activeSessionProvider = Provider<ActiveSession>((ref) {
+  final state = ref.watch(sessionControllerProvider).value;
+  final active = state is SignedIn ? state.active : null;
+  if (state is! SignedIn || active == null) {
+    throw StateError('No hay sesión con un negocio elegido');
+  }
+  return ActiveSession(
+    businessId: active.id,
+    businessName: active.name,
+    userId: state.userId,
+    role: active.role,
+    amountMode: active.amountMode,
+    quantityMode: active.quantityMode,
+  );
 });
 
 /// Usuario activo y su rol en el negocio activo.

@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/app/providers.dart';
 import 'package:pulperia_mobile/data/local/app_database.dart';
-import 'package:pulperia_mobile/dev/dev_session.dart';
+
+import '../../support/dev_session.dart';
+
 import 'package:pulperia_mobile/ui/catalog/catalog_screen.dart';
 import 'package:pulperia_mobile/ui/format/date_format.dart';
 import 'package:pulperia_mobile/ui/theme.dart';
@@ -58,7 +60,10 @@ void main() {
     });
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          activeSessionProvider.overrideWithValue(devSessionFor()!),
+        ],
         child: MaterialApp(
           theme: buildTheme(),
           locale: const Locale('es'),

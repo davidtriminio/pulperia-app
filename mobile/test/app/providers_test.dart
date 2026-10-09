@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/app/providers.dart';
 import 'package:pulperia_mobile/data/local/app_database.dart';
 import 'package:pulperia_mobile/data/repositories/client_repository.dart';
-import 'package:pulperia_mobile/dev/dev_session.dart';
+
+import '../support/dev_session.dart';
+
 import 'package:pulperia_mobile/domain/access/access.dart';
 import 'package:pulperia_mobile/domain/client/client_validation.dart';
 
@@ -24,7 +26,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          activeSessionProvider.overrideWithValue(devSessionFor()!),
+        ],
         child: MaterialApp(
           home: Consumer(
             builder: (context, ref, _) {
@@ -57,7 +62,10 @@ void main() {
 
   test('el usuario activo es el dueño de la sesión de prueba', () {
     final container = ProviderContainer(
-      overrides: [appDatabaseProvider.overrideWithValue(db)],
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        activeSessionProvider.overrideWithValue(devSessionFor()!),
+      ],
     );
     addTearDown(container.dispose);
 
@@ -78,7 +86,10 @@ void main() {
     final session = devSessionFor(isRelease: false)!;
     await seedDevSession(db, session);
     final container = ProviderContainer(
-      overrides: [appDatabaseProvider.overrideWithValue(db)],
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        activeSessionProvider.overrideWithValue(devSessionFor()!),
+      ],
     );
     addTearDown(container.dispose);
 

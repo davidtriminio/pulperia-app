@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/app/providers.dart';
 import 'package:pulperia_mobile/data/local/app_database.dart';
-import 'package:pulperia_mobile/dev/dev_session.dart';
+
+import '../../support/dev_session.dart';
+
 import 'package:pulperia_mobile/domain/access/access.dart';
 import 'package:pulperia_mobile/ui/clients/client_detail_screen.dart';
 import 'package:pulperia_mobile/ui/theme.dart';
