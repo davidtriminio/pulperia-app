@@ -15,6 +15,10 @@ abstract final class AppColors {
 
   /// Lo que el cliente debe.
   static const debt = Color(0xFFC62828);
+  static const debtDark = Color(0xFF9F1D1D);
+
+  /// Fondo de los avisos de error.
+  static const debtSoft = Color(0xFFFDECEC);
 
   /// Saldo a favor del cliente.
   static const credit = Color(0xFF0B7A70);

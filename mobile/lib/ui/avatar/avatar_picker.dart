@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/error_banner.dart';
 import '../../domain/avatar/avatar.dart';
 import '../../l10n/strings.dart';
 import '../theme.dart';
@@ -347,7 +348,6 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return SafeArea(
       top: false,
       child: Padding(
@@ -358,24 +358,7 @@ class _Footer extends StatelessWidget {
             if (hint != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 18,
-                      color: theme.colorScheme.error,
-                    ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        hint!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: theme.colorScheme.error),
-                      ),
-                    ),
-                  ],
-                ),
+                child: ErrorBanner(hint!),
               ),
             Row(
               children: [

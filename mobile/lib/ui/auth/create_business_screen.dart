@@ -100,7 +100,9 @@ class _CreateBusinessViewState extends ConsumerState<CreateBusinessView> {
         inputFormatters: [LengthLimitingTextInputFormatter(InputLimits.name)],
         decoration: InputDecoration(
           labelText: Strings.fieldBusinessName,
-          errorText: _nameError == null ? null : accountErrorText(_nameError!),
+          error: fieldError(
+            _nameError == null ? null : accountErrorText(_nameError!),
+          ),
         ),
       ),
       const SizedBox(height: 20),

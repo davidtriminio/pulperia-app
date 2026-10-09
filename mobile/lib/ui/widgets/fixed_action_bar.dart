@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import 'error_banner.dart';
 
 /// Barra inferior fija de los formularios de movimientos: a la izquierda el
 /// total (o el monto) y a la derecha el botón de registrar. Va en el
@@ -47,11 +48,9 @@ class FixedActionBar extends StatelessWidget {
               if (errorText != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    errorText!,
+                  child: KeyedSubtree(
                     key: errorKey,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: theme.colorScheme.error),
+                    child: ErrorBanner(errorText!),
                   ),
                 ),
               Row(
