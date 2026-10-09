@@ -1,0 +1,27 @@
+{
+  "description": "Negocios del usuario con su rol (GET /api/businesses y las respuestas de crear, aceptar y canjear).",
+  "cases": [
+    {
+      "name": "negocio donde el usuario es dueño, con montos de dos decimales y cantidades fraccionarias",
+      "schema": "BusinessSummary",
+      "example": {
+        "id": "0198a000-0000-7000-8000-000000000002",
+        "name": "Pulpería Ana",
+        "role": "owner",
+        "amountMode": "two_decimals",
+        "quantityMode": "fractional"
+      }
+    },
+    {
+      "name": "negocio donde el usuario es empleado, con montos y cantidades enteros",
+      "schema": "BusinessSummary",
+      "example": {
+        "id": "0198a000-0000-7000-8000-000000000003",
+        "name": "Abarrotes Beto",
+        "role": "employee",
+        "amountMode": "integer",
+        "quantityMode": "integer"
+      }
+    }
+  ]
+}
