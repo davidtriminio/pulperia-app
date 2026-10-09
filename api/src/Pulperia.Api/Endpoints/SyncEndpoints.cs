@@ -25,6 +25,9 @@ internal static class SyncEndpoints
         var sync = app.MapGroup("/api/sync").RequireBusinessCaller();
         sync.MapPost("/push", PushAsync);
         sync.MapGet("/pull", PullAsync);
+
+        // La web envía de una en una (D-4); solo quien es miembro activo: su último lote es cosa del móvil.
+        app.MapPost("/api/operations", OperationAsync).RequireBusiness();
     }
 
     /// <summary>Un servicio de sincronización limitado al negocio de la petición (RNF-6).</summary>
@@ -66,6 +69,25 @@ internal static class SyncEndpoints
         return result.IsSuccess
             ? Results.Json(new { results = result.Value!.Select(Json) }, Http.Json)
             : Failure(result.Codes);
+    }
+
+    /// <summary>
+    /// <c>POST /api/operations</c>: una operación de la web, aplicada con las mismas reglas y la misma
+    /// idempotencia que las del móvil (RF-59, RF-60). Responde con su resultado, igual que cada
+    /// elemento de <c>results</c> del lote. Sin <c>createdAt</c> toma la hora del servidor.
+    /// </summary>
+    private static async Task<IResult> OperationAsync(HttpContext context, PulperiaDbContext db, TimeProvider clock)
+    {
+        var active = context.GetActiveBusiness();
+        if (await Http.ReadBodyAsync<OperationBody>(context) is not { OpId: { } opId, EntityId: { } entityId } body
+            || opId == Guid.Empty || string.IsNullOrWhiteSpace(body.Type))
+        {
+            return Http.InvalidRequest();
+        }
+
+        var operation = new Operation(opId, body.Type, entityId, body.Payload, body.BaseVersion, body.CreatedAt ?? clock.GetUtcNow());
+        var result = await CreateService(db, clock, active.BusinessId).PushAsync(active.UserId, [operation], context.RequestAborted);
+        return result.IsSuccess ? Results.Json(Json(result.Value![0]), Http.Json) : Failure(result.Codes);
     }
 
     /// <summary>
