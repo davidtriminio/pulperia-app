@@ -145,6 +145,27 @@ class SyncService {
                   errorCode: Value(code),
                 ),
               );
+              if (code == versionConflict) {
+                // Las ediciones seguidas sobre ese registro partían de la
+                // descartada: también se descartan, sin enviarlas.
+                final chained =
+                    await (db.update(db.outboxOps)..where(
+                          (o) =>
+                              o.businessId.equals(businessId) &
+                              o.entityId.equals(op.entityId) &
+                              o.status.equals('pending') &
+                              o.localSeq.isBiggerThanValue(op.localSeq) &
+                              o.baseVersion.isNotNull(),
+                        ))
+                        .write(
+                          const OutboxOpsCompanion(
+                            status: Value('rejected'),
+                            errorCode: Value(versionConflict),
+                          ),
+                        );
+                rejected += chained;
+                conflicts += chained;
+              }
           }
         }
       });
@@ -206,15 +227,45 @@ class SyncService {
     return row?.cursor ?? 0;
   }
 
-  Future<List<OutboxOp>> _nextBatch(String businessId) =>
+  /// Las operaciones rechazadas del negocio, en orden de creación: lo que el
+  /// usuario debe saber que no se aplicó (el código dice por qué; por
+  /// ejemplo, `version_conflict` es una edición descartada, RF-55).
+  Future<List<OutboxOp>> rejectedOperations(String businessId) =>
       (db.select(db.outboxOps)
             ..where(
               (o) =>
-                  o.businessId.equals(businessId) & o.status.equals('pending'),
+                  o.businessId.equals(businessId) & o.status.equals('rejected'),
             )
-            ..orderBy([(o) => OrderingTerm.asc(o.localSeq)])
-            ..limit(maxBatch))
+            ..orderBy([(o) => OrderingTerm.asc(o.localSeq)]))
           .get();
+
+  /// La siguiente tanda: las pendientes en orden de creación, hasta el tope.
+  /// De varias ediciones seguidas sobre el mismo registro solo va la primera:
+  /// las demás parten de una versión que el servidor decide si existió, así
+  /// que esperan a la siguiente tanda (o se descartan si hubo conflicto).
+  Future<List<OutboxOp>> _nextBatch(String businessId) async {
+    final pending =
+        await (db.select(db.outboxOps)
+              ..where(
+                (o) =>
+                    o.businessId.equals(businessId) &
+                    o.status.equals('pending'),
+              )
+              ..orderBy([(o) => OrderingTerm.asc(o.localSeq)]))
+            .get();
+    final editing = <String>{};
+    final batch = <OutboxOp>[];
+    for (final op in pending) {
+      if (op.baseVersion != null && !editing.add(op.entityId)) {
+        continue;
+      }
+      batch.add(op);
+      if (batch.length == maxBatch) {
+        break;
+      }
+    }
+    return batch;
+  }
 
   PushOperation _toPush(OutboxOp op) => PushOperation(
     opId: op.opId,
