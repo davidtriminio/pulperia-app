@@ -72,10 +72,23 @@ public sealed class EfSyncStore : ISyncStore
         await LoadAsync(latest, ChangeEntityType.Fiado, ids => LoadFiadosAsync(ids, cancellationToken), records);
         await LoadAsync(latest, ChangeEntityType.Payment, ids => LoadPaymentsAsync(ids, cancellationToken), records);
 
+        // Los movimientos llevan además su orden de llegada, que no es el de su último cambio si se anularon.
+        var arrivals = new Dictionary<(ChangeEntityType, Guid), long>();
+        foreach (var type in new[] { ChangeEntityType.Fiado, ChangeEntityType.Payment })
+        {
+            var ids = latest.Where(r => r.EntityType == type).Select(r => r.EntityId).ToArray();
+            foreach (var (id, seq) in await ChangeSeqs.FirstAsync(_db, type, ids, cancellationToken))
+            {
+                arrivals[(type, id)] = seq;
+            }
+        }
+
         return new ChangePage(
             rows[^1].Seq,
             hasMore,
-            latest.Select(r => new ChangeEntry(r.Seq, r.EntityType, records[(r.EntityType, r.EntityId)])).ToList());
+            latest.Select(r => new ChangeEntry(
+                r.Seq, r.EntityType, records[(r.EntityType, r.EntityId)],
+                arrivals.TryGetValue((r.EntityType, r.EntityId), out var arrival) ? arrival : null)).ToList());
     }
 
     private static async Task LoadAsync(

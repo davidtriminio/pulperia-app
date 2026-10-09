@@ -113,7 +113,7 @@ internal static class SyncEndpoints
                 {
                     cursor = result.Value!.Cursor,
                     hasMore = result.Value.HasMore,
-                    changes = result.Value.Changes.Select(c => new { seq = c.Seq, type = c.Type.Id(), entity = Entity(c.Record) }),
+                    changes = result.Value.Changes.Select(c => new { seq = c.Seq, type = c.Type.Id(), entity = EntityJson.Of(c) }),
                 },
                 Http.Json)
             : Failure(result.Codes);
@@ -134,38 +134,6 @@ internal static class SyncEndpoints
         value = parsed;
         return true;
     }
-
-    private static object Entity(object record) => record switch
-    {
-        ClientRecord c => new
-        {
-            id = c.Id, name = c.Name, characterId = c.CharacterId, skinId = c.SkinId, backgroundId = c.BackgroundId,
-            phone = c.Phone, address = c.Address, note = c.Note, archived = c.Archived, version = c.Version,
-            createdBy = c.CreatedBy, createdAt = c.CreatedAt, updatedAt = c.UpdatedAt,
-        },
-        ProductRecord p => new
-        {
-            id = p.Id, name = p.Name, price = p.Price.MinorUnits, unit = p.Unit.Id(),
-            previousPrice = p.PreviousPrice?.MinorUnits, priceChangedAt = p.PriceChangedAt, archived = p.Archived,
-            version = p.Version, createdBy = p.CreatedBy, createdAt = p.CreatedAt,
-        },
-        FiadoRecord f => new
-        {
-            id = f.Id, clientId = f.ClientId, total = f.Total.MinorUnits, occurredAt = f.OccurredAt,
-            createdBy = f.CreatedBy, annulledAt = f.AnnulledAt, annulledBy = f.AnnulledBy,
-            items = f.Items.Select(i => new
-            {
-                id = i.Id, productId = i.ProductId, description = i.Description, quantity = i.Quantity.Milli,
-                unit = i.Unit.Id(), unitPrice = i.UnitPrice.MinorUnits, subtotal = i.Subtotal.MinorUnits,
-            }),
-        },
-        PaymentRecord p => new
-        {
-            id = p.Id, clientId = p.ClientId, amount = p.Amount.MinorUnits, occurredAt = p.OccurredAt,
-            createdBy = p.CreatedBy, annulledAt = p.AnnulledAt, annulledBy = p.AnnulledBy,
-        },
-        _ => throw new ArgumentOutOfRangeException(nameof(record)),
-    };
 
     private static object Json(OperationOutcome outcome) => outcome.Status switch
     {

@@ -179,7 +179,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T081** Empleado removido: último lote y revocación. RF: 11, 12. *Hecho cuando:* su primer envío tras la baja se acepta, el siguiente se rechaza, y no hay límite de tiempo.
 - [x] **T082** Prueba de fiado a cliente archivado por otro dispositivo. RF: 85. *Hecho cuando:* el fiado se acepta y el cliente sigue archivado con el saldo actualizado.
 - [x] **T083** Endpoint de operación individual para la web. RF: 59, 60. *Hecho cuando:* una operación enviada se aplica y devuelve su resultado al instante.
-- [ ] **T084** Consultas de lectura: clientes con saldo, historial, archivados, productos. RF: 22, 41, 42, 59. *Hecho cuando:* cada consulta respeta el aislamiento del negocio.
+- [x] **T084** Consultas de lectura: clientes con saldo, historial, archivados, productos. RF: 22, 41, 42, 59. *Hecho cuando:* cada consulta respeta el aislamiento del negocio.
 - [ ] **T085** Consulta del resumen. RF: 63, 64, 65. Dep: T047. *Hecho cuando:* pasan los vectores de resumen desde el servidor.
 - [ ] **T086** Contrato OpenAPI en `shared/`. RF: —; D-17. *Hecho cuando:* una prueba verifica que las respuestas reales coinciden con el contrato.
 

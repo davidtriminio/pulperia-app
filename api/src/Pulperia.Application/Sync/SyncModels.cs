@@ -46,7 +46,8 @@ public sealed record SyncMembership(Role Role, MembershipStatus Status, bool Fin
 /// <c>ClientRecord</c>, <c>ProductRecord</c>, <c>FiadoRecord</c> o <c>PaymentRecord</c> según el tipo.
 /// </summary>
 /// <param name="Seq">El <c>seq</c> del último cambio de ese registro dentro de la página.</param>
-public sealed record ChangeEntry(long Seq, Pulperia.Domain.Sync.ChangeEntityType Type, object Record);
+/// <param name="ArrivalSeq">En fiados y abonos, el <c>seq</c> de su creación: el orden de llegada que desempata el historial (D-18).</param>
+public sealed record ChangeEntry(long Seq, Pulperia.Domain.Sync.ChangeEntityType Type, object Record, long? ArrivalSeq = null);
 
 /// <summary>Una página de cambios: el cursor a pedir después y si hay más páginas.</summary>
 public sealed record ChangePage(long Cursor, bool HasMore, IReadOnlyList<ChangeEntry> Changes);
