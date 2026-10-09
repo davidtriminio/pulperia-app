@@ -5,6 +5,9 @@ import 'package:pulperia_mobile/app.dart';
 import 'package:pulperia_mobile/app/providers.dart';
 import 'package:pulperia_mobile/data/local/app_database.dart';
 import 'package:pulperia_mobile/data/remote/models.dart';
+import 'package:pulperia_mobile/domain/access/access.dart';
+import 'package:pulperia_mobile/domain/business/amount_mode.dart';
+import 'package:pulperia_mobile/domain/business/quantity_mode.dart';
 import 'package:pulperia_mobile/l10n/error_messages.dart';
 import 'package:pulperia_mobile/l10n/strings.dart';
 
@@ -158,6 +161,61 @@ void main() {
         find.text(errorMessageForCode('invitation_not_pending')!),
         findsOne,
       );
+    });
+  });
+
+  group('canjear un código (RF-93, RF-94)', () {
+    const business = RemoteBusiness(
+      id: 'b-9',
+      name: 'Abarrotes Cata',
+      role: Role.employee,
+      amountMode: AmountMode.integer,
+      quantityMode: QuantityMode.integer,
+    );
+
+    Future<void> openRedeem(WidgetTester tester) async {
+      api.businesses = [remoteBusiness('b-1', name: 'Pulpería Beto')];
+      api.offers = const [offer];
+      await signIn(tester);
+      await tapKey(tester, 'business-redeem');
+    }
+
+    testWidgets('un código bien escrito agrega el negocio', (tester) async {
+      api.redeemable = {'K7M2PX9Q': business};
+      await openRedeem(tester);
+
+      // En minúsculas y con guion.
+      await tester.enterText(key('redeem-code'), 'k7m2-px9q');
+      await tester.pump();
+      await tapKey(tester, 'redeem-send');
+
+      expect(key('business-tile-b-9'), findsOne);
+      expect(key('redeem-code'), findsNothing);
+    });
+
+    testWidgets('un código inválido muestra el mismo mensaje en español', (
+      tester,
+    ) async {
+      await openRedeem(tester);
+
+      await tester.enterText(key('redeem-code'), 'ZZZZ-ZZZZ');
+      await tester.pump();
+      await tapKey(tester, 'redeem-send');
+
+      expect(
+        find.text(errorMessageForCode('invalid_invitation_code')!),
+        findsOne,
+      );
+      expect(key('redeem-code'), findsOne);
+    });
+
+    testWidgets('sin escribir nada no llama al servidor', (tester) async {
+      await openRedeem(tester);
+
+      await tapKey(tester, 'redeem-send');
+
+      expect(find.text(Strings.codeRequired), findsOne);
+      expect(api.count('redeemInvitationCode'), 0);
     });
   });
 }

@@ -239,6 +239,18 @@ abstract final class Strings {
   static const menu = 'Menú';
   static const switchBusiness = 'Cambiar de negocio';
   static const syncNow = 'Sincronizar ahora';
+  static const codeCopied = 'Código copiado';
+  static const copyCode = 'Copiar código';
+  static const inviteEmailOptional = 'Correo (opcional)';
+  static const inviteHelp =
+      'Sin correo, la persona entra escribiendo el código de la invitación.';
+  static const redeemAction = 'Tengo un código';
+  static const redeemTitle = 'Entrar con un código';
+  static const redeemHint =
+      'Escribe el código que te dio el dueño del negocio.';
+  static const redeemSend = 'Entrar al negocio';
+  static const fieldCode = 'Código';
+  static const codeRequired = 'Escribe el código';
   static const invitedTo = 'Te invitaron a unirte a';
   static const acceptInvitation = 'Aceptar';
   static const rejectInvitation = 'Rechazar';

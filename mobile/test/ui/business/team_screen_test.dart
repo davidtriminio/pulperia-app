@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/app.dart';
@@ -203,6 +204,73 @@ void main() {
       await tapKey(tester, 'team-retry');
 
       expect(find.text('beto@correo.com'), findsOne);
+    });
+  });
+
+  group('código de invitación (RF-92)', () {
+    testWidgets('invitar sin correo crea una invitación solo por código', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await openTeam(tester);
+
+      await tapKey(tester, 'team-invite');
+      await tapKey(tester, 'invite-send');
+
+      expect(api.businessInvitations.single.email, isNull);
+      expect(find.text(Strings.codeOnlyInvitation), findsOne);
+      expect(find.text('CODE-0001'), findsOne);
+    });
+
+    testWidgets('la invitación con correo también muestra su código', (
+      tester,
+    ) async {
+      api.businessInvitations = const [
+        BusinessInvitation(
+          id: 'inv-9',
+          email: 'dina@correo.com',
+          code: 'K7M2PX9Q',
+          status: InvitationStatus.pending,
+        ),
+      ];
+      await pumpApp(tester);
+      await openTeam(tester);
+
+      expect(find.text('K7M2-PX9Q'), findsOne);
+    });
+
+    testWidgets('copiar el código lo deja en el portapapeles', (tester) async {
+      api.businessInvitations = const [
+        BusinessInvitation(
+          id: 'inv-9',
+          email: null,
+          code: 'K7M2PX9Q',
+          status: InvitationStatus.pending,
+        ),
+      ];
+      String? copied;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied = (call.arguments as Map)['text'] as String?;
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await pumpApp(tester);
+      await openTeam(tester);
+
+      await tapKey(tester, 'invitation-copy-inv-9');
+
+      expect(copied, 'K7M2-PX9Q');
+      expect(find.text(Strings.codeCopied), findsOne);
     });
   });
 

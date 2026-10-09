@@ -166,6 +166,16 @@ class SessionController extends AsyncNotifier<SessionState> {
     return business;
   }
 
+  /// Entra a un negocio con el código de una invitación (RF-93). El negocio
+  /// queda en la lista del usuario como empleado.
+  Future<RemoteBusiness> redeemInvitationCode(String code) async {
+    final business = await ref.read(managementServiceProvider).redeem(code);
+    await ref
+        .read(businessServiceProvider)
+        .remember(_signedIn.userId, business);
+    return business;
+  }
+
   Future<void> rejectInvitation(String invitationId) =>
       ref.read(managementServiceProvider).reject(invitationId);
 

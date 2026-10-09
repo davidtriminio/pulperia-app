@@ -12,6 +12,7 @@ import '../theme.dart';
 import 'auth_widgets.dart';
 import 'create_business_screen.dart';
 import 'logout.dart';
+import 'redeem_dialog.dart';
 
 /// Elegir el negocio con el que se trabaja (RF-5, RF-6) y crear otro (RF-79).
 /// Es la pantalla que sigue al inicio de sesión cuando hay varios negocios (o
@@ -84,6 +85,16 @@ class _BusinessChooserScreenState extends ConsumerState<BusinessChooserScreen> {
       if (mounted) {
         setState(() => _error = errorMessage(e));
       }
+    }
+  }
+
+  Future<void> _redeem() async {
+    final redeemed = await showDialog<bool>(
+      context: context,
+      builder: (_) => const RedeemCodeDialog(),
+    );
+    if (redeemed == true && mounted) {
+      _reload();
     }
   }
 
@@ -195,6 +206,17 @@ class _BusinessChooserScreenState extends ConsumerState<BusinessChooserScreen> {
           ErrorBanner(_error!),
         ],
         const SizedBox(height: 12),
+        OutlinedButton.icon(
+          key: const ValueKey('business-redeem'),
+          onPressed: _redeem,
+          icon: const Icon(Icons.vpn_key_outlined),
+          label: const Text(Strings.redeemAction),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            shape: const StadiumBorder(),
+          ),
+        ),
+        const SizedBox(height: 10),
         OutlinedButton.icon(
           key: const ValueKey('business-create'),
           onPressed: () => setState(() => _creating = true),

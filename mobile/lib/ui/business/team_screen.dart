@@ -124,6 +124,18 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
     );
   }
 
+  /// Deja el código en el portapapeles, para pegarlo donde el dueño quiera
+  /// (WhatsApp, mensaje...).
+  Future<void> _copyCode(BusinessInvitation invitation) async {
+    await Clipboard.setData(
+      ClipboardData(text: formatInvitationCode(invitation.code)),
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text(Strings.codeCopied)));
+    }
+  }
+
   Future<void> _invite() async {
     final sent = await showDialog<bool>(
       context: context,
@@ -208,6 +220,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
                 _InvitationTile(
                   invitation: invitation,
                   onCancel: () => _cancelInvitation(invitation),
+                  onCopy: () => _copyCode(invitation),
                 ),
             ],
           );
@@ -304,10 +317,15 @@ class _MemberTile extends StatelessWidget {
 }
 
 class _InvitationTile extends StatelessWidget {
-  const _InvitationTile({required this.invitation, required this.onCancel});
+  const _InvitationTile({
+    required this.invitation,
+    required this.onCancel,
+    required this.onCopy,
+  });
 
   final BusinessInvitation invitation;
   final VoidCallback onCancel;
+  final VoidCallback onCopy;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -319,7 +337,28 @@ class _InvitationTile extends StatelessWidget {
         invitation.email ?? Strings.codeOnlyInvitation,
         overflow: TextOverflow.ellipsis,
       ),
-      subtitle: const Text(Strings.invitationPending),
+      subtitle: Row(
+        children: [
+          Flexible(
+            child: Text(
+              formatInvitationCode(invitation.code),
+              key: ValueKey('invitation-code-${invitation.id}'),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: AppColors.navy,
+              ),
+            ),
+          ),
+          IconButton(
+            key: ValueKey('invitation-copy-${invitation.id}'),
+            tooltip: Strings.copyCode,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.copy_outlined, size: 20),
+            onPressed: onCopy,
+          ),
+        ],
+      ),
       trailing: IconButton(
         key: ValueKey('invitation-cancel-${invitation.id}'),
         tooltip: Strings.cancelInvitation,
@@ -354,7 +393,9 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
     if (_busy) {
       return;
     }
-    final emailError = validateEmail(_email.text);
+    final typed = _email.text.trim();
+    // Sin correo la invitación es solo por código (RF-92).
+    final emailError = typed.isEmpty ? null : validateEmail(typed);
     setState(() {
       _emailError = emailError;
       _error = null;
@@ -368,7 +409,7 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
           .read(managementServiceProvider)
           .invite(
             ref.read(activeBusinessIdProvider),
-            email: _email.text.trim().toLowerCase(),
+            email: typed.isEmpty ? null : typed.toLowerCase(),
           );
       if (mounted) {
         Navigator.of(context).pop(true);
@@ -400,7 +441,9 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
             onSubmitted: (_) => _send(),
             inputFormatters: [LengthLimitingTextInputFormatter(254)],
             decoration: InputDecoration(
-              labelText: Strings.fieldEmail,
+              labelText: Strings.inviteEmailOptional,
+              helperText: Strings.inviteHelp,
+              helperMaxLines: 3,
               error: fieldError(
                 _emailError == null ? null : accountErrorText(_emailError!),
               ),
@@ -440,3 +483,7 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
     ],
   );
 }
+
+/// El código se muestra como XXXX-XXXX (D-28).
+String formatInvitationCode(String code) =>
+    code.length == 8 ? '${code.substring(0, 4)}-${code.substring(4)}' : code;
