@@ -44,6 +44,7 @@ public static class ApiHost
         app.MapBusinessEndpoints();
         app.MapManagementEndpoints();
         app.MapSyncEndpoints();
+        app.MapQueryEndpoints();
         return app;
     }
 
