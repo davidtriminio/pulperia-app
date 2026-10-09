@@ -31,6 +31,7 @@ class BusinessChooserScreen extends ConsumerStatefulWidget {
 
 class _BusinessChooserScreenState extends ConsumerState<BusinessChooserScreen> {
   late Future<List<RemoteBusiness>> _businesses;
+  late Future<List<InvitationOffer>> _offers;
   String? _error;
   bool _creating = false;
 
@@ -38,14 +39,37 @@ class _BusinessChooserScreenState extends ConsumerState<BusinessChooserScreen> {
   void initState() {
     super.initState();
     _businesses = _load();
+    _offers = _loadOffers();
+  }
+
+  Future<List<InvitationOffer>> _loadOffers() =>
+      ref.read(sessionControllerProvider.notifier).receivedInvitations();
+
+  Future<void> _answer(InvitationOffer offer, {required bool accept}) async {
+    final controller = ref.read(sessionControllerProvider.notifier);
+    setState(() => _error = null);
+    try {
+      if (accept) {
+        await controller.acceptInvitation(offer.id);
+      } else {
+        await controller.rejectInvitation(offer.id);
+      }
+    } on Object catch (e) {
+      if (mounted) {
+        setState(() => _error = errorMessage(e));
+      }
+    }
+    if (mounted) {
+      _reload();
+    }
   }
 
   Future<List<RemoteBusiness>> _load() =>
       ref.read(sessionControllerProvider.notifier).loadBusinesses();
 
   void _reload() => setState(() {
-    _error = null;
     _businesses = _load();
+    _offers = _loadOffers();
   });
 
   Future<void> _choose(RemoteBusiness business) async {
@@ -102,6 +126,30 @@ class _BusinessChooserScreenState extends ConsumerState<BusinessChooserScreen> {
           ),
           const SizedBox(height: 12),
         ],
+        FutureBuilder<List<InvitationOffer>>(
+          future: _offers,
+          builder: (context, snapshot) {
+            final offers = snapshot.data ?? const <InvitationOffer>[];
+            if (offers.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final offer in offers)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _OfferTile(
+                      offer: offer,
+                      onAccept: () => _answer(offer, accept: true),
+                      onReject: () => _answer(offer, accept: false),
+                    ),
+                  ),
+                const SizedBox(height: 4),
+              ],
+            );
+          },
+        ),
         FutureBuilder<List<RemoteBusiness>>(
           future: _businesses,
           builder: (context, snapshot) {
@@ -257,6 +305,66 @@ class _BusinessTile extends StatelessWidget {
                 const Icon(Icons.chevron_right),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Una invitación recibida: aceptarla agrega el negocio como empleado
+/// (RF-68); rechazarla la descarta.
+class _OfferTile extends StatelessWidget {
+  const _OfferTile({
+    required this.offer,
+    required this.onAccept,
+    required this.onReject,
+  });
+
+  final InvitationOffer offer;
+  final VoidCallback onAccept;
+  final VoidCallback onReject;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      key: ValueKey('offer-${offer.id}'),
+      color: AppColors.turquoise.withValues(alpha: 0.15),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(Strings.invitedTo, style: theme.textTheme.bodySmall),
+            const SizedBox(height: 2),
+            Text(
+              offer.businessName,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    key: ValueKey('offer-accept-${offer.id}'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                    ),
+                    onPressed: onAccept,
+                    child: const Text(Strings.acceptInvitation),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  key: ValueKey('offer-reject-${offer.id}'),
+                  onPressed: onReject,
+                  child: const Text(Strings.rejectInvitation),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -124,7 +124,12 @@ void main() {
           );
 
       expect(c.read(sessionControllerProvider).value, isA<SignedIn>());
-      expect(api.calls, ['register', 'login', 'listBusinesses']);
+      expect(api.calls, [
+        'register',
+        'login',
+        'listBusinesses',
+        'listInvitations',
+      ]);
     });
 
     test(
