@@ -27,7 +27,9 @@ class ConfirmDialog extends StatelessWidget {
   final String title;
   final String body;
   final String confirmLabel;
-  final String cancelLabel;
+
+  /// Null oculta el botón de cancelar (aviso con una sola salida).
+  final String? cancelLabel;
   final Key? confirmKey;
   final Key? cancelKey;
 
@@ -85,13 +87,15 @@ class ConfirmDialog extends StatelessWidget {
                   child: Text(extraLabel!),
                 ),
               ],
-              const SizedBox(height: 4),
-              TextButton(
-                key: cancelKey,
-                onPressed: () =>
-                    Navigator.of(context).pop(ConfirmChoice.cancel),
-                child: Text(cancelLabel),
-              ),
+              if (cancelLabel != null) ...[
+                const SizedBox(height: 4),
+                TextButton(
+                  key: cancelKey,
+                  onPressed: () =>
+                      Navigator.of(context).pop(ConfirmChoice.cancel),
+                  child: Text(cancelLabel!),
+                ),
+              ],
             ],
           ),
         ),
@@ -108,7 +112,7 @@ Future<bool> showConfirmDialog(
   required String title,
   required String body,
   required String confirmLabel,
-  required String cancelLabel,
+  required String? cancelLabel,
   Key? confirmKey,
   Key? cancelKey,
 }) async {
@@ -133,7 +137,7 @@ Future<ConfirmChoice> showChoiceDialog(
   required String title,
   required String body,
   required String confirmLabel,
-  required String cancelLabel,
+  required String? cancelLabel,
   Key? confirmKey,
   Key? cancelKey,
   String? extraLabel,

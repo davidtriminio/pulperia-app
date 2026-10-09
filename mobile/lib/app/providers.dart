@@ -14,6 +14,7 @@ import '../data/remote/api_client.dart';
 import '../data/session/business_service.dart';
 import '../data/session/session_service.dart';
 import '../data/session/session_store.dart';
+import '../data/sync/sync_service.dart';
 import '../domain/access/access.dart';
 import 'session_controller.dart';
 import 'session_state.dart';
@@ -72,6 +73,15 @@ final sessionServiceProvider = Provider<SessionService>(
     api: ref.watch(pulperiaApiProvider),
     store: ref.watch(sessionStoreProvider),
     now: ref.watch(clockProvider),
+  ),
+);
+
+/// La sincronización con el servidor (plan, sección 4).
+final syncServiceProvider = Provider<SyncService>(
+  (ref) => SyncService(
+    sessions: ref.watch(sessionServiceProvider),
+    api: ref.watch(pulperiaApiProvider),
+    db: ref.watch(appDatabaseProvider),
   ),
 );
 

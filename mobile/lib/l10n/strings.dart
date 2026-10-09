@@ -240,6 +240,13 @@ abstract final class Strings {
   static const switchBusiness = 'Cambiar de negocio';
   static const logout = 'Cerrar sesión';
   static const logoutConfirmTitle = '¿Cerrar sesión?';
-  static const logoutConfirmBody =
-      'Los cambios sin enviar se conservan en este teléfono. Para volver a entrar necesitarás conexión.';
+  static const logoutConfirmBody = 'Para volver a entrar necesitarás conexión.';
+
+  static const logoutBlockedTitle = 'Hay cambios sin enviar';
+  static String logoutBlockedBody(int count) =>
+      'Tienes $count ${count == 1 ? 'cambio sin enviar' : 'cambios sin enviar'} '
+      'al servidor. '
+      'Sincroniza antes de cerrar sesión: si otra persona entra en este '
+      'teléfono, quedarían a su nombre.';
+  static const understood = 'Entendido';
 }

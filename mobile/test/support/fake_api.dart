@@ -83,6 +83,9 @@ class FakeApi implements PulperiaApi {
   /// Operaciones y cursor recibidos por sincronización, para tests posteriores.
   final List<List<PushOperation>> pushed = [];
 
+  /// Resultado de cada operación del lote; null (o sin función) es "aplicada".
+  OperationResult? Function(PushOperation op)? pushResult;
+
   void _enter(String name) {
     calls.add(name);
     if (offline) {
@@ -189,7 +192,8 @@ class FakeApi implements PulperiaApi {
     pushed.add(operations);
     return [
       for (final o in operations)
-        OperationResult(opId: o.opId, status: OperationStatus.applied),
+        pushResult?.call(o) ??
+            OperationResult(opId: o.opId, status: OperationStatus.applied),
     ];
   }
 
