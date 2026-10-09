@@ -37,6 +37,65 @@ abstract interface class PulperiaApi {
     required QuantityMode quantityMode,
   });
 
+  /// Ajustes del negocio (solo dueño).
+  Future<BusinessSettings> getSettings(String accessToken, String businessId);
+
+  /// Cambia nombre y modos (RF-7 a RF-9, RF-80); solo se envía lo indicado.
+  Future<BusinessSettings> updateSettings(
+    String accessToken,
+    String businessId, {
+    String? name,
+    AmountMode? amountMode,
+    QuantityMode? quantityMode,
+  });
+
+  /// Miembros activos del negocio (solo dueño).
+  Future<List<TeamMember>> listTeam(String accessToken, String businessId);
+
+  /// Promueve a un empleado a dueño (RF-70).
+  Future<void> promote(String accessToken, String businessId, String userId);
+
+  /// Quita a un miembro del negocio (RF-11, RF-71).
+  Future<void> removeMember(
+    String accessToken,
+    String businessId,
+    String userId,
+  );
+
+  /// Invitaciones del negocio con su código (solo dueño).
+  Future<List<BusinessInvitation>> listBusinessInvitations(
+    String accessToken,
+    String businessId,
+  );
+
+  /// Invita con correo, o solo por código si [email] es null (RF-10, RF-92).
+  Future<BusinessInvitation> invite(
+    String accessToken,
+    String businessId, {
+    String? email,
+  });
+
+  /// Cancela una invitación pendiente (RF-69).
+  Future<void> cancelInvitation(
+    String accessToken,
+    String businessId,
+    String invitationId,
+  );
+
+  /// Invitaciones pendientes dirigidas al usuario (RF-67).
+  Future<List<InvitationOffer>> listInvitations(String accessToken);
+
+  /// Acepta una invitación recibida: entra como empleado (RF-68).
+  Future<RemoteBusiness> acceptInvitation(
+    String accessToken,
+    String invitationId,
+  );
+
+  Future<void> rejectInvitation(String accessToken, String invitationId);
+
+  /// Entra a un negocio con el código de una invitación (RF-93).
+  Future<RemoteBusiness> redeemInvitationCode(String accessToken, String code);
+
   /// Envía un lote de operaciones (RF-52): un resultado por operación, en el
   /// mismo orden.
   Future<List<OperationResult>> push(
@@ -230,6 +289,188 @@ final class HttpPulperiaApi implements PulperiaApi {
       },
     ),
     201,
+    (j) => RemoteBusiness.fromJson(j! as Map<String, dynamic>),
+  );
+
+  @override
+  Future<BusinessSettings> getSettings(
+    String accessToken,
+    String businessId,
+  ) async => _parse(
+    await _send(
+      'GET',
+      '/api/business',
+      accessToken: accessToken,
+      businessId: businessId,
+    ),
+    200,
+    (j) => BusinessSettings.fromJson(j! as Map<String, dynamic>),
+  );
+
+  @override
+  Future<BusinessSettings> updateSettings(
+    String accessToken,
+    String businessId, {
+    String? name,
+    AmountMode? amountMode,
+    QuantityMode? quantityMode,
+  }) async => _parse(
+    await _send(
+      'PATCH',
+      '/api/business',
+      accessToken: accessToken,
+      businessId: businessId,
+      body: {
+        'name': ?name,
+        'amountMode': ?amountMode?.id,
+        'quantityMode': ?quantityMode?.id,
+      },
+    ),
+    200,
+    (j) => BusinessSettings.fromJson(j! as Map<String, dynamic>),
+  );
+
+  @override
+  Future<List<TeamMember>> listTeam(
+    String accessToken,
+    String businessId,
+  ) async => _parse(
+    await _send(
+      'GET',
+      '/api/business/team',
+      accessToken: accessToken,
+      businessId: businessId,
+    ),
+    200,
+    (j) => [
+      for (final m in j! as List<dynamic>)
+        TeamMember.fromJson(m as Map<String, dynamic>),
+    ],
+  );
+
+  @override
+  Future<void> promote(
+    String accessToken,
+    String businessId,
+    String userId,
+  ) async {
+    await _send(
+      'POST',
+      '/api/business/team/$userId/promote',
+      accessToken: accessToken,
+      businessId: businessId,
+    );
+  }
+
+  @override
+  Future<void> removeMember(
+    String accessToken,
+    String businessId,
+    String userId,
+  ) async {
+    await _send(
+      'DELETE',
+      '/api/business/team/$userId',
+      accessToken: accessToken,
+      businessId: businessId,
+    );
+  }
+
+  @override
+  Future<List<BusinessInvitation>> listBusinessInvitations(
+    String accessToken,
+    String businessId,
+  ) async => _parse(
+    await _send(
+      'GET',
+      '/api/business/invitations',
+      accessToken: accessToken,
+      businessId: businessId,
+    ),
+    200,
+    (j) => [
+      for (final i in j! as List<dynamic>)
+        BusinessInvitation.fromJson(i as Map<String, dynamic>),
+    ],
+  );
+
+  @override
+  Future<BusinessInvitation> invite(
+    String accessToken,
+    String businessId, {
+    String? email,
+  }) async => _parse(
+    await _send(
+      'POST',
+      '/api/business/invitations',
+      accessToken: accessToken,
+      businessId: businessId,
+      body: {'email': email},
+    ),
+    201,
+    (j) => BusinessInvitation.fromJson(j! as Map<String, dynamic>),
+  );
+
+  @override
+  Future<void> cancelInvitation(
+    String accessToken,
+    String businessId,
+    String invitationId,
+  ) async {
+    await _send(
+      'DELETE',
+      '/api/business/invitations/$invitationId',
+      accessToken: accessToken,
+      businessId: businessId,
+    );
+  }
+
+  @override
+  Future<List<InvitationOffer>> listInvitations(String accessToken) async =>
+      _parse(
+        await _send('GET', '/api/invitations', accessToken: accessToken),
+        200,
+        (j) => [
+          for (final i in j! as List<dynamic>)
+            InvitationOffer.fromJson(i as Map<String, dynamic>),
+        ],
+      );
+
+  @override
+  Future<RemoteBusiness> acceptInvitation(
+    String accessToken,
+    String invitationId,
+  ) async => _parse(
+    await _send(
+      'POST',
+      '/api/invitations/$invitationId/accept',
+      accessToken: accessToken,
+    ),
+    200,
+    (j) => RemoteBusiness.fromJson(j! as Map<String, dynamic>),
+  );
+
+  @override
+  Future<void> rejectInvitation(String accessToken, String invitationId) async {
+    await _send(
+      'POST',
+      '/api/invitations/$invitationId/reject',
+      accessToken: accessToken,
+    );
+  }
+
+  @override
+  Future<RemoteBusiness> redeemInvitationCode(
+    String accessToken,
+    String code,
+  ) async => _parse(
+    await _send(
+      'POST',
+      '/api/invitations/redeem',
+      accessToken: accessToken,
+      body: {'code': code},
+    ),
+    200,
     (j) => RemoteBusiness.fromJson(j! as Map<String, dynamic>),
   );
 
