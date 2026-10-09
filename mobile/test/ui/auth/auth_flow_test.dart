@@ -509,5 +509,45 @@ void main() {
       expect(key('login-screen'), findsOne);
       expect(store.session, isNull);
     });
+
+    testWidgets(
+      'con cambios sin enviar no se cierra la sesión y se avisa cuántos',
+      (tester) async {
+        await tester.runAsync(() async {
+          await insertBusiness(db, 'b-1', name: 'Pulpería Ana');
+          await insertOutboxOp(db, 'op-1', 'b-1');
+          await insertOutboxOp(db, 'op-2', 'b-1', entityId: 'c-2');
+        });
+        await signInWithTwoBusinesses(tester);
+
+        await tapKey(tester, 'home-menu');
+        await tapKey(tester, 'menu-logout');
+
+        expect(find.text(Strings.logoutBlockedTitle), findsOne);
+        expect(find.text(Strings.logoutBlockedBody(2)), findsOne);
+        expect(key('logout-confirm'), findsNothing);
+
+        await tapKey(tester, 'logout-blocked-ok');
+        expect(key('nav-clients'), findsOne);
+        expect(store.session, isNotNull);
+        expect(api.count('logout'), 0);
+      },
+    );
+
+    testWidgets('con un solo cambio pendiente el aviso va en singular', (
+      tester,
+    ) async {
+      await tester.runAsync(() async {
+        await insertBusiness(db, 'b-1', name: 'Pulpería Ana');
+        await insertOutboxOp(db, 'op-1', 'b-1');
+      });
+      await signInWithTwoBusinesses(tester);
+
+      await tapKey(tester, 'home-menu');
+      await tapKey(tester, 'menu-logout');
+
+      expect(find.text(Strings.logoutBlockedBody(1)), findsOne);
+      expect(Strings.logoutBlockedBody(1), contains('1 cambio sin enviar'));
+    });
   });
 }

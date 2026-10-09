@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/remote/models.dart';
 import '../data/session/session_store.dart';
+import '../data/sync/sync_service.dart';
 import '../domain/business/amount_mode.dart';
 import '../domain/business/quantity_mode.dart';
 import 'providers.dart';
@@ -53,8 +54,14 @@ class SessionController extends AsyncNotifier<SessionState> {
     await _chooseOnlyBusiness();
   }
 
-  /// Cierra la sesión de este teléfono.
+  /// Cierra la sesión de este teléfono. Con cambios sin enviar no se puede:
+  /// otro usuario los enviaría con su nombre, así que primero hay que
+  /// sincronizar (lanza [PendingChangesException] con cuántos faltan).
   Future<void> logout() async {
+    final pending = await ref.read(syncServiceProvider).pendingCount();
+    if (pending > 0) {
+      throw PendingChangesException(pending);
+    }
     await ref.read(sessionServiceProvider).logout();
     state = const AsyncData(SignedOut());
   }

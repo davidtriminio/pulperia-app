@@ -10,6 +10,7 @@ import 'package:pulperia_mobile/data/local/app_database.dart';
 import 'package:pulperia_mobile/data/remote/models.dart';
 import 'package:pulperia_mobile/data/session/session_service.dart';
 import 'package:pulperia_mobile/data/session/session_store.dart';
+import 'package:pulperia_mobile/data/sync/sync_service.dart';
 import 'package:pulperia_mobile/domain/access/access.dart';
 import 'package:pulperia_mobile/domain/business/amount_mode.dart';
 import 'package:pulperia_mobile/domain/business/quantity_mode.dart';
@@ -22,15 +23,20 @@ import '../support/fake_api.dart';
 void main() {
   late FakeApi api;
   late MemorySessionStore store;
+  late AppDatabase db;
 
   setUp(() {
     api = FakeApi();
     store = MemorySessionStore();
+    db = openDb();
   });
+
+  tearDown(() => db.close());
 
   ProviderContainer container() {
     final c = ProviderContainer(
       overrides: [
+        appDatabaseProvider.overrideWithValue(db),
         pulperiaApiProvider.overrideWithValue(api),
         sessionStoreProvider.overrideWithValue(store),
         clockProvider.overrideWithValue(() => api.now),
@@ -117,7 +123,7 @@ void main() {
           );
 
       expect(c.read(sessionControllerProvider).value, isA<SignedIn>());
-      expect(api.calls, ['register', 'login']);
+      expect(api.calls, ['register', 'login', 'listBusinesses']);
     });
 
     test(
@@ -133,6 +139,47 @@ void main() {
         expect(store.session, isNull);
       },
     );
+
+    test(
+      'con cambios sin enviar no deja cerrar sesión y dice cuántos',
+      () async {
+        store.session = stored(active: remoteBusiness('b-1'));
+        await insertBusiness(db, 'b-1');
+        await insertOutboxOp(db, 'op-1', 'b-1');
+        await insertOutboxOp(db, 'op-2', 'b-1', entityId: 'c-2');
+        final c = container();
+        await c.read(sessionControllerProvider.future);
+
+        await expectLater(
+          c.read(sessionControllerProvider.notifier).logout(),
+          throwsA(
+            isA<PendingChangesException>().having((e) => e.count, 'count', 2),
+          ),
+        );
+
+        expect(c.read(sessionControllerProvider).value, isA<SignedIn>());
+        expect(store.session, isNotNull);
+        expect(api.count('logout'), 0);
+      },
+    );
+
+    test('las rechazadas no impiden cerrar sesión', () async {
+      store.session = stored(active: remoteBusiness('b-1'));
+      await insertBusiness(db, 'b-1');
+      await insertOutboxOp(
+        db,
+        'op-1',
+        'b-1',
+        status: 'rejected',
+        errorCode: 'client_not_found',
+      );
+      final c = container();
+      await c.read(sessionControllerProvider.future);
+
+      await c.read(sessionControllerProvider.notifier).logout();
+
+      expect(c.read(sessionControllerProvider).value, isA<SignedOut>());
+    });
   });
 
   group('negocio activo', () {
