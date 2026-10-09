@@ -239,6 +239,9 @@ abstract final class Strings {
   static const menu = 'Menú';
   static const switchBusiness = 'Cambiar de negocio';
   static const syncNow = 'Sincronizar ahora';
+  static const invitedTo = 'Te invitaron a unirte a';
+  static const acceptInvitation = 'Aceptar';
+  static const rejectInvitation = 'Rechazar';
   static const menuTeam = 'Equipo';
   static const teamTitle = 'Equipo';
   static const teamMembers = 'Miembros';

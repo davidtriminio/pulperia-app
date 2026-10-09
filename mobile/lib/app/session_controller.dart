@@ -144,6 +144,31 @@ class SessionController extends AsyncNotifier<SessionState> {
     ref.read(localDataRevisionProvider.notifier).bump();
   }
 
+  /// Las invitaciones pendientes dirigidas al usuario (RF-67). Sin conexión
+  /// o ante cualquier fallo, ninguna: no deben estorbar la entrada.
+  Future<List<InvitationOffer>> receivedInvitations() async {
+    try {
+      return await ref.read(managementServiceProvider).receivedInvitations();
+    } on Object {
+      return const [];
+    }
+  }
+
+  /// Acepta una invitación: el negocio queda en la lista del usuario con rol de
+  /// empleado (RF-68). No lo elige: el usuario decide cuándo entrar.
+  Future<RemoteBusiness> acceptInvitation(String invitationId) async {
+    final business = await ref
+        .read(managementServiceProvider)
+        .accept(invitationId);
+    await ref
+        .read(businessServiceProvider)
+        .remember(_signedIn.userId, business);
+    return business;
+  }
+
+  Future<void> rejectInvitation(String invitationId) =>
+      ref.read(managementServiceProvider).reject(invitationId);
+
   /// Deja de trabajar con el negocio activo (por ejemplo, porque ya no
   /// pertenece a él): el usuario vuelve a elegir negocio.
   Future<void> leaveActiveBusiness() async {
@@ -179,7 +204,11 @@ class SessionController extends AsyncNotifier<SessionState> {
   Future<void> _chooseOnlyBusiness() async {
     try {
       final list = await loadBusinesses();
-      if (list.length == 1 && _signedIn.active == null) {
+      // Con una invitación pendiente se pasa por la pantalla de elección,
+      // para que el usuario la vea (RF-67).
+      if (list.length == 1 &&
+          _signedIn.active == null &&
+          (await receivedInvitations()).isEmpty) {
         await chooseBusiness(list.single);
       }
     } on Object {
