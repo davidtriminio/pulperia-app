@@ -377,7 +377,9 @@ class FakeApi implements PulperiaApi {
     String code,
   ) async {
     enter('redeemInvitationCode');
-    final business = redeemable.remove(code);
+    // Como el servidor (D-28): sin mayúsculas, espacios ni guiones.
+    final normalized = code.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+    final business = redeemable.remove(normalized);
     if (business == null) {
       throw const ApiException(404, 'invalid_invitation_code', [
         'invalid_invitation_code',
