@@ -202,7 +202,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 
 - [x] **T103** Incorporar los 24 personajes finales, dibujados en código como los de T102. RF: 72. Dep: T102. *Hecho cuando:* existen los 24 y el test confirma que cada identificador de la paleta tiene su recurso.
-- [ ] **T105** Pantallas de registro, inicio de sesión y elección de negocio. RF: 1–6, 78, 79. Dep: T088, T089. *Hecho cuando:* un usuario se registra, entra y elige negocio con mensajes de error en español.
+- [x] **T105** Pantallas de registro, inicio de sesión y elección de negocio. RF: 1–6, 78, 79. Dep: T088, T089. *Hecho cuando:* un usuario se registra, entra y elige negocio con mensajes de error en español.
 - [x] **T113** Acción de anular, visible solo para el dueño. RF: 43, 44, 45. *Hecho cuando:* el empleado no ve la acción y el dueño anula con confirmación.
 - [x] **T114** Archivar y restaurar cliente y vista de archivados. RF: 20–23, 76. *Hecho cuando:* solo el dueño ve las acciones y fiar a un archivado muestra que debe restaurarse primero.
 - [x] **T172** Tarjetas de cliente más cuidadas: sombra suave, avatar y saldo mejor jerarquizados, estado archivado claro y altura uniforme, igual que las tarjetas de producto. RF: 20, 42. Dep: T106, T114. *Hecho cuando:* tests de widget comprueban que la tarjeta distingue deuda, saldo a favor y saldo cero, que un archivado se ve marcado en la vista de archivados y que un toque sigue abriendo el detalle.

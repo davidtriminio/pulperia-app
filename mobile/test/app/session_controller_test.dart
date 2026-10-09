@@ -232,7 +232,7 @@ void main() {
     ) async {
       await pump(tester);
 
-      expect(find.byKey(const ValueKey('auth-pending')), findsOne);
+      expect(find.byKey(const ValueKey('login-screen')), findsOne);
       expect(find.byKey(const ValueKey('nav-clients')), findsNothing);
     });
 
@@ -240,7 +240,7 @@ void main() {
       store.session = stored();
       await pump(tester);
 
-      expect(find.byKey(const ValueKey('auth-pending')), findsOne);
+      expect(find.byKey(const ValueKey('business-chooser')), findsOne);
       expect(find.byKey(const ValueKey('nav-clients')), findsNothing);
     });
   });
