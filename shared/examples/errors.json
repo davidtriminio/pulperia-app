@@ -1,0 +1,15 @@
+{
+  "description": "Errores de la API: un código estable que los clientes traducen al español (RNF-5).",
+  "cases": [
+    {
+      "name": "un solo motivo",
+      "schema": "Error",
+      "example": { "code": "invalid_credentials", "codes": ["invalid_credentials"] }
+    },
+    {
+      "name": "varios motivos: el primero es code",
+      "schema": "Error",
+      "example": { "code": "email_invalid", "codes": ["email_invalid", "password_too_short"] }
+    }
+  ]
+}

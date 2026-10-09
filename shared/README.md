@@ -80,3 +80,18 @@ Descripción OpenAPI 3.0 escrita a mano (D-17). Los clientes HTTP del móvil y d
 - Cada ruta de la API está descrita, con sus respuestas, y cada objeto declara **todas** sus propiedades: una que no esté en el contrato no existe.
 - La prueba `ApiContractTests` (en `api/tests`) recorre la API real: comprueba que las rutas del servidor y las del contrato son las mismas, que cada petición y cada respuesta cumplen su esquema, y que no queda en el contrato ninguna respuesta que ninguna prueba haya visto. Cambiar la API sin cambiar el contrato (o al revés) la hace fallar.
 - Al cambiar el contrato hay que actualizar antes el plan (sección 5), por la regla de no cambiar el contrato de la API sin spec.
+
+## `examples/`: respuestas de ejemplo
+Cada archivo de `examples/` tiene `description` y `cases`; cada caso tiene `name`, `schema` (el nombre de un esquema de `components/schemas` de `openapi.json`) y `example` (un JSON que lo cumple). Son el puente entre el contrato y los clientes (D-17):
+
+- La API comprueba en `SharedExamplesTests` que cada ejemplo cumple el esquema que nombra, así que un ejemplo no puede desviarse del contrato.
+- El móvil (y más adelante la web) lee los mismos ejemplos en sus tests de modelos y de cliente HTTP, y por tanto prueba contra lo que la API devuelve de verdad.
+
+| Archivo | Contenido |
+|---|---|
+| `examples/auth.json` | Registro y tokens |
+| `examples/businesses.json` | Negocios del usuario con su rol |
+| `examples/sync.json` | Resultados de operaciones, resultado de un lote y páginas del pull |
+| `examples/errors.json` | El cuerpo de error con su código estable |
+
+Las reglas de los vectores se aplican igual: añadir ejemplos es siempre válido; cambiar o borrar uno exige actualizar antes el contrato.

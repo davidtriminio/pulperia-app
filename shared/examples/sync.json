@@ -1,0 +1,140 @@
+{
+  "description": "Respuestas de ejemplo de la sincronización: resultado de cada operación del lote y una página de cambios con los cuatro tipos de registro.",
+  "cases": [
+    {
+      "name": "operación aplicada",
+      "schema": "OperationResult",
+      "example": { "opId": "0198a000-0000-7000-8000-0000000000a1", "status": "applied" }
+    },
+    {
+      "name": "operación repetida: ya se había aplicado",
+      "schema": "OperationResult",
+      "example": { "opId": "0198a000-0000-7000-8000-0000000000a2", "status": "duplicate" }
+    },
+    {
+      "name": "operación rechazada con su código",
+      "schema": "OperationResult",
+      "example": {
+        "opId": "0198a000-0000-7000-8000-0000000000a3",
+        "status": "rejected",
+        "code": "version_conflict",
+        "codes": ["version_conflict"]
+      }
+    },
+    {
+      "name": "operación rechazada por varios motivos",
+      "schema": "OperationResult",
+      "example": {
+        "opId": "0198a000-0000-7000-8000-0000000000a4",
+        "status": "rejected",
+        "code": "amount_too_large",
+        "codes": ["amount_too_large", "quantity_too_large"]
+      }
+    },
+    {
+      "name": "lote con una aplicada, una repetida y una rechazada",
+      "schema": "PushResponse",
+      "example": {
+        "results": [
+          { "opId": "0198a000-0000-7000-8000-0000000000a1", "status": "applied" },
+          { "opId": "0198a000-0000-7000-8000-0000000000a2", "status": "duplicate" },
+          {
+            "opId": "0198a000-0000-7000-8000-0000000000a3",
+            "status": "rejected",
+            "code": "client_not_found",
+            "codes": ["client_not_found"]
+          }
+        ]
+      }
+    },
+    {
+      "name": "página de cambios vacía: el cursor se queda donde estaba",
+      "schema": "PullResponse",
+      "example": { "cursor": 7, "hasMore": false, "changes": [] }
+    },
+    {
+      "name": "página con un cliente, un producto con precio anterior, un fiado anulado con ítems y un abono",
+      "schema": "PullResponse",
+      "example": {
+        "cursor": 12,
+        "hasMore": true,
+        "changes": [
+          {
+            "seq": 8,
+            "type": "client",
+            "entity": {
+              "id": "0198a000-0000-7000-8000-0000000000c1",
+              "name": "Ana López",
+              "characterId": "char-01",
+              "skinId": "skin-1",
+              "backgroundId": "bg-01",
+              "phone": "98765432",
+              "address": null,
+              "note": null,
+              "archived": false,
+              "version": 2,
+              "createdBy": "0198a000-0000-7000-8000-000000000001",
+              "createdAt": "2026-10-09T14:00:00Z",
+              "updatedAt": "2026-10-09T14:30:00Z"
+            }
+          },
+          {
+            "seq": 9,
+            "type": "product",
+            "entity": {
+              "id": "0198a000-0000-7000-8000-0000000000d1",
+              "name": "Arroz",
+              "price": 2800,
+              "unit": "pound",
+              "previousPrice": 2500,
+              "priceChangedAt": "2026-10-09T14:10:00Z",
+              "archived": false,
+              "version": 2,
+              "createdBy": "0198a000-0000-7000-8000-000000000001",
+              "createdAt": "2026-10-09T14:00:00Z"
+            }
+          },
+          {
+            "seq": 11,
+            "type": "fiado",
+            "entity": {
+              "id": "0198a000-0000-7000-8000-0000000000e1",
+              "clientId": "0198a000-0000-7000-8000-0000000000c1",
+              "total": 1400,
+              "occurredAt": "2026-10-09T14:20:00Z",
+              "serverSeq": 10,
+              "createdBy": "0198a000-0000-7000-8000-000000000001",
+              "annulledAt": "2026-10-09T14:40:00Z",
+              "annulledBy": "0198a000-0000-7000-8000-000000000001",
+              "items": [
+                {
+                  "id": "0198a000-0000-7000-8000-0000000000f1",
+                  "productId": "0198a000-0000-7000-8000-0000000000d1",
+                  "description": "Arroz",
+                  "quantity": 500,
+                  "unit": "pound",
+                  "unitPrice": 2800,
+                  "subtotal": 1400
+                }
+              ]
+            }
+          },
+          {
+            "seq": 12,
+            "type": "payment",
+            "entity": {
+              "id": "0198a000-0000-7000-8000-0000000000b1",
+              "clientId": "0198a000-0000-7000-8000-0000000000c1",
+              "amount": 500,
+              "occurredAt": "2026-10-09T14:25:00Z",
+              "serverSeq": 12,
+              "createdBy": "0198a000-0000-7000-8000-000000000001",
+              "annulledAt": null,
+              "annulledBy": null
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
