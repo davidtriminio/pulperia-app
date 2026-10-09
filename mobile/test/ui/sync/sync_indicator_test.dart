@@ -113,6 +113,64 @@ void main() {
 
     expect(find.text(Strings.syncNeedsLogin), findsOne);
   });
+
+  group('volver a entrar para sincronizar (D-10)', () {
+    Future<void> openReauth(WidgetTester tester) async {
+      await insertOutboxOp(db, 'op-1', 'b-1');
+      await pumpIndicator(tester);
+      api.now = api.now.add(const Duration(days: 100));
+      await tester.tap(find.byKey(const ValueKey('sync-indicator')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey('sync-indicator')));
+      await settle(tester);
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('con la contraseña correcta se sincroniza y se cierra', (
+      tester,
+    ) async {
+      await openReauth(tester);
+      expect(find.byKey(const ValueKey('reauth-screen')), findsOne);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('reauth-password')),
+        'contrasena1',
+      );
+      await tester.tap(find.byKey(const ValueKey('reauth-submit')));
+      await settle(tester);
+      await settle(tester);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const ValueKey('reauth-screen')), findsNothing);
+      expect(api.count('push'), 1);
+      expect(find.byKey(const ValueKey('sync-indicator')), findsNothing);
+    });
+
+    testWidgets('con la contraseña mala avisa y la cola sigue', (tester) async {
+      api.passwords = {'ana@correo.com': 'la-buena'};
+      await openReauth(tester);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('reauth-password')),
+        'la-mala-123',
+      );
+      await tester.tap(find.byKey(const ValueKey('reauth-submit')));
+      await settle(tester);
+
+      expect(find.text(Strings.errorInvalidCredentials), findsOne);
+      expect(find.byKey(const ValueKey('reauth-screen')), findsOne);
+    });
+
+    testWidgets('sin contraseña marca el campo', (tester) async {
+      await openReauth(tester);
+
+      await tester.tap(find.byKey(const ValueKey('reauth-submit')));
+      await settle(tester);
+
+      expect(find.text(Strings.passwordRequired), findsOne);
+    });
+  });
 }
 
 Widget _gate(BuildContext context, WidgetRef ref, Widget? _) {

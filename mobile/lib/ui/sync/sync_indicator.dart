@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/sync_controller.dart';
 import '../../l10n/strings.dart';
+import '../auth/reauth_screen.dart';
 import '../theme.dart';
 
 /// Avisa que hay cambios sin sincronizar (RF-57) y, si falta iniciar sesión
@@ -43,6 +44,10 @@ class SyncIndicator extends ConsumerWidget {
         side: BorderSide.none,
         onPressed: status.running
             ? null
+            : status.needsLogin
+            ? () => Navigator.of(context).push<void>(
+                MaterialPageRoute(builder: (_) => const ReauthScreen()),
+              )
             : () => ref
                   .read(syncControllerProvider.notifier)
                   .request(SyncTrigger.manual),
