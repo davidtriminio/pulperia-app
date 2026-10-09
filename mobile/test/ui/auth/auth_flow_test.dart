@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/app.dart';
 import 'package:pulperia_mobile/app/providers.dart';
+import 'package:pulperia_mobile/app/sync_controller.dart';
 import 'package:pulperia_mobile/data/local/app_database.dart';
 import 'package:pulperia_mobile/data/remote/models.dart';
 import 'package:pulperia_mobile/data/session/session_store.dart';
@@ -386,6 +387,20 @@ void main() {
       await fillLogin(tester);
       await tapKey(tester, 'auth-submit');
     }
+
+    testWidgets('si se perdió el acceso a un negocio se avisa al elegir', (
+      tester,
+    ) async {
+      await signInWithoutBusinesses(tester);
+      expect(key('removed-notice'), findsNothing);
+
+      ProviderScope.containerOf(tester.element(key('business-chooser')))
+          .read(removedBusinessProvider.notifier)
+          .set('Pulpería Ana');
+      await settle(tester);
+
+      expect(find.text(Strings.businessRemoved('Pulpería Ana')), findsOne);
+    });
 
     testWidgets('sin negocios se explica y se ofrece crear uno o salir', (
       tester,

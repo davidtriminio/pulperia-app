@@ -84,12 +84,12 @@ void main() {
     );
 
     test('que el servidor rechace la petición no se reintenta solo', () async {
-      api.failures['push'] = const ApiException(403, 'forbidden');
+      api.failures['push'] = const ApiException(403, 'not_allowed');
 
       final outcome = await sync.attempt('b-1') as SyncFailed;
 
       expect(outcome.reason, SyncFailure.refused);
-      expect(outcome.code, 'forbidden');
+      expect(outcome.code, 'not_allowed');
       expect(outcome.retryable, isFalse);
       expect(await pending(), 1);
     });
@@ -165,7 +165,7 @@ void main() {
     });
 
     test('lo que no se arregla reintentando no se reintenta', () async {
-      api.failures['push'] = const ApiException(403, 'forbidden');
+      api.failures['push'] = const ApiException(403, 'not_allowed');
 
       await sync.syncWithRetries('b-1');
 

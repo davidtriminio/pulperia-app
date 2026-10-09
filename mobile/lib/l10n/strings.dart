@@ -242,6 +242,8 @@ abstract final class Strings {
   static String pendingChanges(int count) =>
       count == 1 ? '1 sin enviar' : '$count sin enviar';
   static const syncNeedsLogin = 'Inicia sesión para sincronizar';
+  static String businessRemoved(String name) =>
+      'Ya no tienes acceso a "$name". Sus datos se borraron de este teléfono.';
   static const reauthTitle = 'Vuelve a entrar';
   static String reauthSubtitle(String email) =>
       'Tu sesión caducó mientras no había conexión. Tus cambios siguen guardados en este teléfono; escribe la contraseña de $email para enviarlos.';
