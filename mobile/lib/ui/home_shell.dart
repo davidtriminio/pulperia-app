@@ -8,6 +8,7 @@ import '../l10n/strings.dart';
 import 'auth/business_chooser_screen.dart';
 import 'auth/logout.dart';
 import 'business/settings_screen.dart';
+import 'business/team_screen.dart';
 import 'catalog/catalog_screen.dart';
 import 'clients/clients_screen.dart';
 import 'summary/summary_screen.dart';
@@ -23,7 +24,7 @@ class HomeShell extends ConsumerStatefulWidget {
   ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-enum _MenuAction { syncNow, settings, switchBusiness, logout }
+enum _MenuAction { syncNow, settings, team, switchBusiness, logout }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
@@ -50,6 +51,9 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                   builder: (_) => const BusinessSettingsScreen(),
                 ),
               ),
+              _MenuAction.team => Navigator.of(context).push<void>(
+                MaterialPageRoute(builder: (_) => const TeamScreen()),
+              ),
               _MenuAction.switchBusiness => Navigator.of(context).push<void>(
                 MaterialPageRoute(
                   builder: (_) => const BusinessChooserScreen(asRoute: true),
@@ -63,6 +67,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 value: _MenuAction.syncNow,
                 child: Text(Strings.syncNow),
               ),
+              if (can(role, Permission.manageTeam))
+                const PopupMenuItem(
+                  key: ValueKey('menu-team'),
+                  value: _MenuAction.team,
+                  child: Text(Strings.menuTeam),
+                ),
               if (can(role, Permission.manageBusinessSettings))
                 const PopupMenuItem(
                   key: ValueKey('menu-settings'),

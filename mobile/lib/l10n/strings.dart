@@ -239,6 +239,32 @@ abstract final class Strings {
   static const menu = 'Menú';
   static const switchBusiness = 'Cambiar de negocio';
   static const syncNow = 'Sincronizar ahora';
+  static const menuTeam = 'Equipo';
+  static const teamTitle = 'Equipo';
+  static const teamMembers = 'Miembros';
+  static const teamInvitations = 'Invitaciones pendientes';
+  static const noInvitations = 'No hay invitaciones pendientes.';
+  static const youMarker = '(tú)';
+  static const promoteAction = 'Hacer dueño';
+  static const promoteConfirmTitle = '¿Hacer dueño a esta persona?';
+  static String promoteConfirmBody(String email) =>
+      '$email podrá hacer todo en el negocio: ajustes, equipo, anular movimientos y archivar clientes.';
+  static const removeAction = 'Quitar del negocio';
+  static const removeConfirmTitle = '¿Quitar a esta persona?';
+  static String removeConfirmBody(String email) =>
+      '$email dejará de ver los datos del negocio. Si tiene cambios sin enviar, podrá enviarlos una última vez.';
+  static const inviteAction = 'Invitar';
+  static const inviteTitle = 'Invitar a una persona';
+  static const inviteSend = 'Enviar invitación';
+  static const inviteSent = 'Invitación enviada';
+  static const invitationPending = 'Pendiente';
+  static const codeOnlyInvitation = 'Solo con código';
+  static const cancelInvitation = 'Cancelar invitación';
+  static const keepInvitation = 'Mantenerla';
+  static const cancelInvitationTitle = '¿Cancelar la invitación?';
+  static String cancelInvitationBody(String? email) => email == null
+      ? 'El código dejará de servir.'
+      : '$email ya no podrá aceptarla.';
   static const settingsTitle = 'Ajustes del negocio';
   static const menuSettings = 'Ajustes del negocio';
   static const saveChanges = 'Guardar cambios';
