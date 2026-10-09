@@ -9,6 +9,7 @@ import 'auth/logout.dart';
 import 'catalog/catalog_screen.dart';
 import 'clients/clients_screen.dart';
 import 'summary/summary_screen.dart';
+import 'sync/sync_indicator.dart';
 import 'sync/sync_triggers.dart';
 
 /// Estructura principal: barra superior con el negocio activo y navegación
@@ -32,6 +33,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       appBar: AppBar(
         title: Text(business.maybeWhen(data: (b) => b.name, orElse: () => '')),
         actions: [
+          const SyncIndicator(),
           PopupMenuButton<_MenuAction>(
             key: const ValueKey('home-menu'),
             tooltip: Strings.menu,

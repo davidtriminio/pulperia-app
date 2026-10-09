@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/app/providers.dart';
 import 'package:pulperia_mobile/app/sync_controller.dart';
 import 'package:pulperia_mobile/data/local/app_database.dart';
+import 'package:pulperia_mobile/data/remote/models.dart';
 import 'package:pulperia_mobile/data/session/session_store.dart';
+import 'package:pulperia_mobile/l10n/strings.dart';
 import 'package:pulperia_mobile/ui/sync/sync_triggers.dart';
 
 import '../../support/db_fixtures.dart';
@@ -56,7 +58,9 @@ void main() {
           clockProvider.overrideWithValue(() => api.now),
           onlineProvider.overrideWith((ref) => online.stream),
         ],
-        child: const MaterialApp(home: Consumer(builder: _warm)),
+        child: const MaterialApp(
+          home: Scaffold(body: Consumer(builder: _warm)),
+        ),
       ),
     );
     await settle(tester);
@@ -81,6 +85,28 @@ void main() {
     online.add(true);
     await settle(tester);
     expect(api.count('pull'), 1);
+  });
+
+  testWidgets('si se descartó una edición por conflicto lo avisa', (
+    tester,
+  ) async {
+    await insertOutboxOp(
+      db,
+      'op-1',
+      'b-1',
+      type: 'client.update',
+      entityId: 'c-1',
+      baseVersion: 1,
+    );
+    api.pushResult = (op) => OperationResult(
+      opId: op.opId,
+      status: OperationStatus.rejected,
+      code: 'version_conflict',
+    );
+
+    await pumpTriggers(tester);
+
+    expect(find.text(Strings.conflictsDiscarded(1)), findsOne);
   });
 
   testWidgets('seguir con conexión no vuelve a sincronizar', (tester) async {

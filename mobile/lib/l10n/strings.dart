@@ -239,6 +239,12 @@ abstract final class Strings {
   static const menu = 'Menú';
   static const switchBusiness = 'Cambiar de negocio';
   static const syncNow = 'Sincronizar ahora';
+  static String pendingChanges(int count) =>
+      count == 1 ? '1 sin enviar' : '$count sin enviar';
+  static const syncNeedsLogin = 'Inicia sesión para sincronizar';
+  static String conflictsDiscarded(int count) => count == 1
+      ? 'Se descartó 1 cambio tuyo: otra persona había modificado ese registro antes.'
+      : 'Se descartaron $count cambios tuyos: otras personas habían modificado esos registros antes.';
   static const logout = 'Cerrar sesión';
   static const logoutConfirmTitle = '¿Cerrar sesión?';
   static const logoutConfirmBody = 'Para volver a entrar necesitarás conexión.';
