@@ -181,7 +181,7 @@ Añade RF-90 y RF-91 y D-24: el producto guarda su precio anterior y la fecha de
 - [x] **T083** Endpoint de operación individual para la web. RF: 59, 60. *Hecho cuando:* una operación enviada se aplica y devuelve su resultado al instante.
 - [x] **T084** Consultas de lectura: clientes con saldo, historial, archivados, productos. RF: 22, 41, 42, 59. *Hecho cuando:* cada consulta respeta el aislamiento del negocio.
 - [x] **T085** Consulta del resumen. RF: 63, 64, 65. Dep: T047. *Hecho cuando:* pasan los vectores de resumen desde el servidor.
-- [ ] **T086** Contrato OpenAPI en `shared/`. RF: —; D-17. *Hecho cuando:* una prueba verifica que las respuestas reales coinciden con el contrato.
+- [x] **T086** Contrato OpenAPI en `shared/`. RF: —; D-17. *Hecho cuando:* una prueba verifica que las respuestas reales coinciden con el contrato.
 
 ## Fase 8 — Sesión y sincronización del móvil
 - [ ] **T087** Cliente HTTP y modelos del contrato. RF: —. Dep: T086. *Hecho cuando:* tests contra respuestas de ejemplo del contrato.

@@ -73,3 +73,10 @@ Cada plataforma recorre `cases` y compara su resultado con `expected`; un caso q
 - Un vector es comportamiento acordado. **No se cambia un caso para que un test pase**: si un resultado esperado cambia, primero se actualiza la spec o el plan.
 - Añadir casos nuevos es siempre válido; cambiar o borrar uno existente requiere el paso anterior.
 - Los vectores son datos puros: sin lógica, sin referencias a código de ninguna plataforma.
+
+## `openapi.json`: el contrato de la API
+Descripción OpenAPI 3.0 escrita a mano (D-17). Los clientes HTTP del móvil y de la web se escriben contra ella; no se generan.
+
+- Cada ruta de la API está descrita, con sus respuestas, y cada objeto declara **todas** sus propiedades: una que no esté en el contrato no existe.
+- La prueba `ApiContractTests` (en `api/tests`) recorre la API real: comprueba que las rutas del servidor y las del contrato son las mismas, que cada petición y cada respuesta cumplen su esquema, y que no queda en el contrato ninguna respuesta que ninguna prueba haya visto. Cambiar la API sin cambiar el contrato (o al revés) la hace fallar.
+- Al cambiar el contrato hay que actualizar antes el plan (sección 5), por la regla de no cambiar el contrato de la API sin spec.
