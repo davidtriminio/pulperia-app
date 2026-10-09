@@ -187,4 +187,59 @@ abstract final class Strings {
   static const errorSessionExpired =
       'Tu sesión terminó. Inicia sesión de nuevo.';
   static const signInRequired = 'Inicia sesión para continuar';
+
+  // Registro, inicio de sesión y elección de negocio (T105).
+  static const signInTitle = 'Inicia sesión';
+  static const signInSubtitle = 'Entra para ver los fiados de tu negocio';
+  static const signInAction = 'Entrar';
+  static const createAccountTitle = 'Crea tu cuenta';
+  static const createAccountSubtitle =
+      'Registra tu negocio para llevar sus fiados';
+  static const createAccountAction = 'Crear cuenta';
+  static const goToRegister = 'Crear una cuenta';
+  static const goToLogin = 'Ya tengo una cuenta';
+  static const fieldEmail = 'Correo electrónico';
+  static const fieldPassword = 'Contraseña';
+  static const fieldBusinessName = 'Nombre del negocio';
+  static const showPassword = 'Mostrar contraseña';
+  static const hidePassword = 'Ocultar contraseña';
+  static const emailRequired = 'Escribe tu correo';
+  static const emailInvalid = 'El correo no es válido';
+  static const passwordRequired = 'Escribe tu contraseña';
+  static const passwordTooShort =
+      'La contraseña debe tener al menos 8 caracteres';
+  static const passwordTooLong = 'La contraseña es muy larga';
+  static const passwordHint = 'Mínimo 8 caracteres';
+  static const businessNameRequired = 'El nombre del negocio es obligatorio';
+  static const amountModeTitle = 'Montos';
+  static const amountModeInteger = 'Enteros';
+  static const amountModeDecimals = 'Con centavos';
+  static const amountModeHint = 'Ejemplo: L 25 o L 25.50';
+  static const amountModeRequired = 'Elige cómo manejas los montos';
+  static const quantityModeTitle = 'Cantidades';
+  static const quantityModeInteger = 'Enteras';
+  static const quantityModeFractional = 'Con decimales';
+  static const quantityModeHint = 'Ejemplo: 2 libras o 0.5 libras';
+  static const quantityModeRequired = 'Elige cómo manejas las cantidades';
+  static const modesCannotReturn =
+      'Más adelante podrás pasar de enteros a decimales, pero no al revés';
+
+  static const chooseBusinessTitle = 'Elige tu negocio';
+  static const chooseBusinessSubtitle = 'Con cuál quieres trabajar ahora';
+  static const noBusinesses = 'Aún no perteneces a ningún negocio';
+  static const noBusinessesHint =
+      'Crea uno o pide que te inviten a uno existente';
+  static const roleOwner = 'Dueño';
+  static const roleEmployee = 'Empleado';
+  static const createBusiness = 'Crear un negocio';
+  static const newBusinessTitle = 'Nuevo negocio';
+  static const createBusinessAction = 'Crear negocio';
+  static const retry = 'Reintentar';
+
+  static const menu = 'Menú';
+  static const switchBusiness = 'Cambiar de negocio';
+  static const logout = 'Cerrar sesión';
+  static const logoutConfirmTitle = '¿Cerrar sesión?';
+  static const logoutConfirmBody =
+      'Los cambios sin enviar se conservan en este teléfono. Para volver a entrar necesitarás conexión.';
 }

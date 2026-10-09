@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/providers.dart';
 import '../l10n/strings.dart';
+import 'auth/business_chooser_screen.dart';
+import 'auth/logout.dart';
 import 'catalog/catalog_screen.dart';
 import 'clients/clients_screen.dart';
 import 'summary/summary_screen.dart';
@@ -16,6 +18,8 @@ class HomeShell extends ConsumerStatefulWidget {
   ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
+enum _MenuAction { switchBusiness, logout }
+
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
 
@@ -25,6 +29,32 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     return Scaffold(
       appBar: AppBar(
         title: Text(business.maybeWhen(data: (b) => b.name, orElse: () => '')),
+        actions: [
+          PopupMenuButton<_MenuAction>(
+            key: const ValueKey('home-menu'),
+            tooltip: Strings.menu,
+            onSelected: (action) => switch (action) {
+              _MenuAction.switchBusiness => Navigator.of(context).push<void>(
+                MaterialPageRoute(
+                  builder: (_) => const BusinessChooserScreen(asRoute: true),
+                ),
+              ),
+              _MenuAction.logout => confirmLogout(context, ref),
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                key: ValueKey('menu-switch-business'),
+                value: _MenuAction.switchBusiness,
+                child: Text(Strings.switchBusiness),
+              ),
+              PopupMenuItem(
+                key: ValueKey('menu-logout'),
+                value: _MenuAction.logout,
+                child: Text(Strings.logout),
+              ),
+            ],
+          ),
+        ],
       ),
       body: IndexedStack(
         index: _index,

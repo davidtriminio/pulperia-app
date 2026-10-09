@@ -42,6 +42,9 @@ class ClientsScreen extends ConsumerWidget {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
+        // Sin héroe: las pantallas de la barra inferior conviven en el mismo
+        // IndexedStack y dos botones con la misma etiqueta rompen las rutas.
+        heroTag: null,
         key: const ValueKey('new-client'),
         icon: const Icon(Icons.person_add_alt_1),
         label: const Text(Strings.newClient),

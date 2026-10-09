@@ -49,6 +49,9 @@ class CatalogScreen extends ConsumerWidget {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
+        // Sin héroe: las pantallas de la barra inferior conviven en el mismo
+        // IndexedStack y dos botones con la misma etiqueta rompen las rutas.
+        heroTag: null,
         key: const ValueKey('new-product'),
         icon: const Icon(Icons.add),
         label: const Text(Strings.newProduct),
