@@ -252,6 +252,24 @@ class SyncService {
     return SyncReport(push: push, pull: pull);
   }
 
+  /// Sincroniza todos los negocios que tienen cambios sin enviar (el teléfono
+  /// puede guardar los de varios), uno tras otro. Cada negocio se intenta
+  /// aunque otro falle; el resultado es por negocio.
+  Future<Map<String, SyncOutcome>> syncAllPending() async {
+    final column = db.outboxOps.businessId;
+    final rows =
+        await (db.selectOnly(db.outboxOps, distinct: true)
+              ..addColumns([column])
+              ..where(db.outboxOps.status.equals('pending')))
+            .get();
+    final outcomes = <String, SyncOutcome>{};
+    for (final row in rows) {
+      final id = row.read(column)!;
+      outcomes[id] = await attempt(id);
+    }
+    return outcomes;
+  }
+
   /// Operaciones pendientes de enviar (RF-57): las de un negocio, o las de
   /// todos si no se indica. Las rechazadas no cuentan: ya no se reenvían.
   Future<int> pendingCount({String? businessId}) async {

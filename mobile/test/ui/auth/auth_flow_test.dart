@@ -563,6 +563,53 @@ void main() {
       },
     );
 
+    testWidgets(
+      'sincronizar desde el aviso vacía la cola y deja cerrar la sesión',
+      (tester) async {
+        api.failures['push'] = const ApiException(403, 'not_allowed');
+        await tester.runAsync(() async {
+          await insertBusiness(db, 'b-1', name: 'Pulpería Ana');
+          await insertOutboxOp(db, 'op-1', 'b-1');
+        });
+        await signInWithTwoBusinesses(tester);
+        await tapKey(tester, 'home-menu');
+        await tapKey(tester, 'menu-logout');
+        expect(find.text(Strings.logoutBlockedTitle), findsOne);
+
+        api.failures.remove('push');
+        await tapKey(tester, 'logout-blocked-sync');
+
+        // Ya no queda nada: ofrece cerrar la sesión.
+        expect(find.text(Strings.logoutConfirmTitle), findsOne);
+        await tapKey(tester, 'logout-confirm');
+        expect(key('login-screen'), findsOne);
+        expect(store.session, isNull);
+      },
+    );
+
+    testWidgets(
+      'si no se pudo sincronizar el aviso lo dice y sigue bloqueado',
+      (tester) async {
+        api.failures['push'] = const ApiException(403, 'not_allowed');
+        await tester.runAsync(() async {
+          await insertBusiness(db, 'b-1', name: 'Pulpería Ana');
+          await insertOutboxOp(db, 'op-1', 'b-1');
+          await insertOutboxOp(db, 'op-2', 'b-1', entityId: 'c-2');
+        });
+        await signInWithTwoBusinesses(tester);
+        await tapKey(tester, 'home-menu');
+        await tapKey(tester, 'menu-logout');
+
+        api.failures['push'] = const NetworkException();
+        await tapKey(tester, 'logout-blocked-sync');
+
+        expect(find.text(Strings.errorOffline), findsOne);
+        expect(find.text(Strings.logoutBlockedBody(2)), findsOne);
+        expect(key('logout-confirm'), findsNothing);
+        expect(store.session, isNotNull);
+      },
+    );
+
     testWidgets('con un solo cambio pendiente el aviso va en singular', (
       tester,
     ) async {
