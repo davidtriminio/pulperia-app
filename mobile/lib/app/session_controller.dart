@@ -7,6 +7,7 @@ import '../domain/business/amount_mode.dart';
 import '../domain/business/quantity_mode.dart';
 import 'providers.dart';
 import 'session_state.dart';
+import 'sync_controller.dart';
 
 /// La sesión de este teléfono para la interfaz. Los errores de una acción
 /// (credenciales malas, sin red) se lanzan a quien la pidió, que decide cómo
@@ -109,6 +110,38 @@ class SessionController extends AsyncNotifier<SessionState> {
         .read(businessServiceProvider)
         .create(name: name, amountMode: amountMode, quantityMode: quantityMode);
     await chooseBusiness(created);
+  }
+
+  /// Cambia el nombre y los modos del negocio activo (RF-7 a RF-9, RF-80).
+  /// Solo el dueño y en línea (D-3). Con lo que responde el servidor se pone
+  /// al día la base local y la sesión, y las pantallas se vuelven a leer.
+  Future<void> updateBusinessSettings({
+    String? name,
+    AmountMode? amountMode,
+    QuantityMode? quantityMode,
+  }) async {
+    final active = _signedIn.active;
+    if (active == null) {
+      throw StateError('No hay negocio activo');
+    }
+    final settings = await ref
+        .read(managementServiceProvider)
+        .updateSettings(
+          active.id,
+          name: name,
+          amountMode: amountMode,
+          quantityMode: quantityMode,
+        );
+    await chooseBusiness(
+      RemoteBusiness(
+        id: active.id,
+        name: settings.name,
+        role: active.role,
+        amountMode: settings.amountMode,
+        quantityMode: settings.quantityMode,
+      ),
+    );
+    ref.read(localDataRevisionProvider.notifier).bump();
   }
 
   /// Deja de trabajar con el negocio activo (por ejemplo, porque ya no

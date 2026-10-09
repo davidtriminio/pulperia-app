@@ -239,6 +239,11 @@ abstract final class Strings {
   static const menu = 'Menú';
   static const switchBusiness = 'Cambiar de negocio';
   static const syncNow = 'Sincronizar ahora';
+  static const settingsTitle = 'Ajustes del negocio';
+  static const menuSettings = 'Ajustes del negocio';
+  static const saveChanges = 'Guardar cambios';
+  static const settingsOnline =
+      'Los cambios de ajustes se hacen con conexión y los ven todos los usuarios del negocio.';
   static String pendingChanges(int count) =>
       count == 1 ? '1 sin enviar' : '$count sin enviar';
   static const syncNeedsLogin = 'Inicia sesión para sincronizar';

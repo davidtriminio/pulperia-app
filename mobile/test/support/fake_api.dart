@@ -190,6 +190,203 @@ class FakeApi implements PulperiaApi {
     return business;
   }
 
+  // --- Ajustes, equipo e invitaciones (en memoria) ---
+
+  BusinessSettings settings = const BusinessSettings(
+    name: 'Pulpería Ana',
+    amountMode: AmountMode.twoDecimals,
+    quantityMode: QuantityMode.fractional,
+  );
+  List<TeamMember> team = [];
+  List<BusinessInvitation> businessInvitations = [];
+  List<InvitationOffer> offers = [];
+
+  /// Código -> negocio al que da entrada.
+  Map<String, RemoteBusiness> redeemable = {};
+  int _inviteCounter = 0;
+
+  @override
+  Future<BusinessSettings> getSettings(
+    String accessToken,
+    String businessId,
+  ) async {
+    enter('getSettings');
+    return settings;
+  }
+
+  @override
+  Future<BusinessSettings> updateSettings(
+    String accessToken,
+    String businessId, {
+    String? name,
+    AmountMode? amountMode,
+    QuantityMode? quantityMode,
+  }) async {
+    enter('updateSettings');
+    if ((amountMode == AmountMode.integer &&
+            settings.amountMode == AmountMode.twoDecimals) ||
+        (quantityMode == QuantityMode.integer &&
+            settings.quantityMode == QuantityMode.fractional)) {
+      throw const ApiException(400, 'mode_downgrade_not_allowed', [
+        'mode_downgrade_not_allowed',
+      ]);
+    }
+    settings = BusinessSettings(
+      name: name ?? settings.name,
+      amountMode: amountMode ?? settings.amountMode,
+      quantityMode: quantityMode ?? settings.quantityMode,
+    );
+    return settings;
+  }
+
+  @override
+  Future<List<TeamMember>> listTeam(
+    String accessToken,
+    String businessId,
+  ) async {
+    enter('listTeam');
+    return List.of(team);
+  }
+
+  @override
+  Future<void> promote(
+    String accessToken,
+    String businessId,
+    String userId,
+  ) async {
+    enter('promote');
+    team = [
+      for (final m in team)
+        m.userId == userId
+            ? TeamMember(userId: m.userId, email: m.email, role: Role.owner)
+            : m,
+    ];
+  }
+
+  @override
+  Future<void> removeMember(
+    String accessToken,
+    String businessId,
+    String userId,
+  ) async {
+    enter('removeMember');
+    final target = team.where((m) => m.userId == userId).firstOrNull;
+    final owners = team.where((m) => m.role == Role.owner).length;
+    if (target != null && target.role == Role.owner && owners <= 1) {
+      throw const ApiException(409, 'team_last_owner', ['team_last_owner']);
+    }
+    team = [
+      for (final m in team)
+        if (m.userId != userId) m,
+    ];
+  }
+
+  @override
+  Future<List<BusinessInvitation>> listBusinessInvitations(
+    String accessToken,
+    String businessId,
+  ) async {
+    enter('listBusinessInvitations');
+    return List.of(businessInvitations);
+  }
+
+  @override
+  Future<BusinessInvitation> invite(
+    String accessToken,
+    String businessId, {
+    String? email,
+  }) async {
+    enter('invite');
+    if (email != null &&
+        businessInvitations.any(
+          (i) => i.email == email && i.status == InvitationStatus.pending,
+        )) {
+      throw const ApiException(409, 'invitation_already_pending', [
+        'invitation_already_pending',
+      ]);
+    }
+    _inviteCounter++;
+    final invitation = BusinessInvitation(
+      id: 'inv-$_inviteCounter',
+      email: email,
+      code: 'CODE${_inviteCounter.toString().padLeft(4, '0')}',
+      status: InvitationStatus.pending,
+    );
+    businessInvitations = [...businessInvitations, invitation];
+    return invitation;
+  }
+
+  @override
+  Future<void> cancelInvitation(
+    String accessToken,
+    String businessId,
+    String invitationId,
+  ) async {
+    enter('cancelInvitation');
+    businessInvitations = [
+      for (final i in businessInvitations)
+        if (i.id != invitationId) i,
+    ];
+  }
+
+  @override
+  Future<List<InvitationOffer>> listInvitations(String accessToken) async {
+    enter('listInvitations');
+    return List.of(offers);
+  }
+
+  @override
+  Future<RemoteBusiness> acceptInvitation(
+    String accessToken,
+    String invitationId,
+  ) async {
+    enter('acceptInvitation');
+    final offer = offers.where((o) => o.id == invitationId).firstOrNull;
+    if (offer == null) {
+      throw const ApiException(404, 'invitation_not_found', [
+        'invitation_not_found',
+      ]);
+    }
+    offers = [
+      for (final o in offers)
+        if (o.id != invitationId) o,
+    ];
+    final business = RemoteBusiness(
+      id: offer.businessId,
+      name: offer.businessName,
+      role: Role.employee,
+      amountMode: AmountMode.twoDecimals,
+      quantityMode: QuantityMode.fractional,
+    );
+    businesses = [...businesses, business];
+    return business;
+  }
+
+  @override
+  Future<void> rejectInvitation(String accessToken, String invitationId) async {
+    enter('rejectInvitation');
+    offers = [
+      for (final o in offers)
+        if (o.id != invitationId) o,
+    ];
+  }
+
+  @override
+  Future<RemoteBusiness> redeemInvitationCode(
+    String accessToken,
+    String code,
+  ) async {
+    enter('redeemInvitationCode');
+    final business = redeemable.remove(code);
+    if (business == null) {
+      throw const ApiException(404, 'invalid_invitation_code', [
+        'invalid_invitation_code',
+      ]);
+    }
+    businesses = [...businesses, business];
+    return business;
+  }
+
   @override
   Future<List<OperationResult>> push(
     String accessToken,

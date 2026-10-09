@@ -1,0 +1,70 @@
+{
+  "description": "Ajustes del negocio, equipo e invitaciones (rutas /api/business, /api/business/team, /api/business/invitations y /api/invitations).",
+  "cases": [
+    {
+      "name": "ajustes del negocio",
+      "schema": "BusinessSettings",
+      "example": {
+        "name": "Pulpería Ana",
+        "amountMode": "two_decimals",
+        "quantityMode": "fractional"
+      }
+    },
+    {
+      "name": "miembro del equipo: dueño",
+      "schema": "TeamMember",
+      "example": {
+        "userId": "0198a000-0000-7000-8000-000000000001",
+        "email": "ana@correo.com",
+        "role": "owner"
+      }
+    },
+    {
+      "name": "miembro del equipo: empleado",
+      "schema": "TeamMember",
+      "example": {
+        "userId": "0198a000-0000-7000-8000-000000000004",
+        "email": "beto@correo.com",
+        "role": "employee"
+      }
+    },
+    {
+      "name": "miembro promovido",
+      "schema": "PromotedMember",
+      "example": {
+        "userId": "0198a000-0000-7000-8000-000000000004",
+        "role": "owner"
+      }
+    },
+    {
+      "name": "invitación pendiente con correo y su código",
+      "schema": "Invitation",
+      "example": {
+        "id": "0198a000-0000-7000-8000-000000000051",
+        "email": "beto@correo.com",
+        "code": "K7M2PX9Q",
+        "status": "pending"
+      }
+    },
+    {
+      "name": "invitación pendiente solo por código",
+      "schema": "Invitation",
+      "example": {
+        "id": "0198a000-0000-7000-8000-000000000052",
+        "email": null,
+        "code": "H4N8TW3R",
+        "status": "pending"
+      }
+    },
+    {
+      "name": "invitación recibida",
+      "schema": "InvitationOffer",
+      "example": {
+        "id": "0198a000-0000-7000-8000-000000000051",
+        "businessId": "0198a000-0000-7000-8000-000000000002",
+        "businessName": "Pulpería Ana",
+        "email": "beto@correo.com"
+      }
+    }
+  ]
+}

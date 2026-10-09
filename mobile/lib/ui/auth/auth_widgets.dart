@@ -135,7 +135,14 @@ class ModeChoices extends StatelessWidget {
     required this.onQuantity,
     this.amountError,
     this.quantityError,
+    this.amountIntegerEnabled = true,
+    this.quantityIntegerEnabled = true,
   });
+
+  /// Pasar de decimales a enteros no se permite (RF-9): quien ya usa
+  /// decimales no puede elegir la opción de enteros.
+  final bool amountIntegerEnabled;
+  final bool quantityIntegerEnabled;
 
   final AmountMode? amount;
   final QuantityMode? quantity;
@@ -155,6 +162,7 @@ class ModeChoices extends StatelessWidget {
         errorKey: const ValueKey('amount-mode-error'),
         selected: amount,
         onSelected: onAmount,
+        disabled: amountIntegerEnabled ? const {} : const {AmountMode.integer},
         options: const [
           (AmountMode.integer, Strings.amountModeInteger, 'amount-integer'),
           (
@@ -172,6 +180,9 @@ class ModeChoices extends StatelessWidget {
         errorKey: const ValueKey('quantity-mode-error'),
         selected: quantity,
         onSelected: onQuantity,
+        disabled: quantityIntegerEnabled
+            ? const {}
+            : const {QuantityMode.integer},
         options: const [
           (
             QuantityMode.integer,
@@ -203,8 +214,10 @@ class _Choice<T> extends StatelessWidget {
     required this.selected,
     required this.onSelected,
     required this.options,
+    this.disabled = const {},
   });
 
+  final Set<T> disabled;
   final String title;
   final String hint;
   final String? error;
@@ -241,6 +254,7 @@ class _Choice<T> extends StatelessWidget {
               for (final (value, label, keyName) in options)
                 ButtonSegment<T>(
                   value: value,
+                  enabled: !disabled.contains(value),
                   label: Text(label, key: ValueKey(keyName)),
                 ),
             ],

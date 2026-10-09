@@ -91,6 +91,109 @@ final class RemoteBusiness {
   };
 }
 
+/// Nombre y modos del negocio (RF-7, RF-80).
+final class BusinessSettings {
+  const BusinessSettings({
+    required this.name,
+    required this.amountMode,
+    required this.quantityMode,
+  });
+
+  factory BusinessSettings.fromJson(Map<String, dynamic> json) =>
+      BusinessSettings(
+        name: json['name'] as String,
+        amountMode: AmountMode.fromId(json['amountMode'] as String),
+        quantityMode: QuantityMode.fromId(json['quantityMode'] as String),
+      );
+
+  final String name;
+  final AmountMode amountMode;
+  final QuantityMode quantityMode;
+}
+
+/// Un miembro activo del equipo del negocio (RF-70).
+final class TeamMember {
+  const TeamMember({
+    required this.userId,
+    required this.email,
+    required this.role,
+  });
+
+  factory TeamMember.fromJson(Map<String, dynamic> json) => TeamMember(
+    userId: json['userId'] as String,
+    email: json['email'] as String,
+    role: Role.fromId(json['role'] as String),
+  );
+
+  final String userId;
+  final String email;
+  final Role role;
+}
+
+enum InvitationStatus {
+  pending('pending'),
+  accepted('accepted'),
+  rejected('rejected'),
+  cancelled('cancelled');
+
+  const InvitationStatus(this.id);
+
+  final String id;
+
+  static InvitationStatus fromId(String id) => values.firstWhere(
+    (s) => s.id == id,
+    orElse: () => throw ArgumentError.value(id, 'id', 'estado desconocido'),
+  );
+}
+
+/// Una invitación del negocio, como la ve el dueño: con su código de un solo
+/// uso (RF-92). Sin correo es una invitación solo por código.
+final class BusinessInvitation {
+  const BusinessInvitation({
+    required this.id,
+    required this.email,
+    required this.code,
+    required this.status,
+  });
+
+  factory BusinessInvitation.fromJson(Map<String, dynamic> json) =>
+      BusinessInvitation(
+        id: json['id'] as String,
+        email: json['email'] as String?,
+        code: json['code'] as String,
+        status: InvitationStatus.fromId(json['status'] as String),
+      );
+
+  final String id;
+  final String? email;
+  final String code;
+  final InvitationStatus status;
+}
+
+/// Una invitación recibida, dirigida al correo del usuario (RF-67). No trae el
+/// código.
+final class InvitationOffer {
+  const InvitationOffer({
+    required this.id,
+    required this.businessId,
+    required this.businessName,
+    required this.email,
+  });
+
+  factory InvitationOffer.fromJson(Map<String, dynamic> json) =>
+      InvitationOffer(
+        id: json['id'] as String,
+        businessId: json['businessId'] as String,
+        businessName: json['businessName'] as String,
+        email: json['email'] as String,
+      );
+
+  final String id;
+  final String businessId;
+  final String businessName;
+  final String email;
+}
+
 /// Una operación de la cola tal como viaja en un lote (plan 4.1).
 final class PushOperation {
   const PushOperation({

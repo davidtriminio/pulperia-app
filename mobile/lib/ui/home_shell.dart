@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/providers.dart';
 import '../app/sync_controller.dart';
+import '../domain/access/access.dart';
 import '../l10n/strings.dart';
 import 'auth/business_chooser_screen.dart';
 import 'auth/logout.dart';
+import 'business/settings_screen.dart';
 import 'catalog/catalog_screen.dart';
 import 'clients/clients_screen.dart';
 import 'summary/summary_screen.dart';
@@ -21,7 +23,7 @@ class HomeShell extends ConsumerStatefulWidget {
   ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-enum _MenuAction { syncNow, switchBusiness, logout }
+enum _MenuAction { syncNow, settings, switchBusiness, logout }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
@@ -29,6 +31,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final business = ref.watch(activeBusinessProvider);
+    final role = ref.watch(activeUserProvider).role;
     return Scaffold(
       appBar: AppBar(
         title: Text(business.maybeWhen(data: (b) => b.name, orElse: () => '')),
@@ -42,6 +45,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 ref
                     .read(syncControllerProvider.notifier)
                     .request(SyncTrigger.manual),
+              _MenuAction.settings => Navigator.of(context).push<void>(
+                MaterialPageRoute(
+                  builder: (_) => const BusinessSettingsScreen(),
+                ),
+              ),
               _MenuAction.switchBusiness => Navigator.of(context).push<void>(
                 MaterialPageRoute(
                   builder: (_) => const BusinessChooserScreen(asRoute: true),
@@ -49,18 +57,24 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               ),
               _MenuAction.logout => confirmLogout(context, ref),
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
+            itemBuilder: (_) => [
+              const PopupMenuItem(
                 key: ValueKey('menu-sync'),
                 value: _MenuAction.syncNow,
                 child: Text(Strings.syncNow),
               ),
-              PopupMenuItem(
+              if (can(role, Permission.manageBusinessSettings))
+                const PopupMenuItem(
+                  key: ValueKey('menu-settings'),
+                  value: _MenuAction.settings,
+                  child: Text(Strings.menuSettings),
+                ),
+              const PopupMenuItem(
                 key: ValueKey('menu-switch-business'),
                 value: _MenuAction.switchBusiness,
                 child: Text(Strings.switchBusiness),
               ),
-              PopupMenuItem(
+              const PopupMenuItem(
                 key: ValueKey('menu-logout'),
                 value: _MenuAction.logout,
                 child: Text(Strings.logout),

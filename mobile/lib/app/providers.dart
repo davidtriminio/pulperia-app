@@ -12,6 +12,7 @@ import '../data/repositories/product_repository.dart';
 import '../data/repositories/summary_queries.dart';
 import '../data/remote/api_client.dart';
 import '../data/session/business_service.dart';
+import '../data/session/management_service.dart';
 import '../data/session/session_service.dart';
 import '../data/session/session_store.dart';
 import '../data/sync/sync_service.dart';
@@ -89,6 +90,13 @@ final syncServiceProvider = Provider<SyncService>(
     api: ref.watch(pulperiaApiProvider),
     db: ref.watch(appDatabaseProvider),
     wait: ref.watch(syncWaitProvider),
+  ),
+);
+
+final managementServiceProvider = Provider<ManagementService>(
+  (ref) => ManagementService(
+    sessions: ref.watch(sessionServiceProvider),
+    api: ref.watch(pulperiaApiProvider),
   ),
 );
 
