@@ -1,6 +1,7 @@
 using Pulperia.Domain.Access;
 using Pulperia.Domain.Accounts;
 using Pulperia.Domain.Business;
+using Pulperia.Domain.Invitations;
 
 namespace Pulperia.Application.Accounts;
 
@@ -30,6 +31,48 @@ public sealed class AccountService(IAccountStore store, PasswordHasher hasher, T
         return await store.TryCreateAccountAsync(account, cancellationToken)
             ? AccountResult<RegisteredAccount>.Ok(new RegisteredAccount(account.UserId, account.BusinessId))
             : AccountResult<RegisteredAccount>.Fail("email_taken");
+    }
+
+    /// <summary>
+    /// Crea la cuenta de quien solo viene a trabajar con un código de invitación (RF-105, RF-106, D-32):
+    /// sin negocio propio, como empleado del negocio de la invitación. Todo o nada: con un código que
+    /// no sirve, o un correo ya registrado, no se crea la cuenta ni se consume el código.
+    /// </summary>
+    public async Task<AccountResult<RegisteredAccount>> RegisterWithInvitationCodeAsync(
+        string? email, string? password, string? typedCode, CancellationToken cancellationToken = default)
+    {
+        var problems = new List<string>();
+        if (!AccountRules.IsValidEmail(AccountRules.NormalizeEmail(email)))
+        {
+            problems.Add("email_invalid");
+        }
+        if (AccountRules.PasswordError(password) is { } passwordError)
+        {
+            problems.Add(passwordError);
+        }
+        if (problems.Count > 0)
+        {
+            return AccountResult<RegisteredAccount>.Fail(problems);
+        }
+        if (InvitationCodes.Normalize(typedCode) is not { } code)
+        {
+            return AccountResult<RegisteredAccount>.Fail("invalid_invitation_code");
+        }
+
+        var account = new NewInvitedAccount(
+            Guid.CreateVersion7(),
+            AccountRules.NormalizeEmail(email),
+            hasher.Hash(password!),
+            code,
+            clock.GetUtcNow().UtcDateTime);
+        var outcome = await store.TryCreateInvitedAccountAsync(account, cancellationToken);
+        return outcome.Status switch
+        {
+            InvitedAccountStatus.Created => AccountResult<RegisteredAccount>.Ok(
+                new RegisteredAccount(account.UserId, outcome.BusinessId)),
+            InvitedAccountStatus.EmailTaken => AccountResult<RegisteredAccount>.Fail("email_taken"),
+            _ => AccountResult<RegisteredAccount>.Fail("invalid_invitation_code"),
+        };
     }
 
     private readonly Lazy<string> _unknownUserHash = new(() => hasher.Hash("sin-usuario"));

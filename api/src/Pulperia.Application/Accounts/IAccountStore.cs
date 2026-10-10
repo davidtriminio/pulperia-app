@@ -14,6 +14,24 @@ public sealed record NewAccount(
     QuantityMode QuantityMode,
     DateTime CreatedAt);
 
+/// <summary>Una cuenta nueva que entra a un negocio existente con un código de invitación (D-32).</summary>
+public sealed record NewInvitedAccount(
+    Guid UserId,
+    string Email,
+    string PasswordHash,
+    string Code,
+    DateTime CreatedAt);
+
+/// <summary>Cómo terminó el registro con código: lo que se creó, o por qué no se creó nada.</summary>
+public enum InvitedAccountStatus
+{
+    Created,
+    EmailTaken,
+    InvalidCode,
+}
+
+public sealed record InvitedAccountOutcome(InvitedAccountStatus Status, Guid BusinessId = default);
+
 /// <summary>Un negocio adicional de un usuario ya registrado, que lo crea como dueño.</summary>
 public sealed record NewBusiness(
     Guid BusinessId,
@@ -34,6 +52,14 @@ public interface IAccountStore
     /// false, sin crear nada, si el correo ya está registrado.
     /// </summary>
     Task<bool> TryCreateAccountAsync(NewAccount account, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Crea el usuario y su pertenencia de empleado al negocio de la invitación pendiente con ese
+    /// código, y la marca aceptada, todo en una sola transacción (D-32). Si el código no está
+    /// pendiente o el correo ya existe no crea ni consume nada.
+    /// </summary>
+    Task<InvitedAccountOutcome> TryCreateInvitedAccountAsync(
+        NewInvitedAccount account, CancellationToken cancellationToken = default);
 
     Task<UserCredentials?> FindUserByEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default);
 

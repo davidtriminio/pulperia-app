@@ -5,7 +5,8 @@ namespace Pulperia.Api.Endpoints;
 internal static class AuthEndpoints
 {
     private sealed record RegisterBody(
-        string? Email, string? Password, string? BusinessName, string? AmountMode, string? QuantityMode);
+        string? Email, string? Password, string? BusinessName, string? AmountMode, string? QuantityMode,
+        string? InvitationCode);
 
     public static void MapAuthEndpoints(this WebApplication app)
     {
@@ -65,9 +66,14 @@ internal static class AuthEndpoints
         return Results.NoContent();
     }
 
-    private static async Task<IResult> RegisterAsync(HttpContext context, AccountService accounts)
+    private static async Task<IResult> RegisterAsync(
+        HttpContext context, AccountService accounts, RegistrationRateLimiter limiter)
     {
         var body = await Http.ReadBodyAsync<RegisterBody>(context);
+        if (body is { InvitationCode: not null })
+        {
+            return await RegisterWithCodeAsync(context, accounts, limiter, body);
+        }
         if (body is not { Email: not null, Password: not null, BusinessName: not null, AmountMode: not null, QuantityMode: not null })
         {
             return Http.InvalidRequest();
@@ -90,5 +96,33 @@ internal static class AuthEndpoints
                 new { userId = result.Value!.UserId, businessId = result.Value.BusinessId },
                 Http.Json, statusCode: StatusCodes.Status201Created)
             : Http.Error(result.Codes[0] == "email_taken" ? StatusCodes.Status409Conflict : StatusCodes.Status400BadRequest, result.Codes);
+    }
+
+    /// <summary>El registro de quien viene con un código de invitación y no crea negocio (RF-105 a RF-107, D-32).</summary>
+    private static async Task<IResult> RegisterWithCodeAsync(
+        HttpContext context, AccountService accounts, RegistrationRateLimiter limiter, RegisterBody body)
+    {
+        if (body.BusinessName is not null || body.AmountMode is not null || body.QuantityMode is not null)
+        {
+            return Http.Error(StatusCodes.Status400BadRequest, "registration_ambiguous");
+        }
+        if (body is not { Email: not null, Password: not null })
+        {
+            return Http.InvalidRequest();
+        }
+        // Todavía no hay usuario al que contarle los intentos: se cuentan por origen de la conexión (D-32).
+        if (!limiter.TryAcquire(context.Connection.RemoteIpAddress?.ToString() ?? "unknown"))
+        {
+            return ManagementEndpoints.Failure(["too_many_attempts"]);
+        }
+        var result = await accounts.RegisterWithInvitationCodeAsync(
+            body.Email, body.Password, body.InvitationCode, context.RequestAborted);
+        return result.IsSuccess
+            ? Results.Json(
+                new { userId = result.Value!.UserId, businessId = result.Value.BusinessId },
+                Http.Json, statusCode: StatusCodes.Status201Created)
+            : result.Codes[0] == "email_taken"
+                ? Http.Error(StatusCodes.Status409Conflict, result.Codes)
+                : ManagementEndpoints.Failure(result.Codes);
     }
 }
