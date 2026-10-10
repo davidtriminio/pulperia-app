@@ -151,7 +151,8 @@ public sealed class ManagementService(IManagementStore store, TimeProvider clock
 
         var settings = await store.GetSettingsAsync(invitation.BusinessId, cancellationToken);
         return AccountResult<BusinessSummary>.Ok(new BusinessSummary(
-            invitation.BusinessId, settings!.Name, Role.Employee, settings.AmountMode, settings.QuantityMode));
+            invitation.BusinessId, settings!.Name, Role.Employee, settings.AmountMode, settings.QuantityMode,
+            await store.GetStatusAsync(invitation.BusinessId, cancellationToken)));
     }
 
     /// <summary>Las invitaciones pendientes del negocio, para que el dueño pueda cancelarlas.</summary>
@@ -218,7 +219,8 @@ public sealed class ManagementService(IManagementStore store, TimeProvider clock
 
         var settings = await store.GetSettingsAsync(invitation!.BusinessId, cancellationToken);
         return AccountResult<BusinessSummary>.Ok(new BusinessSummary(
-            invitation.BusinessId, settings!.Name, Role.Employee, settings.AmountMode, settings.QuantityMode));
+            invitation.BusinessId, settings!.Name, Role.Employee, settings.AmountMode, settings.QuantityMode,
+            await store.GetStatusAsync(invitation.BusinessId, cancellationToken)));
     }
 
     /// <summary>El invitado rechaza (RF-68): no se crea ninguna pertenencia.</summary>

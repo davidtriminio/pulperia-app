@@ -327,6 +327,16 @@ public class ApiContractTests(PostgresFixture postgres)
         await probe.Call("GET", "/api/admin/audit", "/api/admin/audit?action=borrar_todo", 400, token: root.Token);
         await probe.Call("GET", "/api/admin/audit", "/api/admin/audit", 403, token: ana.Token);
 
+        // El negocio de Beto (activo en esta prueba) pasa a pendiente y lo activa el super administrador.
+        var pendingBusiness = (await probe.Call("POST", "/api/businesses", "/api/businesses", 201,
+            new { name = "Nuevo", amountMode = "integer", quantityMode = "integer" }, ana.Token))!.Value.GetProperty("id").GetString();
+        await kit.Host.Db.Businesses.Where(b => b.Id == Guid.Parse(pendingBusiness!))
+            .ExecuteUpdateAsync(s => s.SetProperty(b => b.Status, Pulperia.Domain.Business.BusinessStatus.Pending));
+        await probe.Call("POST", "/api/admin/businesses/{id}/activate", $"/api/admin/businesses/{Random()}/activate", 404, new { }, root.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/activate", $"/api/admin/businesses/{pendingBusiness}/activate", 403, new { }, ana.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/activate", $"/api/admin/businesses/{pendingBusiness}/activate", 200, new { }, root.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/activate", $"/api/admin/businesses/{pendingBusiness}/activate", 409, new { }, root.Token);
+
         // ---- Sin sesión: el 401 de todas las rutas que lo documentan y aún no se vieron ----
         foreach (var (method, template, status) in Contract.Responses().Where(r => r.Status == 401).ToArray())
         {

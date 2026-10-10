@@ -66,6 +66,11 @@ public sealed class EfManagementStore(PulperiaDbContext db) : IManagementStore
         return entity?.ToDomain();
     }
 
+    public async Task<Pulperia.Domain.Business.BusinessStatus> GetStatusAsync(
+        Guid businessId, CancellationToken cancellationToken = default) =>
+        await db.Businesses.AsNoTracking().Where(b => b.Id == businessId)
+            .Select(b => b.Status).SingleOrDefaultAsync(cancellationToken);
+
     public async Task<bool> IsActiveMemberAsync(Guid userId, Guid businessId, CancellationToken cancellationToken = default) =>
         await db.Memberships.AsNoTracking().AnyAsync(
             m => m.UserId == userId && m.BusinessId == businessId && m.Status == MembershipStatus.Active,

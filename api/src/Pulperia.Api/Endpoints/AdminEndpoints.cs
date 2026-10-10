@@ -20,6 +20,7 @@ internal static class AdminEndpoints
         admin.MapGet("/accounts/{id:guid}", GetAccountAsync);
         admin.MapPost("/businesses/{id:guid}/suspend", SuspendBusinessAsync);
         admin.MapPost("/businesses/{id:guid}/reactivate", ReactivateBusinessAsync);
+        admin.MapPost("/businesses/{id:guid}/activate", ActivateBusinessAsync);
         admin.MapPost("/accounts/{id:guid}/suspend", SuspendAccountAsync);
         admin.MapPost("/accounts/{id:guid}/reactivate", ReactivateAccountAsync);
         admin.MapPost("/accounts/{id:guid}/reset-password", ResetPasswordAsync);
@@ -110,6 +111,12 @@ internal static class AdminEndpoints
         }
         var result = await platform.SuspendBusinessAsync(
             id, body.Reason, context.GetSuperAdmin().UserId, context.RequestAborted);
+        return result.IsSuccess ? Results.Json(Json(result.Value!), Http.Json) : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> ActivateBusinessAsync(Guid id, PlatformService platform, HttpContext context)
+    {
+        var result = await platform.ActivateBusinessAsync(id, context.GetSuperAdmin().UserId, context.RequestAborted);
         return result.IsSuccess ? Results.Json(Json(result.Value!), Http.Json) : Failure(result.Codes);
     }
 

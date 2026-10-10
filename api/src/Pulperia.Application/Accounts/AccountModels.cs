@@ -36,4 +36,10 @@ public sealed record AccountResult<T>
 }
 
 /// <summary>Un negocio del usuario con el rol que tiene en él (RF-5, RF-6).</summary>
-public sealed record BusinessSummary(Guid Id, string Name, Role Role, AmountMode AmountMode, QuantityMode QuantityMode);
+public sealed record BusinessSummary(
+    Guid Id,
+    string Name,
+    Role Role,
+    AmountMode AmountMode,
+    QuantityMode QuantityMode,
+    BusinessStatus Status = BusinessStatus.Active);

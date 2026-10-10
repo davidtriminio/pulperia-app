@@ -39,7 +39,8 @@ public sealed record NewBusiness(
     string Name,
     AmountMode AmountMode,
     QuantityMode QuantityMode,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    BusinessStatus Status);
 
 /// <summary>
 /// Lo que el servicio de cuentas necesita de la base de datos. Las cuentas, los negocios y las
@@ -99,6 +100,9 @@ public interface IAccountStore
 
     /// <summary>Los negocios en los que el usuario tiene una pertenencia activa, con su rol.</summary>
     Task<IReadOnlyList<BusinessSummary>> ListBusinessesAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Si la persona es dueña de algún negocio activo (RF-104).</summary>
+    Task<bool> OwnsActiveBusinessAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>El estado del negocio (D-30); null si no existe.</summary>
     Task<BusinessStatus?> FindBusinessStatusAsync(Guid businessId, CancellationToken cancellationToken = default);

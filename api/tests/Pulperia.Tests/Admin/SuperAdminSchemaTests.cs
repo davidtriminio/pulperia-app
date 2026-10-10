@@ -33,7 +33,7 @@ public class SuperAdminSchemaTests(PostgresFixture postgres)
     // ---- estado del negocio y de la cuenta
 
     [Fact]
-    public async Task Un_negocio_y_una_cuenta_nuevos_nacen_activos_y_sin_marca()
+    public async Task El_negocio_de_un_registro_nace_pendiente_y_la_cuenta_sin_marca_ni_suspension()
     {
         var (kit, ana, business, _) = await Setup();
         await using var _k = kit;
@@ -41,7 +41,7 @@ public class SuperAdminSchemaTests(PostgresFixture postgres)
         var stored = await kit.Db.Businesses.AsNoTracking().SingleAsync(b => b.Id == business);
         var user = await kit.Db.Users.AsNoTracking().SingleAsync(u => u.Id == ana);
 
-        Assert.Equal((BusinessStatus.Active, null), (stored.Status, stored.StatusReason));
+        Assert.Equal((BusinessStatus.Pending, null), (stored.Status, stored.StatusReason));
         Assert.Equal((false, null, null), (user.IsSuperAdmin, user.SuspendedAt, user.SuspensionReason));
     }
 

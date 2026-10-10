@@ -306,6 +306,19 @@
         }
       }
     },
+    "/api/admin/businesses/{id}/activate": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "post": {
+        "summary": "Activar un negocio pendiente (RF-103, D-30). Rechazarlo es suspenderlo con un motivo.",
+        "responses": {
+          "200": { "description": "El negocio, ya activo.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminBusiness" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
     "/api/admin/accounts/{id}/suspend": {
       "parameters": [{ "$ref": "#/components/parameters/Id" }],
       "post": {
@@ -620,13 +633,14 @@
       },
       "BusinessSummary": {
         "type": "object",
-        "required": ["id", "name", "role", "amountMode", "quantityMode"],
+        "required": ["id", "name", "role", "amountMode", "quantityMode", "status"],
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "name": { "type": "string" },
           "role": { "$ref": "#/components/schemas/Role" },
           "amountMode": { "$ref": "#/components/schemas/AmountMode" },
-          "quantityMode": { "$ref": "#/components/schemas/QuantityMode" }
+          "quantityMode": { "$ref": "#/components/schemas/QuantityMode" },
+          "status": { "$ref": "#/components/schemas/BusinessStatus" }
         }
       },
       "BusinessSettings": {
