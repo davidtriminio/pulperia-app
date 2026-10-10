@@ -40,7 +40,7 @@ internal static class SyncEndpoints
     private static IResult Failure(IReadOnlyList<string> codes) => Http.Error(
         codes[0] switch
         {
-            SyncService.Forbidden => StatusCodes.Status403Forbidden,
+            SyncService.Forbidden or "business_pending" or "business_suspended" => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status400BadRequest,
         },
         codes);

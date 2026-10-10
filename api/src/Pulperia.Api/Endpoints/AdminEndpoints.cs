@@ -17,7 +17,11 @@ internal static class AdminEndpoints
         admin.MapGet("/businesses/{id:guid}", GetBusinessAsync);
         admin.MapGet("/accounts", ListAccountsAsync);
         admin.MapGet("/accounts/{id:guid}", GetAccountAsync);
+        admin.MapPost("/businesses/{id:guid}/suspend", SuspendBusinessAsync);
+        admin.MapPost("/businesses/{id:guid}/reactivate", ReactivateBusinessAsync);
     }
+
+    private sealed record ReasonBody(string? Reason);
 
     private static object Json(AdminBusiness b) => new
     {
@@ -56,6 +60,16 @@ internal static class AdminEndpoints
 
     private static IResult NotFound(IReadOnlyList<string> codes) => Http.Error(StatusCodes.Status404NotFound, codes);
 
+    /// <summary>Traduce un rechazo del panel a su estado HTTP.</summary>
+    private static IResult Failure(IReadOnlyList<string> codes) => Http.Error(
+        codes[0] switch
+        {
+            var code when code.EndsWith("_not_found") => StatusCodes.Status404NotFound,
+            "business_status_invalid_transition" => StatusCodes.Status409Conflict,
+            _ => StatusCodes.Status400BadRequest,
+        },
+        codes);
+
     private static async Task<IResult> ListBusinessesAsync(
         PlatformService platform, HttpContext context, string? search, string? status, int? page, int? pageSize)
     {
@@ -79,6 +93,24 @@ internal static class AdminEndpoints
     {
         var result = await platform.GetBusinessAsync(id, context.RequestAborted);
         return result.IsSuccess ? Results.Json(Json(result.Value!), Http.Json) : NotFound(result.Codes);
+    }
+
+    private static async Task<IResult> SuspendBusinessAsync(
+        Guid id, PlatformService platform, HttpContext context)
+    {
+        if (await Http.ReadBodyAsync<ReasonBody>(context) is not { } body)
+        {
+            return Http.InvalidRequest();
+        }
+        var result = await platform.SuspendBusinessAsync(
+            id, body.Reason, context.GetSuperAdmin().UserId, context.RequestAborted);
+        return result.IsSuccess ? Results.Json(Json(result.Value!), Http.Json) : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> ReactivateBusinessAsync(Guid id, PlatformService platform, HttpContext context)
+    {
+        var result = await platform.ReactivateBusinessAsync(id, context.GetSuperAdmin().UserId, context.RequestAborted);
+        return result.IsSuccess ? Results.Json(Json(result.Value!), Http.Json) : Failure(result.Codes);
     }
 
     private static async Task<IResult> ListAccountsAsync(

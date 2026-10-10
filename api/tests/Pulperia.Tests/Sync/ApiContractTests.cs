@@ -271,6 +271,27 @@ public class ApiContractTests(PostgresFixture postgres)
         await probe.Call("GET", "/api/admin/accounts/{id}", $"/api/admin/accounts/{Random()}", 404, token: root.Token);
         await probe.Call("GET", "/api/admin/accounts/{id}", $"/api/admin/accounts/{ana.UserId}", 403, token: ana.Token);
 
+        var betoBusiness = (await probe.Call("GET", "/api/admin/accounts/{id}", $"/api/admin/accounts/{outsider.UserId}", 200, token: root.Token))!
+            .Value.GetProperty("businesses")[0].GetProperty("id").GetString();
+        await probe.Call("POST", "/api/admin/businesses/{id}/suspend", $"/api/admin/businesses/{betoBusiness}/suspend", 400,
+            new { reason = "  " }, root.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/suspend", $"/api/admin/businesses/{betoBusiness}/suspend", 200,
+            new { reason = "Falta de pago" }, root.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/suspend", $"/api/admin/businesses/{betoBusiness}/suspend", 409,
+            new { reason = "Otra vez" }, root.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/suspend", $"/api/admin/businesses/{Random()}/suspend", 404,
+            new { reason = "x" }, root.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/suspend", $"/api/admin/businesses/{betoBusiness}/suspend", 403,
+            new { reason = "x" }, ana.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/reactivate", $"/api/admin/businesses/{betoBusiness}/reactivate", 200,
+            new { }, root.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/reactivate", $"/api/admin/businesses/{betoBusiness}/reactivate", 409,
+            new { }, root.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/reactivate", $"/api/admin/businesses/{Random()}/reactivate", 404,
+            new { }, root.Token);
+        await probe.Call("POST", "/api/admin/businesses/{id}/reactivate", $"/api/admin/businesses/{betoBusiness}/reactivate", 403,
+            new { }, ana.Token);
+
         // ---- Sin sesión: el 401 de todas las rutas que lo documentan y aún no se vieron ----
         foreach (var (method, template, status) in Contract.Responses().Where(r => r.Status == 401).ToArray())
         {

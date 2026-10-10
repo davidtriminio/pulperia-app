@@ -31,6 +31,21 @@ public static class BusinessStatuses
     };
 }
 
+public static class BusinessAvailability
+{
+    /// <summary>
+    /// Código con el que un negocio que no está activo rechaza peticiones, lotes y pull (D-29, D-30);
+    /// null si está activo.
+    /// </summary>
+    public static string? RejectionCode(this BusinessStatus status) => status switch
+    {
+        BusinessStatus.Active => null,
+        BusinessStatus.Pending => "business_pending",
+        BusinessStatus.Suspended => "business_suspended",
+        _ => throw new ArgumentOutOfRangeException(nameof(status)),
+    };
+}
+
 /// <summary>Motivo por el que se rechaza un cambio de estado del negocio.</summary>
 public enum BusinessStatusError
 {

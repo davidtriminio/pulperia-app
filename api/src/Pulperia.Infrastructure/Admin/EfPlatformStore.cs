@@ -4,6 +4,8 @@ using Pulperia.Domain.Business;
 using Pulperia.Domain.Team;
 using Pulperia.Infrastructure.Persistence;
 using Pulperia.Domain.Access;
+using Pulperia.Domain.Admin;
+using Pulperia.Infrastructure.Persistence.Entities;
 
 namespace Pulperia.Infrastructure.Admin;
 
@@ -119,6 +121,46 @@ public sealed class EfPlatformStore(PulperiaDbContext db) : IPlatformStore
             u.Id, u.Email, u.CreatedAt, u.IsSuperAdmin, u.SuspendedAt, u.Reason,
             byUser[u.Id].OrderBy(m => m.Name, StringComparer.Ordinal).ThenBy(m => m.Id)
                 .Select(m => new AdminAccountBusiness(m.Id, m.Name, m.Role, m.Status)).ToList())).ToList();
+    }
+
+    public async Task<BusinessStatusOutcome> ChangeBusinessStatusAsync(
+        Guid businessId, Func<BusinessStatus, BusinessStatusChange> change, AdminAction action,
+        Guid performedByUserId, string? reason, DateTime at, CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        // El negocio bloqueado: dos cambios de estado simultáneos se esperan entre sí.
+        var locked = await db.Database
+            .SqlQuery<int>($"SELECT 1 AS \"Value\" FROM businesses WHERE id = {businessId} FOR UPDATE")
+            .ToListAsync(cancellationToken);
+        if (locked.Count == 0)
+        {
+            return BusinessStatusOutcome.Fail("business_not_found");
+        }
+
+        var current = await db.Businesses.AsNoTracking().Where(b => b.Id == businessId)
+            .Select(b => b.Status).SingleAsync(cancellationToken);
+        var result = change(current);
+        if (!result.IsValid)
+        {
+            return BusinessStatusOutcome.Fail(result.Error!.Value.Code());
+        }
+
+        var performedBy = await db.Users.AsNoTracking().Where(u => u.Id == performedByUserId)
+            .Select(u => u.Email).SingleAsync(cancellationToken);
+        var status = result.Status;
+        var statusReason = status == BusinessStatus.Suspended ? reason : null;
+        await db.Businesses.Where(b => b.Id == businessId).ExecuteUpdateAsync(
+            s => s.SetProperty(b => b.Status, status).SetProperty(b => b.StatusReason, statusReason), cancellationToken);
+        db.AdminAudits.Add(new AdminAuditEntity
+        {
+            Id = Guid.CreateVersion7(), Action = action, TargetBusinessId = businessId,
+            Detail = reason, PerformedBy = performedBy, PerformedAt = at,
+        });
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return BusinessStatusOutcome.Done((await FindBusinessAsync(businessId, cancellationToken))!);
     }
 
     /// <summary>El texto buscado como patrón de <c>ILIKE</c>, con sus comodines escapados.</summary>
