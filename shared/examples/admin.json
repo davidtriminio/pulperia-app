@@ -1,0 +1,92 @@
+{
+  "description": "Respuestas de ejemplo de la administración de la plataforma (rutas /api/admin). Cada caso cumple el esquema que nombra de shared/openapi.json (la API lo comprueba) y los clientes lo leen en sus tests.",
+  "cases": [
+    {
+      "name": "ficha de un negocio activo con cifras agregadas",
+      "schema": "AdminBusiness",
+      "example": {
+        "id": "0198a000-0000-7000-8000-000000000002",
+        "name": "Pulpería Ana",
+        "ownerEmails": [
+          "ana@correo.com"
+        ],
+        "memberCount": 2,
+        "createdAt": "2026-10-02T14:00:00Z",
+        "status": "active",
+        "statusReason": null,
+        "lastSyncAt": "2026-10-09T15:30:00Z",
+        "clientCount": 42,
+        "productCount": 18,
+        "fiadoCount": 130,
+        "paymentCount": 75
+      }
+    },
+    {
+      "name": "negocio pendiente de activación, sin sincronizar",
+      "schema": "AdminBusiness",
+      "example": {
+        "id": "0198a000-0000-7000-8000-000000000012",
+        "name": "Abarrotes Beto",
+        "ownerEmails": [
+          "beto@correo.com"
+        ],
+        "memberCount": 1,
+        "createdAt": "2026-10-09T16:00:00Z",
+        "status": "pending",
+        "statusReason": null,
+        "lastSyncAt": null,
+        "clientCount": 0,
+        "productCount": 0,
+        "fiadoCount": 0,
+        "paymentCount": 0
+      }
+    },
+    {
+      "name": "cuenta suspendida con sus negocios",
+      "schema": "AdminAccount",
+      "example": {
+        "id": "0198a000-0000-7000-8000-000000000004",
+        "email": "beto@correo.com",
+        "createdAt": "2026-10-05T12:00:00Z",
+        "isSuperAdmin": false,
+        "suspendedAt": "2026-10-09T10:00:00Z",
+        "suspensionReason": "Uso indebido",
+        "businesses": [
+          {
+            "id": "0198a000-0000-7000-8000-000000000012",
+            "name": "Abarrotes Beto",
+            "role": "owner",
+            "status": "suspended"
+          }
+        ]
+      }
+    },
+    {
+      "name": "página de negocios",
+      "schema": "AdminBusinessPage",
+      "example": {
+        "items": [
+          {
+            "id": "0198a000-0000-7000-8000-000000000002",
+            "name": "Pulpería Ana",
+            "ownerEmails": [
+              "ana@correo.com"
+            ],
+            "memberCount": 2,
+            "createdAt": "2026-10-02T14:00:00Z",
+            "status": "active",
+            "statusReason": null,
+            "lastSyncAt": "2026-10-09T15:30:00Z",
+            "clientCount": 42,
+            "productCount": 18,
+            "fiadoCount": 130,
+            "paymentCount": 75
+          }
+        ],
+        "page": 1,
+        "pageSize": 25,
+        "total": 1
+      }
+    }
+  ]
+}
