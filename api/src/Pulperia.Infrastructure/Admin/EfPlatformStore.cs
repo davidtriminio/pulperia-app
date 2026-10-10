@@ -213,6 +213,38 @@ public sealed class EfPlatformStore(PulperiaDbContext db) : IPlatformStore
         return AccountSuspensionOutcome.Done((await FindAccountAsync(userId, cancellationToken))!);
     }
 
+    public async Task<AdminPage<AdminAuditEntry>> ListAuditAsync(
+        Guid? accountId, Guid? businessId, AdminAction? action, int page, int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = db.AdminAudits.AsNoTracking();
+        if (accountId is { } account)
+        {
+            query = query.Where(a => a.TargetUserId == account);
+        }
+        if (businessId is { } business)
+        {
+            query = query.Where(a => a.TargetBusinessId == business);
+        }
+        if (action is { } wanted)
+        {
+            query = query.Where(a => a.Action == wanted);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var rows = await query.OrderByDescending(a => a.PerformedAt).ThenByDescending(a => a.Id)
+            .Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(a => new AdminAuditEntry(
+                a.Id, a.Action, a.PerformedBy, a.PerformedAt,
+                a.TargetUserId,
+                db.Users.Where(u => u.Id == a.TargetUserId).Select(u => u.Email).FirstOrDefault(),
+                a.TargetBusinessId,
+                db.Businesses.Where(b => b.Id == a.TargetBusinessId).Select(b => b.Name).FirstOrDefault(),
+                a.Detail))
+            .ToListAsync(cancellationToken);
+        return new AdminPage<AdminAuditEntry>(rows, page, pageSize, total);
+    }
+
     /// <summary>El texto buscado como patrón de <c>ILIKE</c>, con sus comodines escapados.</summary>
     private static string Like(string term) =>
         "%" + term.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";

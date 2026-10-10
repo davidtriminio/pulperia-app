@@ -39,6 +39,11 @@ public interface IPlatformStore
         Guid performedByUserId, string? reason, DateTime at, CancellationToken cancellationToken = default);
 
     Task<AdminAccount?> FindAccountAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>La auditoría de la más reciente a la más antigua, con filtros opcionales.</summary>
+    Task<AdminPage<AdminAuditEntry>> ListAuditAsync(
+        Guid? accountId, Guid? businessId, AdminAction? action, int page, int pageSize,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>El negocio con su estado nuevo, o el código estable del rechazo.</summary>
@@ -76,6 +81,11 @@ public sealed class PlatformService(IPlatformStore store, PasswordResetService p
     public Task<AdminPage<AdminAccount>> ListAccountsAsync(
         string? search, int? page, int? pageSize, CancellationToken cancellationToken = default) =>
         store.ListAccountsAsync(Clean(search), Page(page), PageSize(pageSize), cancellationToken);
+
+    public Task<AdminPage<AdminAuditEntry>> ListAuditAsync(
+        Guid? accountId, Guid? businessId, AdminAction? action, int? page, int? pageSize,
+        CancellationToken cancellationToken = default) =>
+        store.ListAuditAsync(accountId, businessId, action, Page(page), PageSize(pageSize), cancellationToken);
 
     public async Task<AccountResult<AdminAccount>> GetAccountAsync(
         Guid userId, CancellationToken cancellationToken = default) =>

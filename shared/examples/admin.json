@@ -101,6 +101,21 @@
       "example": {
         "password": "k7Mw2PxQ9tHnR4Zb"
       }
+    },
+    {
+      "name": "entrada de la auditoría: suspensión de un negocio",
+      "schema": "AdminAuditEntry",
+      "example": {
+        "id": "0198a000-0000-7000-8000-000000000071",
+        "action": "suspend_business",
+        "performedBy": "root@plataforma.com",
+        "performedAt": "2026-10-09T12:20:00Z",
+        "targetUserId": null,
+        "targetEmail": null,
+        "targetBusinessId": "0198a000-0000-7000-8000-000000000002",
+        "targetBusinessName": "Pulpería Ana",
+        "detail": "Falta de pago"
+      }
     }
   ]
 }
