@@ -60,6 +60,23 @@ class SessionService {
     return login(normalized, password);
   }
 
+  /// Crea la cuenta de quien solo viene a trabajar con un código de invitación
+  /// (RF-105): sin negocio propio, como empleado del negocio de la invitación, e
+  /// inicia sesión. Requiere conexión. Si el código no sirve no se crea nada.
+  Future<StoredSession> registerWithInvitationCode({
+    required String email,
+    required String password,
+    required String invitationCode,
+  }) async {
+    final normalized = _normalize(email);
+    await _api.registerWithInvitationCode(
+      email: normalized,
+      password: password,
+      invitationCode: invitationCode.trim(),
+    );
+    return login(normalized, password);
+  }
+
   /// Inicia sesión (RF-3). El primer inicio en un teléfono requiere conexión
   /// (principio 2): sin ella lanza [NetworkException] y no guarda nada.
   Future<StoredSession> login(String email, String password) async {

@@ -48,6 +48,7 @@ const _byCode = <String, String>{
   'invitation_not_invitee': 'Esa invitación no es para tu cuenta.',
   'invitation_not_pending': 'La invitación ya no está pendiente.',
   'invalid_invitation_code': 'El código no es válido o ya se usó.',
+  'registration_ambiguous': 'Elige una sola forma de registrarte: con un negocio nuevo o con un código.',
   'team_already_owner': 'Esa persona ya es dueña del negocio.',
   'team_last_owner': 'El negocio debe tener al menos un dueño.',
   'team_member_not_active': 'Esa persona ya no es parte del equipo.',

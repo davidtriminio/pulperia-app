@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pulperia_mobile/data/remote/models.dart';
 import 'package:pulperia_mobile/data/session/session_service.dart';
 import 'package:pulperia_mobile/data/session/session_store.dart';
+import 'package:pulperia_mobile/domain/access/access.dart';
 import 'package:pulperia_mobile/domain/business/amount_mode.dart';
 import 'package:pulperia_mobile/domain/business/quantity_mode.dart';
 
@@ -65,6 +66,70 @@ void main() {
 
       await expectLater(
         service.login('ana@correo.com', 'contrasena1'),
+        throwsA(isA<NetworkException>()),
+      );
+      expect(store.session, isNull);
+    });
+  });
+
+  group('registrarse con un código de invitación (RF-105, RF-106)', () {
+    const business = RemoteBusiness(
+      id: 'b-9',
+      name: 'Abarrotes Cata',
+      role: Role.employee,
+      amountMode: AmountMode.integer,
+      quantityMode: QuantityMode.integer,
+    );
+
+    setUp(() => api.redeemable = {'H4N8TW3R': business});
+
+    test(
+      'crea la cuenta sin negocio propio y deja la sesión iniciada',
+      () async {
+        final session = await service.registerWithInvitationCode(
+          email: ' Dana@Correo.com ',
+          password: 'contrasena1',
+          invitationCode: 'h4n8-tw3r',
+        );
+
+        expect(api.calls, ['registerWithInvitationCode', 'login']);
+        expect(session.email, 'dana@correo.com');
+        expect(store.session?.tokens.accessToken, 'access-1');
+        expect(api.businesses.map((b) => b.id), ['b-9']);
+      },
+    );
+
+    test(
+      'un código que no sirve: el error sube y no se inicia sesión',
+      () async {
+        await expectLater(
+          service.registerWithInvitationCode(
+            email: 'dana@correo.com',
+            password: 'contrasena1',
+            invitationCode: 'AAAA-AAAA',
+          ),
+          throwsA(
+            isA<ApiException>().having(
+              (e) => e.code,
+              'code',
+              'invalid_invitation_code',
+            ),
+          ),
+        );
+        expect(api.calls, ['registerWithInvitationCode']);
+        expect(store.session, isNull);
+      },
+    );
+
+    test('sin conexión no se crea nada', () async {
+      api.offline = true;
+
+      await expectLater(
+        service.registerWithInvitationCode(
+          email: 'dana@correo.com',
+          password: 'contrasena1',
+          invitationCode: 'H4N8-TW3R',
+        ),
         throwsA(isA<NetworkException>()),
       );
       expect(store.session, isNull);

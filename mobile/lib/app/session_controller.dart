@@ -55,6 +55,24 @@ class SessionController extends AsyncNotifier<SessionState> {
     await _chooseOnlyBusiness();
   }
 
+  /// Crea la cuenta con un código de invitación, sin negocio propio, e inicia
+  /// sesión (RF-105). El negocio de la invitación queda elegido.
+  Future<void> registerWithInvitationCode({
+    required String email,
+    required String password,
+    required String invitationCode,
+  }) async {
+    final stored = await ref
+        .read(sessionServiceProvider)
+        .registerWithInvitationCode(
+          email: email,
+          password: password,
+          invitationCode: invitationCode,
+        );
+    state = AsyncData(_stateOf(stored));
+    await _chooseOnlyBusiness();
+  }
+
   /// Vuelve a entrar con la contraseña cuando la sesión caducó sin conexión
   /// (D-10); no cierra nada ni toca la cola.
   Future<void> reauthenticate(String password) async {

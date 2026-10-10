@@ -144,6 +144,29 @@ class FakeApi implements PulperiaApi {
   }
 
   @override
+  Future<RegisteredAccount> registerWithInvitationCode({
+    required String email,
+    required String password,
+    required String invitationCode,
+  }) async {
+    enter('registerWithInvitationCode');
+    // Como el servidor (D-28, D-32): sin mayúsculas, espacios ni guiones.
+    final normalized = invitationCode.toUpperCase().replaceAll(
+      RegExp(r'[^A-Z0-9]'),
+      '',
+    );
+    final business = redeemable.remove(normalized);
+    if (business == null) {
+      throw const ApiException(404, 'invalid_invitation_code', [
+        'invalid_invitation_code',
+      ]);
+    }
+    passwords[email] = password;
+    businesses = [...businesses, business];
+    return RegisteredAccount(userId: userId, businessId: business.id);
+  }
+
+  @override
   Future<ApiTokens> login(String email, String password) async {
     enter('login');
     if (passwords.isNotEmpty && passwords[email] != password) {

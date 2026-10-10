@@ -59,6 +59,7 @@ const apiCodes = [
   'quantity_not_whole',
   'quantity_too_large',
   'quantity_too_many_decimals',
+  'registration_ambiguous',
   'subtotal_mismatch',
   'team_already_owner',
   'team_last_owner',

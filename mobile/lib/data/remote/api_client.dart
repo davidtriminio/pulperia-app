@@ -22,6 +22,14 @@ abstract interface class PulperiaApi {
     required QuantityMode quantityMode,
   });
 
+  /// Crea la cuenta de quien viene con un código de invitación (RF-105): sin
+  /// negocio propio, como empleado del negocio de la invitación.
+  Future<RegisteredAccount> registerWithInvitationCode({
+    required String email,
+    required String password,
+    required String invitationCode,
+  });
+
   Future<ApiTokens> login(String email, String password);
 
   Future<ApiTokens> refresh(String refreshToken);
@@ -227,6 +235,25 @@ final class HttpPulperiaApi implements PulperiaApi {
         'businessName': businessName,
         'amountMode': amountMode.id,
         'quantityMode': quantityMode.id,
+      },
+    ),
+    201,
+    (j) => RegisteredAccount.fromJson(j! as Map<String, dynamic>),
+  );
+
+  @override
+  Future<RegisteredAccount> registerWithInvitationCode({
+    required String email,
+    required String password,
+    required String invitationCode,
+  }) async => _parse(
+    await _send(
+      'POST',
+      '/api/auth/register',
+      body: {
+        'email': email,
+        'password': password,
+        'invitationCode': invitationCode,
       },
     ),
     201,
