@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Pulperia.Application.Accounts;
 using Pulperia.Domain.Access;
+using Pulperia.Domain.Business;
 using Pulperia.Domain.Invitations;
 using Pulperia.Domain.Team;
 using Pulperia.Infrastructure.Persistence;
@@ -89,6 +90,11 @@ public sealed class EfAccountStore(PulperiaDbContext db) : IAccountStore
         await transaction.CommitAsync(cancellationToken);
         return new InvitedAccountOutcome(InvitedAccountStatus.Created, invitation.BusinessId);
     }
+
+    public async Task<BusinessStatus?> FindBusinessStatusAsync(
+        Guid businessId, CancellationToken cancellationToken = default) =>
+        await db.Businesses.AsNoTracking().Where(b => b.Id == businessId)
+            .Select(b => (BusinessStatus?)b.Status).SingleOrDefaultAsync(cancellationToken);
 
     public async Task<bool> IsActiveSuperAdminAsync(Guid userId, CancellationToken cancellationToken = default) =>
         await db.Users.AsNoTracking()

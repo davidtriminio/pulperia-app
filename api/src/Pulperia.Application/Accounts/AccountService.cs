@@ -156,6 +156,14 @@ public sealed class AccountService(IAccountStore store, PasswordHasher hasher, T
     public Task<bool> IsActiveSuperAdminAsync(Guid userId, CancellationToken cancellationToken = default) =>
         store.IsActiveSuperAdminAsync(userId, cancellationToken);
 
+    /// <summary>
+    /// Si el negocio puede atender peticiones: null si está activo, o el código con el que rechaza
+    /// (<c>business_pending</c>, <c>business_suspended</c>). Se mira después de comprobar la
+    /// pertenencia, para no revelar el estado de un negocio a quien no es de él (D-29, D-30).
+    /// </summary>
+    public async Task<string?> CheckBusinessAvailableAsync(Guid businessId, CancellationToken cancellationToken = default) =>
+        (await store.FindBusinessStatusAsync(businessId, cancellationToken))?.RejectionCode();
+
     /// <summary>Cierra la sesión del token de acceso, aunque haya caducado. Cerrar dos veces no falla.</summary>
     public async Task LogoutAsync(string accessToken, CancellationToken cancellationToken = default)
     {

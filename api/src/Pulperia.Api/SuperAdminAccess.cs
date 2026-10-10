@@ -17,6 +17,8 @@ public sealed class SuperAdminOnlyMetadata
 /// </summary>
 public static class SuperAdminAccess
 {
+    private const string AdminKey = "Pulperia.SuperAdmin";
+
     /// <summary>Protege la ruta o el grupo: 401 sin sesión, 403 si la cuenta no es super administrador vigente.</summary>
     public static TBuilder RequireSuperAdmin<TBuilder>(this TBuilder builder) where TBuilder : IEndpointConventionBuilder
     {
@@ -34,10 +36,16 @@ public static class SuperAdminAccess
             {
                 return Http.Error(StatusCodes.Status403Forbidden, "forbidden");
             }
+            context.Items[AdminKey] = user;
             return await next(invocation);
         });
         return builder;
     }
+
+    /// <summary>El super administrador de una ruta protegida con <see cref="RequireSuperAdmin"/>.</summary>
+    public static AuthenticatedUser GetSuperAdmin(this HttpContext context) =>
+        context.Items[AdminKey] as AuthenticatedUser
+        ?? throw new InvalidOperationException("La ruta no está protegida con RequireSuperAdmin().");
 
     /// <summary>El grupo <c>/api/admin</c>, protegido: toda ruta de administración cuelga de él.</summary>
     public static RouteGroupBuilder MapAdminGroup(this WebApplication app) =>

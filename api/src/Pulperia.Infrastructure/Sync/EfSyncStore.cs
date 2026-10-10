@@ -25,6 +25,11 @@ public sealed class EfSyncStore : ISyncStore
             ?? throw new ArgumentException("El contexto debe estar limitado a un negocio.", nameof(db));
     }
 
+    public async Task<Pulperia.Domain.Business.BusinessStatus?> FindBusinessStatusAsync(
+        CancellationToken cancellationToken = default) =>
+        await _db.Businesses.AsNoTracking().Where(b => b.Id == _businessId)
+            .Select(b => (Pulperia.Domain.Business.BusinessStatus?)b.Status).SingleOrDefaultAsync(cancellationToken);
+
     public async Task<SyncMembership?> FindMembershipAsync(Guid userId, CancellationToken cancellationToken = default) =>
         await _db.Memberships.AsNoTracking()
             .Where(m => m.UserId == userId && m.BusinessId == _businessId)

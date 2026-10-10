@@ -43,6 +43,12 @@ public static class BusinessAccess
                 return Http.Error(StatusCodes.Status403Forbidden, "forbidden");
             }
 
+            // Un negocio pendiente o suspendido no atiende nada; se dice solo a quien es de él.
+            if (await accounts.CheckBusinessAvailableAsync(businessId, context.RequestAborted) is { } unavailable)
+            {
+                return Http.Error(StatusCodes.Status403Forbidden, unavailable);
+            }
+
             context.Items[ItemKey] = new ActiveBusiness(user.UserId, businessId, role);
             return await next(invocation);
         });

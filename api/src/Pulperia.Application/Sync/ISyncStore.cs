@@ -8,6 +8,9 @@ namespace Pulperia.Application.Sync;
 public interface ISyncStore
 {
     /// <summary>La pertenencia del usuario a este negocio, activa o removida; null si nunca perteneció.</summary>
+    /// <summary>El estado del negocio al que está limitada esta instancia (D-30).</summary>
+    Task<Pulperia.Domain.Business.BusinessStatus?> FindBusinessStatusAsync(CancellationToken cancellationToken = default);
+
     Task<SyncMembership?> FindMembershipAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>

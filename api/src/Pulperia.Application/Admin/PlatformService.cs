@@ -1,4 +1,5 @@
 using Pulperia.Application.Accounts;
+using Pulperia.Domain.Admin;
 using Pulperia.Domain.Business;
 
 namespace Pulperia.Application.Admin;
@@ -18,11 +19,28 @@ public interface IPlatformStore
     Task<AdminPage<AdminAccount>> ListAccountsAsync(
         string? search, int page, int pageSize, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// En una sola transacción y con el negocio bloqueado: aplica la transición del dominio,
+    /// guarda el estado nuevo (con el motivo solo al suspender) y escribe en <c>admin_audit</c>
+    /// quién, cuándo y por qué (RF-101). Si no se puede, no cambia ni audita nada.
+    /// </summary>
+    Task<BusinessStatusOutcome> ChangeBusinessStatusAsync(
+        Guid businessId, Func<BusinessStatus, BusinessStatusChange> change, AdminAction action,
+        Guid performedByUserId, string? reason, DateTime at, CancellationToken cancellationToken = default);
+
     Task<AdminAccount?> FindAccountAsync(Guid userId, CancellationToken cancellationToken = default);
 }
 
-/// <summary>Consulta de negocios y cuentas para super administradores (RF-97).</summary>
-public sealed class PlatformService(IPlatformStore store)
+/// <summary>El negocio con su estado nuevo, o el código estable del rechazo.</summary>
+public sealed record BusinessStatusOutcome(AdminBusiness? Business, string? Code)
+{
+    public static BusinessStatusOutcome Done(AdminBusiness business) => new(business, null);
+
+    public static BusinessStatusOutcome Fail(string code) => new(null, code);
+}
+
+/// <summary>Consulta de negocios y cuentas, y su suspensión, para super administradores (RF-97, RF-98).</summary>
+public sealed class PlatformService(IPlatformStore store, TimeProvider clock)
 {
     public const int DefaultPageSize = 25;
     public const int MaxPageSize = 100;
@@ -46,6 +64,28 @@ public sealed class PlatformService(IPlatformStore store)
         await store.FindAccountAsync(userId, cancellationToken) is { } account
             ? AccountResult<AdminAccount>.Ok(account)
             : AccountResult<AdminAccount>.Fail("account_not_found");
+
+    /// <summary>Suspende el negocio con un motivo (RF-98): conserva sus datos y rechaza sus peticiones.</summary>
+    public async Task<AccountResult<AdminBusiness>> SuspendBusinessAsync(
+        Guid businessId, string? reason, Guid performedByUserId, CancellationToken cancellationToken = default)
+    {
+        var clean = Clean(reason);
+        return Wrap(await store.ChangeBusinessStatusAsync(
+            businessId, current => BusinessStatusRules.Suspend(current, clean), AdminAction.SuspendBusiness,
+            performedByUserId, clean, clock.GetUtcNow().UtcDateTime, cancellationToken));
+    }
+
+    /// <summary>Reactiva un negocio suspendido (RF-98): todo vuelve a funcionar y la cola pendiente se aplica.</summary>
+    public async Task<AccountResult<AdminBusiness>> ReactivateBusinessAsync(
+        Guid businessId, Guid performedByUserId, CancellationToken cancellationToken = default) =>
+        Wrap(await store.ChangeBusinessStatusAsync(
+            businessId, BusinessStatusRules.Reactivate, AdminAction.ReactivateBusiness,
+            performedByUserId, null, clock.GetUtcNow().UtcDateTime, cancellationToken));
+
+    private static AccountResult<AdminBusiness> Wrap(BusinessStatusOutcome outcome) =>
+        outcome.Business is { } business
+            ? AccountResult<AdminBusiness>.Ok(business)
+            : AccountResult<AdminBusiness>.Fail(outcome.Code!);
 
     private static string? Clean(string? search) => string.IsNullOrWhiteSpace(search) ? null : search.Trim();
 

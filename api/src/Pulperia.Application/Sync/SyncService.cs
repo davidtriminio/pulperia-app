@@ -1,5 +1,6 @@
 using Pulperia.Application.Accounts;
 using Pulperia.Application.Operations;
+using Pulperia.Domain.Business;
 using Pulperia.Domain.Team;
 
 namespace Pulperia.Application.Sync;
@@ -43,6 +44,12 @@ public sealed class SyncService(OperationApplier applier, ISyncStore store, Time
             return AccountResult<IReadOnlyList<OperationOutcome>>.Fail(Forbidden);
         }
 
+        // Un negocio pendiente o suspendido no recibe lotes; el teléfono conserva su cola (D-29, D-30).
+        if (await store.FindBusinessStatusAsync(cancellationToken) is { } status && status.RejectionCode() is { } code)
+        {
+            return AccountResult<IReadOnlyList<OperationOutcome>>.Fail(code);
+        }
+
         var actor = new OperationActor(userId, membership.Role);
         var outcomes = await store.InTransactionAsync(
             async () =>
@@ -79,6 +86,10 @@ public sealed class SyncService(OperationApplier applier, ISyncStore store, Time
         if (await store.FindMembershipAsync(userId, cancellationToken) is not { Status: MembershipStatus.Active })
         {
             return AccountResult<ChangePage>.Fail(Forbidden);
+        }
+        if (await store.FindBusinessStatusAsync(cancellationToken) is { } status && status.RejectionCode() is { } code)
+        {
+            return AccountResult<ChangePage>.Fail(code);
         }
         var size = Math.Clamp(limit ?? DefaultPageSize, 1, MaxPageSize);
         return AccountResult<ChangePage>.Ok(await store.ReadChangesAsync(cursor, size, cancellationToken));

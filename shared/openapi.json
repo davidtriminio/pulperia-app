@@ -277,6 +277,34 @@
         }
       }
     },
+    "/api/admin/businesses/{id}/suspend": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "post": {
+        "summary": "Suspender un negocio con un motivo (RF-98, D-29). Conserva sus datos y rechaza sus peticiones, lotes y pull con business_suspended hasta reactivarse.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReasonRequest" } } } },
+        "responses": {
+          "200": { "description": "El negocio, ya suspendido.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminBusiness" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/admin/businesses/{id}/reactivate": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "post": {
+        "summary": "Reactivar un negocio suspendido (RF-98, D-29). Todo vuelve a funcionar y la cola de los teléfonos se aplica.",
+        "responses": {
+          "200": { "description": "El negocio, ya activo.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminBusiness" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
     "/api/admin/accounts": {
       "get": {
         "summary": "Cuentas de la plataforma por correo, con su estado y sus negocios (RF-97, D-29). Solo super administradores.",
@@ -423,6 +451,11 @@
           "suspensionReason": { "type": "string", "nullable": true },
           "businesses": { "type": "array", "items": { "$ref": "#/components/schemas/AdminAccountBusiness" } }
         }
+      },
+      "ReasonRequest": {
+        "type": "object",
+        "required": ["reason"],
+        "properties": { "reason": { "type": "string", "description": "Obligatorio y no vacío: queda en la auditoría." } }
       },
       "AdminBusinessPage": {
         "type": "object",
