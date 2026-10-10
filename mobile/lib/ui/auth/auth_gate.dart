@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../app/session_state.dart';
+import '../../domain/business/business_status.dart';
+import '../business/pending_business_screen.dart';
 import '../home_shell.dart';
 import 'business_chooser_screen.dart';
 import 'login_screen.dart';
@@ -26,6 +28,9 @@ class AuthGate extends ConsumerWidget {
       // Si la sesión guardada no se pudo leer, se empieza de nuevo.
       error: (_, _) => const _SignedOutFlow(),
       data: (state) => switch (state) {
+        // Un negocio pendiente de activación no ofrece registrar datos (T199).
+        SignedIn(:final active?) when active.status == BusinessStatus.pending =>
+          const PendingBusinessScreen(),
         SignedIn(active: != null) => const HomeShell(),
         SignedIn() => const BusinessChooserScreen(),
         SignedOut() => const _SignedOutFlow(),
