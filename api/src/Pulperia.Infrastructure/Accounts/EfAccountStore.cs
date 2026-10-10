@@ -90,6 +90,10 @@ public sealed class EfAccountStore(PulperiaDbContext db) : IAccountStore
         return new InvitedAccountOutcome(InvitedAccountStatus.Created, invitation.BusinessId);
     }
 
+    public async Task<bool> IsActiveSuperAdminAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        await db.Users.AsNoTracking()
+            .AnyAsync(u => u.Id == userId && u.IsSuperAdmin && u.SuspendedAt == null, cancellationToken);
+
     public async Task<UserCredentials?> FindUserByEmailAsync(
         string normalizedEmail, CancellationToken cancellationToken = default) =>
         await db.Users.AsNoTracking().Where(u => u.Email == normalizedEmail)

@@ -19,6 +19,9 @@ public static class SessionLifetimes
 {
     public static readonly TimeSpan Access = TimeSpan.FromMinutes(15);
     public static readonly TimeSpan Refresh = TimeSpan.FromDays(90);
+
+    /// <summary>La renovación de un super administrador es mucho más corta (RF-96, D-29).</summary>
+    public static readonly TimeSpan SuperAdminRefresh = TimeSpan.FromHours(12);
 }
 
 /// <summary>Tokens opacos: 32 bytes aleatorios en base64url; en la base solo vive su hash SHA-256.</summary>
