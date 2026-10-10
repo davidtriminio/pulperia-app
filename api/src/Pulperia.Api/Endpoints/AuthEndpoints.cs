@@ -40,7 +40,9 @@ internal static class AuthEndpoints
         var result = await accounts.LoginAsync(body.Email, body.Password, context.RequestAborted);
         return result.IsSuccess
             ? Results.Json(Tokens(result.Value!), Http.Json)
-            : Http.Error(StatusCodes.Status401Unauthorized, result.Codes);
+            : Http.Error(
+                result.Codes[0] == "account_suspended" ? StatusCodes.Status403Forbidden : StatusCodes.Status401Unauthorized,
+                result.Codes);
     }
 
     private static async Task<IResult> RefreshAsync(HttpContext context, AccountService accounts)

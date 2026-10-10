@@ -19,6 +19,8 @@ internal static class AdminEndpoints
         admin.MapGet("/accounts/{id:guid}", GetAccountAsync);
         admin.MapPost("/businesses/{id:guid}/suspend", SuspendBusinessAsync);
         admin.MapPost("/businesses/{id:guid}/reactivate", ReactivateBusinessAsync);
+        admin.MapPost("/accounts/{id:guid}/suspend", SuspendAccountAsync);
+        admin.MapPost("/accounts/{id:guid}/reactivate", ReactivateAccountAsync);
     }
 
     private sealed record ReasonBody(string? Reason);
@@ -65,7 +67,8 @@ internal static class AdminEndpoints
         codes[0] switch
         {
             var code when code.EndsWith("_not_found") => StatusCodes.Status404NotFound,
-            "business_status_invalid_transition" => StatusCodes.Status409Conflict,
+            "business_status_invalid_transition" or "account_already_suspended" or "account_not_suspended"
+                or "cannot_suspend_self" => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status400BadRequest,
         },
         codes);
@@ -110,6 +113,23 @@ internal static class AdminEndpoints
     private static async Task<IResult> ReactivateBusinessAsync(Guid id, PlatformService platform, HttpContext context)
     {
         var result = await platform.ReactivateBusinessAsync(id, context.GetSuperAdmin().UserId, context.RequestAborted);
+        return result.IsSuccess ? Results.Json(Json(result.Value!), Http.Json) : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> SuspendAccountAsync(Guid id, PlatformService platform, HttpContext context)
+    {
+        if (await Http.ReadBodyAsync<ReasonBody>(context) is not { } body)
+        {
+            return Http.InvalidRequest();
+        }
+        var result = await platform.SuspendAccountAsync(
+            id, body.Reason, context.GetSuperAdmin().UserId, context.RequestAborted);
+        return result.IsSuccess ? Results.Json(Json(result.Value!), Http.Json) : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> ReactivateAccountAsync(Guid id, PlatformService platform, HttpContext context)
+    {
+        var result = await platform.ReactivateAccountAsync(id, context.GetSuperAdmin().UserId, context.RequestAborted);
         return result.IsSuccess ? Results.Json(Json(result.Value!), Http.Json) : Failure(result.Codes);
     }
 

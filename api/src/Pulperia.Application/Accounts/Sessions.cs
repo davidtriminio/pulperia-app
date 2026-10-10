@@ -35,7 +35,7 @@ internal static class TokenSecrets
         Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 }
 
-public sealed record UserCredentials(Guid Id, string PasswordHash);
+public sealed record UserCredentials(Guid Id, string PasswordHash, bool IsSuspended);
 
 public sealed record NewSession(
     Guid Id,
