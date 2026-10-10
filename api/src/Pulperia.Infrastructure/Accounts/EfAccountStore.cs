@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Pulperia.Application.Accounts;
 using Pulperia.Domain.Access;
+using Pulperia.Domain.Invitations;
 using Pulperia.Domain.Team;
 using Pulperia.Infrastructure.Persistence;
 using Pulperia.Infrastructure.Persistence.Entities;
@@ -41,6 +42,52 @@ public sealed class EfAccountStore(PulperiaDbContext db) : IAccountStore
             db.ChangeTracker.Clear();
             return false;
         }
+    }
+
+    public async Task<InvitedAccountOutcome> TryCreateInvitedAccountAsync(
+        NewInvitedAccount account, CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var invitation = await db.Invitations.AsNoTracking()
+            .Where(i => i.Code == account.Code && i.Status == InvitationStatus.Pending)
+            .Select(i => new { i.Id, i.BusinessId })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (invitation is null)
+        {
+            return new InvitedAccountOutcome(InvitedAccountStatus.InvalidCode);
+        }
+
+        db.Users.Add(new UserEntity
+        {
+            Id = account.UserId, Email = account.Email, PasswordHash = account.PasswordHash, CreatedAt = account.CreatedAt,
+        });
+        db.Memberships.Add(new MembershipEntity
+        {
+            UserId = account.UserId, BusinessId = invitation.BusinessId, Role = Role.Employee, Status = MembershipStatus.Active,
+        });
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: UniqueViolation })
+        {
+            // El correo ya existe: el índice único es el árbitro. Nada se confirma ni se consume.
+            db.ChangeTracker.Clear();
+            return new InvitedAccountOutcome(InvitedAccountStatus.EmailTaken);
+        }
+
+        // Condicional: de dos registros simultáneos con el mismo código solo uno lo ve todavía pendiente.
+        var accepted = await db.Invitations
+            .Where(i => i.Id == invitation.Id && i.Status == InvitationStatus.Pending)
+            .ExecuteUpdateAsync(s => s.SetProperty(i => i.Status, InvitationStatus.Accepted), cancellationToken);
+        if (accepted != 1)
+        {
+            db.ChangeTracker.Clear();
+            return new InvitedAccountOutcome(InvitedAccountStatus.InvalidCode);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return new InvitedAccountOutcome(InvitedAccountStatus.Created, invitation.BusinessId);
     }
 
     public async Task<UserCredentials?> FindUserByEmailAsync(

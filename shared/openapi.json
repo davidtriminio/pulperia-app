@@ -10,13 +10,15 @@
   "paths": {
     "/api/auth/register": {
       "post": {
-        "summary": "Crear una cuenta con su primer negocio (RF-1, RF-2, RF-78). No devuelve tokens: hay que iniciar sesión después.",
+        "summary": "Crear una cuenta con su primer negocio (RF-1, RF-2, RF-78), o, con invitationCode y sin datos de negocio, una cuenta que entra como empleado a ese negocio sin crear ninguno propio (RF-105 a RF-107, D-32; máximo 10 intentos con código por minuto y origen). No devuelve tokens: hay que iniciar sesión después.",
         "security": [],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterRequest" } } } },
         "responses": {
-          "201": { "description": "Cuenta y negocio creados.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Registered" } } } },
+          "201": { "description": "Cuenta creada con su negocio, o cuenta de empleado del negocio de la invitación.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Registered" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
-          "409": { "$ref": "#/components/responses/Conflict" }
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" }
         }
       }
     },
@@ -325,10 +327,12 @@
 
       "RegisterRequest": {
         "type": "object",
-        "required": ["email", "password", "businessName", "amountMode", "quantityMode"],
+        "description": "Dos formas: la de siempre (businessName, amountMode y quantityMode) o la de invitado (solo invitationCode). Mezclarlas da 400 registration_ambiguous.",
+        "required": ["email", "password"],
         "properties": {
           "email": { "type": "string" },
           "password": { "type": "string" },
+          "invitationCode": { "type": "string" },
           "businessName": { "type": "string" },
           "amountMode": { "$ref": "#/components/schemas/AmountMode" },
           "quantityMode": { "$ref": "#/components/schemas/QuantityMode" }

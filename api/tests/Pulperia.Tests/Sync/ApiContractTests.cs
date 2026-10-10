@@ -176,6 +176,21 @@ public class ApiContractTests(PostgresFixture postgres)
         await probe.Call("POST", "/api/invitations/redeem", "/api/invitations/redeem", 404, new { code = "ZZZZZZZZ" }, greta.Token);
         await probe.Call("POST", "/api/invitations/redeem", "/api/invitations/redeem", 429, new { code = "ZZZZZZZZ" }, greta.Token);
 
+        // ---- Registro con código de invitación (D-32) ----
+        var registrationCode = (await probe.Call("POST", "/api/business/invitations", "/api/business/invitations", 201,
+            new { }, ana.Token, biz))!.Value.GetProperty("code").GetString();
+        await probe.Call("POST", "/api/auth/register", "/api/auth/register", 400,
+            new { email = "mezcla@correo.com", password = "contrasena1", invitationCode = registrationCode, businessName = "X", amountMode = "integer", quantityMode = "integer" });
+        await probe.Call("POST", "/api/auth/register", "/api/auth/register", 201,
+            new { email = "invitada@correo.com", password = "contrasena1", invitationCode = registrationCode });
+        for (var i = 0; i < 9; i++)
+        {
+            await probe.Call("POST", "/api/auth/register", "/api/auth/register", 404,
+                new { email = "invitada2@correo.com", password = "contrasena1", invitationCode = "ZZZZZZZZ" });
+        }
+        await probe.Call("POST", "/api/auth/register", "/api/auth/register", 429,
+            new { email = "invitada2@correo.com", password = "contrasena1", invitationCode = "ZZZZZZZZ" });
+
         // ---- Equipo ----
         await probe.Call("GET", "/api/business/team", "/api/business/team", 200, token: ana.Token, business: biz);
         await probe.Call("POST", "/api/business/team/{userId}/promote", $"/api/business/team/{dora.UserId}/promote", 200, token: ana.Token, business: biz);
