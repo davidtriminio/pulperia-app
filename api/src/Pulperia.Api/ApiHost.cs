@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Pulperia.Api.Endpoints;
 using Pulperia.Application.Accounts;
+using Pulperia.Application.Admin;
 using Pulperia.Application.Management;
 using Pulperia.Infrastructure.Accounts;
+using Pulperia.Infrastructure.Admin;
 using Pulperia.Infrastructure.Management;
 using Pulperia.Infrastructure.Persistence;
 
@@ -31,6 +33,8 @@ public static class ApiHost
         builder.Services.AddScoped<ManagementService>();
         builder.Services.AddSingleton<RedeemRateLimiter>();
         builder.Services.AddSingleton<RegistrationRateLimiter>();
+        builder.Services.AddScoped<IPlatformStore, EfPlatformStore>();
+        builder.Services.AddScoped<PlatformService>();
 
         configure?.Invoke(builder);
         RequireConnectionString(builder.Configuration);
@@ -44,6 +48,7 @@ public static class ApiHost
         app.MapAuthEndpoints();
         app.MapBusinessEndpoints();
         app.MapManagementEndpoints();
+        app.MapAdminEndpoints();
         app.MapSyncEndpoints();
         app.MapQueryEndpoints();
         return app;

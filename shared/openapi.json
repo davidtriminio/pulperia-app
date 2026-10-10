@@ -248,6 +248,62 @@
         }
       }
     },
+    "/api/admin/businesses": {
+      "get": {
+        "summary": "Negocios de la plataforma con sus cifras agregadas, por nombre (RF-97, D-29). Solo super administradores; nunca trae datos de fiados.",
+        "parameters": [
+          { "name": "page", "in": "query", "required": false, "description": "Página desde 1; por omisión 1.", "schema": { "type": "integer", "minimum": 1 } },
+          { "name": "pageSize", "in": "query", "required": false, "description": "Por omisión 25, máximo 100.", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } },
+          { "name": "search", "in": "query", "required": false, "description": "Parte del nombre del negocio o del correo de un dueño.", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/BusinessStatus" } }
+        ],
+        "responses": {
+          "200": { "description": "Una página de negocios.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminBusinessPage" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/admin/businesses/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "summary": "La ficha de un negocio: dueños, miembros, estado, última sincronización y conteos (RF-97, D-29).",
+        "responses": {
+          "200": { "description": "El negocio.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminBusiness" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/accounts": {
+      "get": {
+        "summary": "Cuentas de la plataforma por correo, con su estado y sus negocios (RF-97, D-29). Solo super administradores.",
+        "parameters": [
+          { "name": "page", "in": "query", "required": false, "description": "Página desde 1; por omisión 1.", "schema": { "type": "integer", "minimum": 1 } },
+          { "name": "pageSize", "in": "query", "required": false, "description": "Por omisión 25, máximo 100.", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } },
+          { "name": "search", "in": "query", "required": false, "description": "Parte del correo.", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Una página de cuentas.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminAccountPage" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/admin/accounts/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "summary": "La ficha de una cuenta (RF-97, D-29).",
+        "responses": {
+          "200": { "description": "La cuenta.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminAccount" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
     "/api/clients": {
       "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
       "get": {
@@ -325,6 +381,69 @@
       "QuantityMode": { "type": "string", "enum": ["integer", "fractional"] },
       "BalanceLabel": { "type": "string", "enum": ["debt", "credit", "settled"] },
 
+      "BusinessStatus": { "type": "string", "enum": ["pending", "active", "suspended"] },
+      "AdminBusiness": {
+        "type": "object",
+        "description": "Metadatos y cifras agregadas de un negocio; nunca nombres de clientes ni de productos, montos ni deudas (RF-97).",
+        "required": ["id", "name", "ownerEmails", "memberCount", "createdAt", "status", "statusReason", "lastSyncAt", "clientCount", "productCount", "fiadoCount", "paymentCount"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "ownerEmails": { "type": "array", "items": { "type": "string" } },
+          "memberCount": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "status": { "$ref": "#/components/schemas/BusinessStatus" },
+          "statusReason": { "type": "string", "nullable": true },
+          "lastSyncAt": { "type": "string", "format": "date-time", "nullable": true },
+          "clientCount": { "type": "integer" },
+          "productCount": { "type": "integer" },
+          "fiadoCount": { "type": "integer" },
+          "paymentCount": { "type": "integer" }
+        }
+      },
+      "AdminAccountBusiness": {
+        "type": "object",
+        "required": ["id", "name", "role", "status"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "role": { "$ref": "#/components/schemas/Role" },
+          "status": { "$ref": "#/components/schemas/BusinessStatus" }
+        }
+      },
+      "AdminAccount": {
+        "type": "object",
+        "required": ["id", "email", "createdAt", "isSuperAdmin", "suspendedAt", "suspensionReason", "businesses"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "isSuperAdmin": { "type": "boolean" },
+          "suspendedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "suspensionReason": { "type": "string", "nullable": true },
+          "businesses": { "type": "array", "items": { "$ref": "#/components/schemas/AdminAccountBusiness" } }
+        }
+      },
+      "AdminBusinessPage": {
+        "type": "object",
+        "required": ["items", "page", "pageSize", "total"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/AdminBusiness" } },
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "total": { "type": "integer" }
+        }
+      },
+      "AdminAccountPage": {
+        "type": "object",
+        "required": ["items", "page", "pageSize", "total"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/AdminAccount" } },
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "total": { "type": "integer" }
+        }
+      },
       "RegisterRequest": {
         "type": "object",
         "description": "Dos formas: la de siempre (businessName, amountMode y quantityMode) o la de invitado (solo invitationCode). Mezclarlas da 400 registration_ambiguous.",

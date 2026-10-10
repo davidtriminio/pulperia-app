@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Routing;
@@ -104,6 +105,9 @@ public class ApiContractTests(PostgresFixture postgres)
         var frank = await RegisterAsync(kit.Host, "frank@correo.com");
         var greta = await RegisterAsync(kit.Host, "greta@correo.com");
         var outsider = await RegisterAsync(kit.Host, "otra@correo.com");
+        var root = await RegisterAsync(kit.Host, "root@correo.com");
+        await kit.Host.Db.Users.Where(u => u.Id == root.UserId)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.IsSuperAdmin, true));
         string Random() => Guid.CreateVersion7().ToString();
 
         // ---- Cuentas y sesiones ----
@@ -251,6 +255,21 @@ public class ApiContractTests(PostgresFixture postgres)
         await probe.Call("GET", "/api/products", "/api/products?archived=1", 400, token: ana.Token, business: biz);
         await probe.Call("GET", "/api/summary", "/api/summary", 200, token: ana.Token, business: biz);
         await probe.Call("GET", "/api/summary", "/api/summary?limit=0", 400, token: ana.Token, business: biz);
+
+        // ---- Administración de la plataforma (D-29) ----
+        await probe.Call("GET", "/api/admin/businesses", "/api/admin/businesses", 200, token: root.Token);
+        await probe.Call("GET", "/api/admin/businesses", "/api/admin/businesses?search=ana&status=active&page=1&pageSize=10", 200, token: root.Token);
+        await probe.Call("GET", "/api/admin/businesses", "/api/admin/businesses?status=archivado", 400, token: root.Token);
+        await probe.Call("GET", "/api/admin/businesses", "/api/admin/businesses", 403, token: ana.Token);
+        await probe.Call("GET", "/api/admin/businesses/{id}", $"/api/admin/businesses/{biz}", 200, token: root.Token);
+        await probe.Call("GET", "/api/admin/businesses/{id}", $"/api/admin/businesses/{Random()}", 404, token: root.Token);
+        await probe.Call("GET", "/api/admin/businesses/{id}", $"/api/admin/businesses/{biz}", 403, token: ana.Token);
+        await probe.Call("GET", "/api/admin/accounts", "/api/admin/accounts", 200, token: root.Token);
+        await probe.Call("GET", "/api/admin/accounts", "/api/admin/accounts?search=ana", 200, token: root.Token);
+        await probe.Call("GET", "/api/admin/accounts", "/api/admin/accounts", 403, token: ana.Token);
+        await probe.Call("GET", "/api/admin/accounts/{id}", $"/api/admin/accounts/{ana.UserId}", 200, token: root.Token);
+        await probe.Call("GET", "/api/admin/accounts/{id}", $"/api/admin/accounts/{Random()}", 404, token: root.Token);
+        await probe.Call("GET", "/api/admin/accounts/{id}", $"/api/admin/accounts/{ana.UserId}", 403, token: ana.Token);
 
         // ---- Sin sesión: el 401 de todas las rutas que lo documentan y aún no se vieron ----
         foreach (var (method, template, status) in Contract.Responses().Where(r => r.Status == 401).ToArray())
