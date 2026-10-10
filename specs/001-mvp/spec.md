@@ -103,6 +103,9 @@ La prioridad es la app móvil: debe funcionar siempre, con o sin conexión, porq
 - RF-102: CUANDO una persona se registra y crea su primer negocio, EL SISTEMA creará ese negocio pendiente de activación: su dueño podrá iniciar sesión y ver su estado, pero el negocio rechazará con un código estable cualquier registro de datos o sincronización hasta que un super administrador lo active; la cuenta seguirá pudiendo usar cualquier otro negocio activo al que pertenezca.
 - RF-103: CUANDO un super administrador activa un negocio pendiente, EL SISTEMA lo habilitará para trabajar con normalidad y lo registrará en la auditoría; si en cambio lo rechaza indicando un motivo, el negocio quedará suspendido (RF-98).
 - RF-104: CUANDO una persona que ya es dueña de al menos un negocio activo crea un negocio adicional (RF-79), EL SISTEMA lo creará activo, sin pasar por la activación.
+- RF-105: CUANDO una persona crea una cuenta con su correo electrónico y un código de invitación pendiente, en lugar del nombre de un negocio, EL SISTEMA creará la cuenta sin ningún negocio propio, la agregará al negocio de la invitación con el rol de empleado como en RF-93, marcará la invitación como aceptada e iniciará su sesión; la cuenta no será dueña de ningún negocio.
+- RF-106: SI el código del registro no existe, ya se usó o su invitación fue cancelada, ENTONCES EL SISTEMA rechazará el registro con el mismo mensaje que RF-94, sin crear la cuenta, sin consumir ningún código y sin revelar nada de ningún negocio, y limitará los intentos fallidos de cada origen.
+- RF-107: SI una solicitud de registro trae a la vez el nombre de un negocio y un código de invitación, ENTONCES EL SISTEMA la rechazará indicando que debe elegirse uno solo.
 
 ### Fiados
 - RF-28: CUANDO un usuario registra un fiado con uno o más ítems (descripción, cantidad y precio unitario), EL SISTEMA guardará cada ítem con la cantidad y el precio unitario vigentes en ese momento.
