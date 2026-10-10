@@ -94,6 +94,13 @@
       "example": {
         "reason": "Falta de pago"
       }
+    },
+    {
+      "name": "contraseña restablecida desde el panel",
+      "schema": "NewPassword",
+      "example": {
+        "password": "k7Mw2PxQ9tHnR4Zb"
+      }
     }
   ]
 }

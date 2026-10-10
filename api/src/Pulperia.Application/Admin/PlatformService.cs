@@ -58,7 +58,7 @@ public sealed record AccountSuspensionOutcome(AdminAccount? Account, string? Cod
 }
 
 /// <summary>Consulta de negocios y cuentas, y su suspensión, para super administradores (RF-97, RF-98).</summary>
-public sealed class PlatformService(IPlatformStore store, TimeProvider clock)
+public sealed class PlatformService(IPlatformStore store, PasswordResetService passwordReset, TimeProvider clock)
 {
     public const int DefaultPageSize = 25;
     public const int MaxPageSize = 100;
@@ -119,6 +119,21 @@ public sealed class PlatformService(IPlatformStore store, TimeProvider clock)
         Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default) =>
         Wrap(await store.ChangeAccountSuspensionAsync(
             userId, suspend: false, null, performedByUserId, clock.GetUtcNow().UtcDateTime, cancellationToken));
+
+    /// <summary>
+    /// Restablece la contraseña de la cuenta desde el panel (RF-100): genera una nueva, que se
+    /// entrega una sola vez, cierra sus sesiones y queda en la auditoría. No toca datos de negocios.
+    /// </summary>
+    public async Task<AccountResult<string>> ResetPasswordAsync(
+        Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default)
+    {
+        if (await store.FindAccountAsync(userId, cancellationToken) is not { } target
+            || await store.FindAccountAsync(performedByUserId, cancellationToken) is not { } performer)
+        {
+            return AccountResult<string>.Fail("account_not_found");
+        }
+        return await passwordReset.ResetPasswordAsync(target.Email, performer.Email, cancellationToken);
+    }
 
     private static AccountResult<AdminAccount> Wrap(AccountSuspensionOutcome outcome) =>
         outcome.Account is { } account

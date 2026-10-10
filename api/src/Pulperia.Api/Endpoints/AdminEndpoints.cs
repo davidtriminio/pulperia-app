@@ -21,6 +21,7 @@ internal static class AdminEndpoints
         admin.MapPost("/businesses/{id:guid}/reactivate", ReactivateBusinessAsync);
         admin.MapPost("/accounts/{id:guid}/suspend", SuspendAccountAsync);
         admin.MapPost("/accounts/{id:guid}/reactivate", ReactivateAccountAsync);
+        admin.MapPost("/accounts/{id:guid}/reset-password", ResetPasswordAsync);
     }
 
     private sealed record ReasonBody(string? Reason);
@@ -131,6 +132,13 @@ internal static class AdminEndpoints
     {
         var result = await platform.ReactivateAccountAsync(id, context.GetSuperAdmin().UserId, context.RequestAborted);
         return result.IsSuccess ? Results.Json(Json(result.Value!), Http.Json) : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> ResetPasswordAsync(Guid id, PlatformService platform, HttpContext context)
+    {
+        var result = await platform.ResetPasswordAsync(id, context.GetSuperAdmin().UserId, context.RequestAborted);
+        // La contraseña nueva se muestra una sola vez; no queda guardada en claro en ningún lado (RF-100).
+        return result.IsSuccess ? Results.Json(new { password = result.Value }, Http.Json) : Failure(result.Codes);
     }
 
     private static async Task<IResult> ListAccountsAsync(
