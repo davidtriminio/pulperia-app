@@ -96,17 +96,18 @@ public sealed class AccountService(IAccountStore store, PasswordHasher hasher, T
         }
 
         var now = clock.GetUtcNow();
+        var refreshLifetime = await RefreshLifetimeAsync(user.Id, cancellationToken);
         var accessToken = TokenSecrets.NewToken();
         var refreshToken = TokenSecrets.NewToken();
         await store.AddSessionAsync(
             new NewSession(
                 Guid.CreateVersion7(), user.Id,
                 TokenSecrets.Hash(accessToken), (now + SessionLifetimes.Access).UtcDateTime,
-                TokenSecrets.Hash(refreshToken), (now + SessionLifetimes.Refresh).UtcDateTime,
+                TokenSecrets.Hash(refreshToken), (now + refreshLifetime).UtcDateTime,
                 now.UtcDateTime),
             cancellationToken);
         return AccountResult<AuthTokens>.Ok(new AuthTokens(
-            user.Id, accessToken, now + SessionLifetimes.Access, refreshToken, now + SessionLifetimes.Refresh));
+            user.Id, accessToken, now + SessionLifetimes.Access, refreshToken, now + refreshLifetime));
     }
 
     /// <summary>
@@ -128,18 +129,32 @@ public sealed class AccountService(IAccountStore store, PasswordHasher hasher, T
             return AccountResult<AuthTokens>.Fail("invalid_refresh_token");
         }
 
+        var refreshLifetime = await RefreshLifetimeAsync(session.UserId, cancellationToken);
         var newAccess = TokenSecrets.NewToken();
         var newRefresh = TokenSecrets.NewToken();
         var rotated = await store.RotateSessionAsync(
             session.Id, oldHash,
             TokenSecrets.Hash(newAccess), (now + SessionLifetimes.Access).UtcDateTime,
-            TokenSecrets.Hash(newRefresh), (now + SessionLifetimes.Refresh).UtcDateTime,
+            TokenSecrets.Hash(newRefresh), (now + refreshLifetime).UtcDateTime,
             cancellationToken);
         return rotated
             ? AccountResult<AuthTokens>.Ok(new AuthTokens(
-                session.UserId, newAccess, now + SessionLifetimes.Access, newRefresh, now + SessionLifetimes.Refresh))
+                session.UserId, newAccess, now + SessionLifetimes.Access, newRefresh, now + refreshLifetime))
             : AccountResult<AuthTokens>.Fail("invalid_refresh_token");
     }
+
+    /// <summary>
+    /// Cuánto dura la renovación de esta cuenta: la de un super administrador es corta (D-29) y se
+    /// decide cada vez, así que marcar a alguien acorta sus sesiones al renovarlas.
+    /// </summary>
+    private async Task<TimeSpan> RefreshLifetimeAsync(Guid userId, CancellationToken cancellationToken) =>
+        await store.IsActiveSuperAdminAsync(userId, cancellationToken)
+            ? SessionLifetimes.SuperAdminRefresh
+            : SessionLifetimes.Refresh;
+
+    /// <summary>Si la cuenta es hoy un super administrador sin suspender (RF-96, D-29). Lo exige cada petición de /api/admin.</summary>
+    public Task<bool> IsActiveSuperAdminAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        store.IsActiveSuperAdminAsync(userId, cancellationToken);
 
     /// <summary>Cierra la sesión del token de acceso, aunque haya caducado. Cerrar dos veces no falla.</summary>
     public async Task LogoutAsync(string accessToken, CancellationToken cancellationToken = default)

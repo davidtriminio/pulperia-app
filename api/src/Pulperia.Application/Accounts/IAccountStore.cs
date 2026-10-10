@@ -61,6 +61,12 @@ public interface IAccountStore
     Task<InvitedAccountOutcome> TryCreateInvitedAccountAsync(
         NewInvitedAccount account, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Si la cuenta está marcada como super administrador y no está suspendida (D-29). Se consulta
+    /// en cada petición de administración y al abrir o renovar una sesión.
+    /// </summary>
+    Task<bool> IsActiveSuperAdminAsync(Guid userId, CancellationToken cancellationToken = default);
+
     Task<UserCredentials?> FindUserByEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default);
 
     Task UpdatePasswordHashAsync(Guid userId, string passwordHash, CancellationToken cancellationToken = default);
