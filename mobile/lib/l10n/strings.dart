@@ -177,6 +177,8 @@ abstract final class Strings {
   static const errorOffline =
       'Sin conexión. Conéctate a internet para continuar.';
   static const errorUnexpected = 'Algo salió mal. Inténtalo de nuevo.';
+  static const errorServer =
+      'El servidor tuvo un problema. Inténtalo de nuevo en unos minutos.';
   static const errorInvalidCredentials = 'Correo o contraseña incorrectos';
   static const errorEmailTaken = 'Ya existe una cuenta con ese correo';
   static const errorEmailInvalid = 'El correo no es válido';

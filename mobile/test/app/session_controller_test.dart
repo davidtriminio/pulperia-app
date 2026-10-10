@@ -243,7 +243,7 @@ void main() {
     });
 
     test('un código desconocido da un mensaje genérico, nunca el código', () {
-      final message = errorMessage(const ApiException(500, 'algo_nuevo'));
+      final message = errorMessage(const ApiException(400, 'algo_nuevo'));
 
       expect(message, Strings.errorUnexpected);
       expect(message, isNot(contains('algo_nuevo')));
