@@ -18,6 +18,24 @@ public interface IAdminStore
     Task<Guid?> ResetPasswordAsync(
         string normalizedEmail, string newPasswordHash, string performedBy, DateTime at,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// En una sola transacción y con las marcas serializadas: aplica las reglas de
+    /// <c>SuperAdminRules</c>, cambia la marca de la cuenta y escribe en <c>admin_audit</c> (RF-95,
+    /// RF-101). Si no se puede, no cambia ni audita nada y devuelve el código del rechazo
+    /// (<c>account_not_found</c> o el de <c>SuperAdminError</c>).
+    /// </summary>
+    Task<SuperAdminOutcome> SetSuperAdminAsync(
+        string normalizedEmail, bool grant, string performedBy, DateTime at,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>Cómo terminó marcar o retirar la marca: el id de la cuenta, o el código del rechazo.</summary>
+public sealed record SuperAdminOutcome(Guid? UserId, string? Code)
+{
+    public static SuperAdminOutcome Done(Guid userId) => new(userId, null);
+
+    public static SuperAdminOutcome Fail(string code) => new(null, code);
 }
 
 /// <summary>
