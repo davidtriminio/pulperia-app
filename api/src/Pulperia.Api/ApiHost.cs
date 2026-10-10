@@ -33,6 +33,8 @@ public static class ApiHost
         builder.Services.AddScoped<ManagementService>();
         builder.Services.AddSingleton<RedeemRateLimiter>();
         builder.Services.AddSingleton<RegistrationRateLimiter>();
+        builder.Services.AddScoped<IAdminStore, EfAdminStore>();
+        builder.Services.AddScoped<PasswordResetService>();
         builder.Services.AddScoped<IPlatformStore, EfPlatformStore>();
         builder.Services.AddScoped<PlatformService>();
 

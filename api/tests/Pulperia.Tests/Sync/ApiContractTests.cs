@@ -315,6 +315,13 @@ public class ApiContractTests(PostgresFixture postgres)
         await probe.Call("POST", "/api/admin/accounts/{id}/reactivate", $"/api/admin/accounts/{victim.UserId}/reactivate", 403,
             new { }, ana.Token);
 
+        await probe.Call("POST", "/api/admin/accounts/{id}/reset-password", $"/api/admin/accounts/{victim.UserId}/reset-password", 200,
+            new { }, root.Token);
+        await probe.Call("POST", "/api/admin/accounts/{id}/reset-password", $"/api/admin/accounts/{Random()}/reset-password", 404,
+            new { }, root.Token);
+        await probe.Call("POST", "/api/admin/accounts/{id}/reset-password", $"/api/admin/accounts/{victim.UserId}/reset-password", 403,
+            new { }, ana.Token);
+
         // ---- Sin sesión: el 401 de todas las rutas que lo documentan y aún no se vieron ----
         foreach (var (method, template, status) in Contract.Responses().Where(r => r.Status == 401).ToArray())
         {

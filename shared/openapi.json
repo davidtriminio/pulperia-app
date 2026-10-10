@@ -334,6 +334,18 @@
         }
       }
     },
+    "/api/admin/accounts/{id}/reset-password": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "post": {
+        "summary": "Restablecer la contraseña de una cuenta (RF-100, D-29): genera una nueva que se muestra una sola vez y cierra las sesiones de la cuenta. No incluye datos de negocios.",
+        "responses": {
+          "200": { "description": "La contraseña nueva, para entregársela a la persona.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NewPassword" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
     "/api/admin/accounts": {
       "get": {
         "summary": "Cuentas de la plataforma por correo, con su estado y sus negocios (RF-97, D-29). Solo super administradores.",
@@ -485,6 +497,11 @@
         "type": "object",
         "required": ["reason"],
         "properties": { "reason": { "type": "string", "description": "Obligatorio y no vacío: queda en la auditoría." } }
+      },
+      "NewPassword": {
+        "type": "object",
+        "required": ["password"],
+        "properties": { "password": { "type": "string", "description": "16 caracteres; no se vuelve a mostrar." } }
       },
       "AdminBusinessPage": {
         "type": "object",
