@@ -133,8 +133,13 @@ void main() {
         errorMessageForCode('team_last_owner'),
       );
       expect(
-        errorMessage(const ApiException(500, 'algo_nuevo')),
+        errorMessage(const ApiException(400, 'algo_nuevo')),
         Strings.errorUnexpected,
+      );
+      // Un fallo del servidor sin código conocido dice que es del servidor.
+      expect(
+        errorMessage(const ApiException(500, ApiException.unexpectedResponse)),
+        Strings.errorServer,
       );
     },
   );

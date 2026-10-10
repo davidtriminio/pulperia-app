@@ -10,8 +10,9 @@ String errorMessage(Object error) => switch (error) {
   NetworkException() => Strings.errorOffline,
   SessionExpiredException() => Strings.errorSessionExpired,
   WrongAccountException() => Strings.errorWrongAccount,
-  ApiException(:final code) =>
-    errorMessageForCode(code) ?? Strings.errorUnexpected,
+  ApiException(:final status, :final code) =>
+    errorMessageForCode(code) ??
+        (status >= 500 ? Strings.errorServer : Strings.errorUnexpected),
   _ => Strings.errorUnexpected,
 };
 
