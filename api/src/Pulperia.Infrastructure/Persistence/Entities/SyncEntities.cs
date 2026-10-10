@@ -37,8 +37,8 @@ public sealed class ProcessedOpEntity
 }
 
 /// <summary>
-/// Tabla <c>admin_audit</c>: constancia de lo que el administrador del servidor hace a mano,
-/// sin datos de ningún negocio (RF-81, RF-82). Solo se agrega.
+/// Tabla <c>admin_audit</c>: constancia de lo que el administrador del servidor y los super
+/// administradores hacen (RF-81, RF-101), sin datos de ningún negocio (RF-82). Solo se agrega.
 /// </summary>
 public sealed class AdminAuditEntity
 {
@@ -46,9 +46,16 @@ public sealed class AdminAuditEntity
 
     public AdminAction Action { get; set; }
 
-    public Guid TargetUserId { get; set; }
+    /// <summary>La cuenta sobre la que se actuó; null si la acción fue sobre un negocio.</summary>
+    public Guid? TargetUserId { get; set; }
 
-    /// <summary>Identificador del operador que ejecutó el comando.</summary>
+    /// <summary>El negocio sobre el que se actuó, solo su identificador; null si fue sobre una cuenta.</summary>
+    public Guid? TargetBusinessId { get; set; }
+
+    /// <summary>El motivo, obligatorio al suspender una cuenta o un negocio (RF-98, RF-99).</summary>
+    public string? Detail { get; set; }
+
+    /// <summary>Quién hizo la acción: el operador del comando o el correo del super administrador.</summary>
     public string PerformedBy { get; set; } = "";
 
     public DateTime PerformedAt { get; set; }

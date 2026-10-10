@@ -145,8 +145,15 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
         modelBuilder.Entity<UserEntity>(e =>
         {
             e.ToTable("users", t =>
-                t.HasCheckConstraint("ck_users_email_normalized", string.Format(NormalizedEmail, "email")));
+            {
+                t.HasCheckConstraint("ck_users_email_normalized", string.Format(NormalizedEmail, "email"));
+                t.HasCheckConstraint(
+                    "ck_users_suspension",
+                    "(suspended_at IS NULL AND suspension_reason IS NULL) " +
+                    "OR (suspended_at IS NOT NULL AND coalesce(btrim(suspension_reason), '') <> '')");
+            });
             e.HasKey(x => x.Id);
+            e.Property(x => x.IsSuperAdmin).HasDefaultValue(false);
             e.Property(x => x.Email).IsRequired();
             e.Property(x => x.PasswordHash).IsRequired();
             e.HasIndex(x => x.Email).IsUnique();
@@ -175,12 +182,22 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
                 t.HasCheckConstraint("ck_businesses_amount_mode", "amount_mode IN ('integer', 'two_decimals')");
                 t.HasCheckConstraint("ck_businesses_quantity_mode", "quantity_mode IN ('integer', 'fractional')");
                 t.HasCheckConstraint("ck_businesses_last_seq", "last_seq >= 0");
+                t.HasCheckConstraint("ck_businesses_status", "status IN ('pending', 'active', 'suspended')");
+                t.HasCheckConstraint(
+                    "ck_businesses_status_reason",
+                    "status <> 'suspended' OR coalesce(btrim(status_reason), '') <> ''");
             });
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).IsRequired();
             e.Property(x => x.AmountMode).HasConversion(m => m.Id(), id => AmountModes.FromId(id));
             e.Property(x => x.QuantityMode).HasConversion(m => m.Id(), id => QuantityModes.FromId(id));
             e.Property(x => x.LastSeq).HasDefaultValue(0L);
+            // El valor por omisión de la base deja activos a los negocios que ya existían; la
+            // aplicación siempre envía el estado, así que Pending (el 0 del enum) no se pierde.
+            e.Property(x => x.Status)
+                .HasConversion(s => s.Id(), id => BusinessStatuses.FromId(id))
+                .HasDefaultValue(BusinessStatus.Active)
+                .ValueGeneratedNever();
         });
 
     private static void ConfigureMemberships(ModelBuilder modelBuilder) =>
@@ -361,15 +378,26 @@ public sealed class PulperiaDbContext(DbContextOptions<PulperiaDbContext> option
         {
             e.ToTable("admin_audit", t =>
             {
-                t.HasCheckConstraint("ck_admin_audit_action", "action IN ('reset_password')");
+                t.HasCheckConstraint(
+                    "ck_admin_audit_action",
+                    "action IN ('reset_password', 'grant_superadmin', 'revoke_superadmin', 'suspend_business', " +
+                    "'reactivate_business', 'activate_business', 'suspend_account', 'reactivate_account')");
                 t.HasCheckConstraint("ck_admin_audit_performed_by", "btrim(performed_by) <> ''");
+                t.HasCheckConstraint(
+                    "ck_admin_audit_target", "target_user_id IS NOT NULL OR target_business_id IS NOT NULL");
+                t.HasCheckConstraint(
+                    "ck_admin_audit_reason",
+                    "action NOT IN ('suspend_business', 'suspend_account') OR coalesce(btrim(detail), '') <> ''");
             });
             e.HasKey(x => x.Id);
             e.Property(x => x.Action).HasConversion(a => a.Id(), id => AdminActions.FromId(id));
             e.Property(x => x.PerformedBy).IsRequired();
-            // Sin business_id a propósito: la auditoría no expone datos de negocios (RF-82).
+            // Solo el identificador del negocio, nunca sus datos: la auditoría no expone nada de un
+            // negocio más allá de a cuál se le hizo la acción (RF-82, D-29).
             e.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.TargetUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<BusinessEntity>().WithMany().HasForeignKey(x => x.TargetBusinessId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => x.TargetUserId);
+            e.HasIndex(x => x.TargetBusinessId);
         });
 
     /// <summary>

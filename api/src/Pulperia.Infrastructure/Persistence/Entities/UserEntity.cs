@@ -11,4 +11,15 @@ public sealed class UserEntity
     public string PasswordHash { get; set; } = "";
 
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Administra la plataforma (D-29). Solo cambia con los comandos del servidor; la base no deja
+    /// retirarla al último.
+    /// </summary>
+    public bool IsSuperAdmin { get; set; }
+
+    /// <summary>Desde cuándo la cuenta está suspendida (RF-99); null si no lo está.</summary>
+    public DateTime? SuspendedAt { get; set; }
+
+    public string? SuspensionReason { get; set; }
 }
