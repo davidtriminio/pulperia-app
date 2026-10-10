@@ -1,5 +1,6 @@
 using Pulperia.Application.Admin;
 using Pulperia.Domain.Access;
+using Pulperia.Domain.Admin;
 using Pulperia.Domain.Business;
 
 namespace Pulperia.Api.Endpoints;
@@ -22,6 +23,7 @@ internal static class AdminEndpoints
         admin.MapPost("/accounts/{id:guid}/suspend", SuspendAccountAsync);
         admin.MapPost("/accounts/{id:guid}/reactivate", ReactivateAccountAsync);
         admin.MapPost("/accounts/{id:guid}/reset-password", ResetPasswordAsync);
+        admin.MapGet("/audit", ListAuditAsync);
     }
 
     private sealed record ReasonBody(string? Reason);
@@ -139,6 +141,57 @@ internal static class AdminEndpoints
         var result = await platform.ResetPasswordAsync(id, context.GetSuperAdmin().UserId, context.RequestAborted);
         // La contraseña nueva se muestra una sola vez; no queda guardada en claro en ningún lado (RF-100).
         return result.IsSuccess ? Results.Json(new { password = result.Value }, Http.Json) : Failure(result.Codes);
+    }
+
+    private static async Task<IResult> ListAuditAsync(
+        PlatformService platform, HttpContext context, string? accountId, string? businessId, string? action,
+        int? page, int? pageSize)
+    {
+        Guid? account = null, business = null;
+        AdminAction? wanted = null;
+        if (accountId is not null)
+        {
+            if (!Guid.TryParse(accountId, out var parsed))
+            {
+                return Http.InvalidRequest();
+            }
+            account = parsed;
+        }
+        if (businessId is not null)
+        {
+            if (!Guid.TryParse(businessId, out var parsed))
+            {
+                return Http.InvalidRequest();
+            }
+            business = parsed;
+        }
+        if (action is not null)
+        {
+            try
+            {
+                wanted = AdminActions.FromId(action);
+            }
+            catch (ArgumentException)
+            {
+                return Http.InvalidRequest();
+            }
+        }
+
+        var result = await platform.ListAuditAsync(account, business, wanted, page, pageSize, context.RequestAborted);
+        return Results.Json(
+            Json(result, e => new
+            {
+                id = e.Id,
+                action = e.Action.Id(),
+                performedBy = e.PerformedBy,
+                performedAt = e.PerformedAt,
+                targetUserId = e.TargetUserId,
+                targetEmail = e.TargetEmail,
+                targetBusinessId = e.TargetBusinessId,
+                targetBusinessName = e.TargetBusinessName,
+                detail = e.Detail,
+            }),
+            Http.Json);
     }
 
     private static async Task<IResult> ListAccountsAsync(

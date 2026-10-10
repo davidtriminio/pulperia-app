@@ -346,6 +346,24 @@
         }
       }
     },
+    "/api/admin/audit": {
+      "get": {
+        "summary": "La auditoría de la plataforma, de la más reciente a la más antigua (RF-101, D-29): quién, cuándo, qué, sobre qué y el motivo. Solo lectura.",
+        "parameters": [
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1 } },
+          { "name": "pageSize", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 100 } },
+          { "name": "accountId", "in": "query", "required": false, "description": "Solo lo hecho sobre esa cuenta.", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "businessId", "in": "query", "required": false, "description": "Solo lo hecho sobre ese negocio.", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "action", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/AdminAction" } }
+        ],
+        "responses": {
+          "200": { "description": "Una página de la auditoría.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminAuditPage" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
     "/api/admin/accounts": {
       "get": {
         "summary": "Cuentas de la plataforma por correo, con su estado y sus negocios (RF-97, D-29). Solo super administradores.",
@@ -502,6 +520,35 @@
         "type": "object",
         "required": ["password"],
         "properties": { "password": { "type": "string", "description": "16 caracteres; no se vuelve a mostrar." } }
+      },
+      "AdminAction": {
+        "type": "string",
+        "enum": ["reset_password", "grant_superadmin", "revoke_superadmin", "suspend_business", "reactivate_business", "activate_business", "suspend_account", "reactivate_account"]
+      },
+      "AdminAuditEntry": {
+        "type": "object",
+        "required": ["id", "action", "performedBy", "performedAt", "targetUserId", "targetEmail", "targetBusinessId", "targetBusinessName", "detail"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "action": { "$ref": "#/components/schemas/AdminAction" },
+          "performedBy": { "type": "string", "description": "El correo del super administrador o el operador del comando del servidor." },
+          "performedAt": { "type": "string", "format": "date-time" },
+          "targetUserId": { "type": "string", "format": "uuid", "nullable": true },
+          "targetEmail": { "type": "string", "nullable": true },
+          "targetBusinessId": { "type": "string", "format": "uuid", "nullable": true },
+          "targetBusinessName": { "type": "string", "nullable": true },
+          "detail": { "type": "string", "nullable": true, "description": "El motivo, cuando la acción lo lleva." }
+        }
+      },
+      "AdminAuditPage": {
+        "type": "object",
+        "required": ["items", "page", "pageSize", "total"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/AdminAuditEntry" } },
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "total": { "type": "integer" }
+        }
       },
       "AdminBusinessPage": {
         "type": "object",

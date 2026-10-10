@@ -1,4 +1,5 @@
 using Pulperia.Domain.Access;
+using Pulperia.Domain.Admin;
 using Pulperia.Domain.Business;
 
 namespace Pulperia.Application.Admin;
@@ -33,6 +34,21 @@ public sealed record AdminAccount(
     DateTime? SuspendedAt,
     string? SuspensionReason,
     IReadOnlyList<AdminAccountBusiness> Businesses);
+
+/// <summary>
+/// Una entrada de la auditoría (RF-101): quién, cuándo, qué, sobre qué cuenta o negocio y el
+/// motivo. Del negocio solo se muestra su identificador y su nombre.
+/// </summary>
+public sealed record AdminAuditEntry(
+    Guid Id,
+    AdminAction Action,
+    string PerformedBy,
+    DateTime PerformedAt,
+    Guid? TargetUserId,
+    string? TargetEmail,
+    Guid? TargetBusinessId,
+    string? TargetBusinessName,
+    string? Detail);
 
 /// <summary>Una página de resultados, con el total para poder paginar.</summary>
 public sealed record AdminPage<T>(IReadOnlyList<T> Items, int Page, int PageSize, int Total);
