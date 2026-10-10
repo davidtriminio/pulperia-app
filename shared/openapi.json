@@ -29,6 +29,7 @@
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } } },
         "responses": {
           "200": { "description": "Sesión iniciada.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Tokens" } } } },
+          "403": { "$ref": "#/components/responses/Forbidden" },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "401": { "$ref": "#/components/responses/Unauthorized" }
         }
@@ -298,6 +299,34 @@
         "summary": "Reactivar un negocio suspendido (RF-98, D-29). Todo vuelve a funcionar y la cola de los teléfonos se aplica.",
         "responses": {
           "200": { "description": "El negocio, ya activo.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminBusiness" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/admin/accounts/{id}/suspend": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "post": {
+        "summary": "Suspender una cuenta con un motivo (RF-99, D-29): no inicia sesión (account_suspended) y sus sesiones se cierran; sus negocios siguen intactos. Un super administrador no puede suspenderse a sí mismo.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReasonRequest" } } } },
+        "responses": {
+          "200": { "description": "La cuenta, ya suspendida.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminAccount" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/admin/accounts/{id}/reactivate": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "post": {
+        "summary": "Reactivar una cuenta suspendida (RF-99, D-29).",
+        "responses": {
+          "200": { "description": "La cuenta, ya activa.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminAccount" } } } },
           "401": { "$ref": "#/components/responses/Unauthorized" },
           "403": { "$ref": "#/components/responses/Forbidden" },
           "404": { "$ref": "#/components/responses/NotFound" },

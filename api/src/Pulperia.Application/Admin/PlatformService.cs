@@ -1,4 +1,5 @@
 using Pulperia.Application.Accounts;
+using Pulperia.Domain.Accounts;
 using Pulperia.Domain.Admin;
 using Pulperia.Domain.Business;
 
@@ -20,6 +21,15 @@ public interface IPlatformStore
         string? search, int page, int pageSize, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// En una sola transacción y con la cuenta bloqueada: aplica la regla, guarda la suspensión con
+    /// su motivo (o la quita), al suspender cierra todas sus sesiones abiertas y escribe en
+    /// <c>admin_audit</c> (RF-99, RF-101). No toca sus negocios ni sus pertenencias.
+    /// </summary>
+    Task<AccountSuspensionOutcome> ChangeAccountSuspensionAsync(
+        Guid userId, bool suspend, string? reason, Guid performedByUserId, DateTime at,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// En una sola transacción y con el negocio bloqueado: aplica la transición del dominio,
     /// guarda el estado nuevo (con el motivo solo al suspender) y escribe en <c>admin_audit</c>
     /// quién, cuándo y por qué (RF-101). Si no se puede, no cambia ni audita nada.
@@ -37,6 +47,14 @@ public sealed record BusinessStatusOutcome(AdminBusiness? Business, string? Code
     public static BusinessStatusOutcome Done(AdminBusiness business) => new(business, null);
 
     public static BusinessStatusOutcome Fail(string code) => new(null, code);
+}
+
+/// <summary>La cuenta con su estado nuevo, o el código estable del rechazo.</summary>
+public sealed record AccountSuspensionOutcome(AdminAccount? Account, string? Code)
+{
+    public static AccountSuspensionOutcome Done(AdminAccount account) => new(account, null);
+
+    public static AccountSuspensionOutcome Fail(string code) => new(null, code);
 }
 
 /// <summary>Consulta de negocios y cuentas, y su suspensión, para super administradores (RF-97, RF-98).</summary>
@@ -81,6 +99,31 @@ public sealed class PlatformService(IPlatformStore store, TimeProvider clock)
         Wrap(await store.ChangeBusinessStatusAsync(
             businessId, BusinessStatusRules.Reactivate, AdminAction.ReactivateBusiness,
             performedByUserId, null, clock.GetUtcNow().UtcDateTime, cancellationToken));
+
+    /// <summary>
+    /// Suspende la cuenta con un motivo (RF-99): no inicia sesión y sus sesiones se cierran. Un super
+    /// administrador no puede suspender su propia cuenta: se quedaría sin acceso al panel.
+    /// </summary>
+    public async Task<AccountResult<AdminAccount>> SuspendAccountAsync(
+        Guid userId, string? reason, Guid performedByUserId, CancellationToken cancellationToken = default)
+    {
+        if (userId == performedByUserId)
+        {
+            return AccountResult<AdminAccount>.Fail("cannot_suspend_self");
+        }
+        return Wrap(await store.ChangeAccountSuspensionAsync(
+            userId, suspend: true, Clean(reason), performedByUserId, clock.GetUtcNow().UtcDateTime, cancellationToken));
+    }
+
+    public async Task<AccountResult<AdminAccount>> ReactivateAccountAsync(
+        Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default) =>
+        Wrap(await store.ChangeAccountSuspensionAsync(
+            userId, suspend: false, null, performedByUserId, clock.GetUtcNow().UtcDateTime, cancellationToken));
+
+    private static AccountResult<AdminAccount> Wrap(AccountSuspensionOutcome outcome) =>
+        outcome.Account is { } account
+            ? AccountResult<AdminAccount>.Ok(account)
+            : AccountResult<AdminAccount>.Fail(outcome.Code!);
 
     private static AccountResult<AdminBusiness> Wrap(BusinessStatusOutcome outcome) =>
         outcome.Business is { } business

@@ -292,6 +292,29 @@ public class ApiContractTests(PostgresFixture postgres)
         await probe.Call("POST", "/api/admin/businesses/{id}/reactivate", $"/api/admin/businesses/{betoBusiness}/reactivate", 403,
             new { }, ana.Token);
 
+        var victim = await RegisterAsync(kit.Host, "victima@correo.com");
+        await probe.Call("POST", "/api/admin/accounts/{id}/suspend", $"/api/admin/accounts/{victim.UserId}/suspend", 400,
+            new { reason = "" }, root.Token);
+        await probe.Call("POST", "/api/admin/accounts/{id}/suspend", $"/api/admin/accounts/{victim.UserId}/suspend", 200,
+            new { reason = "Uso indebido" }, root.Token);
+        await probe.Call("POST", "/api/admin/accounts/{id}/suspend", $"/api/admin/accounts/{victim.UserId}/suspend", 409,
+            new { reason = "Otra vez" }, root.Token);
+        await probe.Call("POST", "/api/admin/accounts/{id}/suspend", $"/api/admin/accounts/{root.UserId}/suspend", 409,
+            new { reason = "Yo" }, root.Token);
+        await probe.Call("POST", "/api/admin/accounts/{id}/suspend", $"/api/admin/accounts/{Random()}/suspend", 404,
+            new { reason = "x" }, root.Token);
+        await probe.Call("POST", "/api/admin/accounts/{id}/suspend", $"/api/admin/accounts/{victim.UserId}/suspend", 403,
+            new { reason = "x" }, ana.Token);
+        await probe.Call("POST", "/api/auth/login", "/api/auth/login", 403, new { email = "victima@correo.com", password = "contrasena1" });
+        await probe.Call("POST", "/api/admin/accounts/{id}/reactivate", $"/api/admin/accounts/{victim.UserId}/reactivate", 200,
+            new { }, root.Token);
+        await probe.Call("POST", "/api/admin/accounts/{id}/reactivate", $"/api/admin/accounts/{victim.UserId}/reactivate", 409,
+            new { }, root.Token);
+        await probe.Call("POST", "/api/admin/accounts/{id}/reactivate", $"/api/admin/accounts/{Random()}/reactivate", 404,
+            new { }, root.Token);
+        await probe.Call("POST", "/api/admin/accounts/{id}/reactivate", $"/api/admin/accounts/{victim.UserId}/reactivate", 403,
+            new { }, ana.Token);
+
         // ---- Sin sesión: el 401 de todas las rutas que lo documentan y aún no se vieron ----
         foreach (var (method, template, status) in Contract.Responses().Where(r => r.Status == 401).ToArray())
         {

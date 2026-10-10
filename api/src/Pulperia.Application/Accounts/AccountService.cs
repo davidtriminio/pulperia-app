@@ -90,6 +90,11 @@ public sealed class AccountService(IAccountStore store, PasswordHasher hasher, T
         {
             return AccountResult<AuthTokens>.Fail("invalid_credentials");
         }
+        // Solo quien sabe la contraseña se entera de que la cuenta está suspendida (RF-99).
+        if (user.IsSuspended)
+        {
+            return AccountResult<AuthTokens>.Fail("account_suspended");
+        }
         if (check.NeedsRehash)
         {
             await store.UpdatePasswordHashAsync(user.Id, hasher.Hash(password!), cancellationToken);

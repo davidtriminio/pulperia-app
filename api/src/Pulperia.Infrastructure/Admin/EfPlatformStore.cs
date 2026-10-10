@@ -4,6 +4,7 @@ using Pulperia.Domain.Business;
 using Pulperia.Domain.Team;
 using Pulperia.Infrastructure.Persistence;
 using Pulperia.Domain.Access;
+using Pulperia.Domain.Accounts;
 using Pulperia.Domain.Admin;
 using Pulperia.Infrastructure.Persistence.Entities;
 
@@ -161,6 +162,55 @@ public sealed class EfPlatformStore(PulperiaDbContext db) : IPlatformStore
         await transaction.CommitAsync(cancellationToken);
 
         return BusinessStatusOutcome.Done((await FindBusinessAsync(businessId, cancellationToken))!);
+    }
+
+    public async Task<AccountSuspensionOutcome> ChangeAccountSuspensionAsync(
+        Guid userId, bool suspend, string? reason, Guid performedByUserId, DateTime at,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        var locked = await db.Database
+            .SqlQuery<int>($"SELECT 1 AS \"Value\" FROM users WHERE id = {userId} FOR UPDATE")
+            .ToListAsync(cancellationToken);
+        if (locked.Count == 0)
+        {
+            return AccountSuspensionOutcome.Fail("account_not_found");
+        }
+
+        var isSuspended = await db.Users.AsNoTracking().Where(u => u.Id == userId)
+            .Select(u => u.SuspendedAt != null).SingleAsync(cancellationToken);
+        var change = suspend
+            ? AccountSuspensionRules.Suspend(isSuspended, reason)
+            : AccountSuspensionRules.Reactivate(isSuspended);
+        if (!change.IsValid)
+        {
+            return AccountSuspensionOutcome.Fail(change.Error!.Value.Code());
+        }
+
+        var performedBy = await db.Users.AsNoTracking().Where(u => u.Id == performedByUserId)
+            .Select(u => u.Email).SingleAsync(cancellationToken);
+        DateTime? suspendedAt = suspend ? at : null;
+        var suspensionReason = suspend ? reason : null;
+        await db.Users.Where(u => u.Id == userId).ExecuteUpdateAsync(
+            s => s.SetProperty(u => u.SuspendedAt, suspendedAt).SetProperty(u => u.SuspensionReason, suspensionReason),
+            cancellationToken);
+        if (suspend)
+        {
+            // Quien entró antes no debe seguir dentro con sus tokens.
+            await db.Sessions.Where(s => s.UserId == userId && s.RevokedAt == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevokedAt, at), cancellationToken);
+        }
+        db.AdminAudits.Add(new AdminAuditEntity
+        {
+            Id = Guid.CreateVersion7(),
+            Action = suspend ? AdminAction.SuspendAccount : AdminAction.ReactivateAccount,
+            TargetUserId = userId, Detail = reason, PerformedBy = performedBy, PerformedAt = at,
+        });
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return AccountSuspensionOutcome.Done((await FindAccountAsync(userId, cancellationToken))!);
     }
 
     /// <summary>El texto buscado como patrón de <c>ILIKE</c>, con sus comodines escapados.</summary>

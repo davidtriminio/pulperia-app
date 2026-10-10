@@ -103,7 +103,7 @@ public sealed class EfAccountStore(PulperiaDbContext db) : IAccountStore
     public async Task<UserCredentials?> FindUserByEmailAsync(
         string normalizedEmail, CancellationToken cancellationToken = default) =>
         await db.Users.AsNoTracking().Where(u => u.Email == normalizedEmail)
-            .Select(u => new UserCredentials(u.Id, u.PasswordHash))
+            .Select(u => new UserCredentials(u.Id, u.PasswordHash, u.SuspendedAt != null))
             .SingleOrDefaultAsync(cancellationToken);
 
     public async Task UpdatePasswordHashAsync(
