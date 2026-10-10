@@ -25,6 +25,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _business = TextEditingController();
+  final _code = TextEditingController();
+  bool _hasCode = false;
+  String? _codeError;
   AmountMode? _amount;
   QuantityMode? _quantity;
   AccountError? _emailError;
@@ -41,12 +44,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _email.dispose();
     _password.dispose();
     _business.dispose();
+    _code.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (_busy) {
       return;
+    }
+    if (_hasCode) {
+      return _submitWithCode();
     }
     final emailError = validateEmail(_email.text);
     final passwordError = validatePassword(_password.text);
@@ -91,11 +98,48 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     // Con éxito la puerta de acceso cambia de pantalla y esta se destruye.
   }
 
+  /// Registro de quien viene con un código: sin negocio ni modos (RF-105).
+  Future<void> _submitWithCode() async {
+    final emailError = validateEmail(_email.text);
+    final passwordError = validatePassword(_password.text);
+    final missingCode = _code.text.trim().isEmpty;
+    setState(() {
+      _emailError = emailError;
+      _passwordError = passwordError;
+      _codeError = missingCode ? Strings.codeRequired : null;
+      _error = null;
+    });
+    if (emailError != null || passwordError != null || missingCode) {
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(sessionControllerProvider.notifier)
+          .registerWithInvitationCode(
+            email: _email.text,
+            password: _password.text,
+            invitationCode: _code.text,
+          );
+    } on Object catch (e) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = errorMessage(e);
+        });
+      }
+    }
+    // Con éxito la puerta de acceso cambia de pantalla y esta se destruye.
+  }
+
   @override
   Widget build(BuildContext context) => AuthPage(
     key: const ValueKey('register-screen'),
     title: Strings.createAccountTitle,
-    subtitle: Strings.createAccountSubtitle,
+    subtitle: _hasCode
+        ? Strings.createAccountWithCodeSubtitle
+        : Strings.createAccountSubtitle,
     children: [
       TextField(
         key: const ValueKey('auth-email'),
@@ -140,32 +184,57 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
       ),
       const SizedBox(height: 14),
-      TextField(
-        key: const ValueKey('register-business-name'),
-        controller: _business,
-        textCapitalization: TextCapitalization.words,
-        textInputAction: TextInputAction.done,
-        inputFormatters: [LengthLimitingTextInputFormatter(InputLimits.name)],
-        decoration: InputDecoration(
-          labelText: Strings.fieldBusinessName,
-          error: fieldError(
-            _businessError == null ? null : accountErrorText(_businessError!),
+      SwitchListTile(
+        key: const ValueKey('register-has-code'),
+        contentPadding: EdgeInsets.zero,
+        title: const Text(Strings.registerHasCode),
+        subtitle: _hasCode ? const Text(Strings.registerHasCodeHint) : null,
+        value: _hasCode,
+        onChanged: _busy ? null : (value) => setState(() => _hasCode = value),
+      ),
+      const SizedBox(height: 6),
+      if (_hasCode)
+        TextField(
+          key: const ValueKey('register-invitation-code'),
+          controller: _code,
+          textCapitalization: TextCapitalization.characters,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _submit(),
+          inputFormatters: [LengthLimitingTextInputFormatter(20)],
+          decoration: InputDecoration(
+            labelText: Strings.fieldCode,
+            error: fieldError(_codeError),
+          ),
+        )
+      else
+        TextField(
+          key: const ValueKey('register-business-name'),
+          controller: _business,
+          textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.done,
+          inputFormatters: [LengthLimitingTextInputFormatter(InputLimits.name)],
+          decoration: InputDecoration(
+            labelText: Strings.fieldBusinessName,
+            error: fieldError(
+              _businessError == null ? null : accountErrorText(_businessError!),
+            ),
           ),
         ),
-      ),
-      const SizedBox(height: 20),
-      ModeChoices(
-        amount: _amount,
-        quantity: _quantity,
-        amountError: _amountMissing && _amount == null
-            ? Strings.amountModeRequired
-            : null,
-        quantityError: _quantityMissing && _quantity == null
-            ? Strings.quantityModeRequired
-            : null,
-        onAmount: (mode) => setState(() => _amount = mode),
-        onQuantity: (mode) => setState(() => _quantity = mode),
-      ),
+      if (!_hasCode) ...[
+        const SizedBox(height: 20),
+        ModeChoices(
+          amount: _amount,
+          quantity: _quantity,
+          amountError: _amountMissing && _amount == null
+              ? Strings.amountModeRequired
+              : null,
+          quantityError: _quantityMissing && _quantity == null
+              ? Strings.quantityModeRequired
+              : null,
+          onAmount: (mode) => setState(() => _amount = mode),
+          onQuantity: (mode) => setState(() => _quantity = mode),
+        ),
+      ],
       const SizedBox(height: 20),
       if (_error != null) ...[
         KeyedSubtree(

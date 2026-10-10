@@ -198,6 +198,11 @@ abstract final class Strings {
   static const createAccountSubtitle =
       'Registra tu negocio para llevar sus fiados';
   static const createAccountAction = 'Crear cuenta';
+  static const registerHasCode = 'Me invitaron con un código';
+  static const registerHasCodeHint =
+      'Entrarás como empleado del negocio que te invitó, sin crear uno propio.';
+  static const createAccountWithCodeSubtitle =
+      'Crea tu cuenta para entrar al negocio que te invitó';
   static const goToRegister = 'Crear una cuenta';
   static const goToLogin = 'Ya tengo una cuenta';
   static const fieldEmail = 'Correo electrónico';
