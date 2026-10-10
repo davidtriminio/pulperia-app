@@ -12,6 +12,7 @@ import 'business/team_screen.dart';
 import 'catalog/catalog_screen.dart';
 import 'clients/clients_screen.dart';
 import 'summary/summary_screen.dart';
+import 'sync/business_status_banner.dart';
 import 'sync/rejected_changes_screen.dart';
 import 'sync/sync_indicator.dart';
 import 'sync/sync_triggers.dart';
@@ -108,9 +109,20 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         ],
       ),
       body: SyncTriggers(
-        child: IndexedStack(
-          index: _index,
-          children: const [ClientsScreen(), SummaryScreen(), CatalogScreen()],
+        child: Column(
+          children: [
+            const BusinessStatusBanner(),
+            Expanded(
+              child: IndexedStack(
+                index: _index,
+                children: const [
+                  ClientsScreen(),
+                  SummaryScreen(),
+                  CatalogScreen(),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: NavigationBar(

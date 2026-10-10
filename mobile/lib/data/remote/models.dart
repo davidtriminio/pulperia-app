@@ -1,5 +1,6 @@
 import '../../domain/access/access.dart';
 import '../../domain/business/amount_mode.dart';
+import '../../domain/business/business_status.dart';
 import '../../domain/business/quantity_mode.dart';
 import '../../domain/catalog/sale_unit.dart';
 
@@ -66,6 +67,7 @@ final class RemoteBusiness {
     required this.role,
     required this.amountMode,
     required this.quantityMode,
+    this.status = BusinessStatus.active,
   });
 
   factory RemoteBusiness.fromJson(Map<String, dynamic> json) => RemoteBusiness(
@@ -74,6 +76,10 @@ final class RemoteBusiness {
     role: Role.fromId(json['role'] as String),
     amountMode: AmountMode.fromId(json['amountMode'] as String),
     quantityMode: QuantityMode.fromId(json['quantityMode'] as String),
+    // Una sesión guardada antes de D-30 no trae el estado: era un negocio activo.
+    status: json['status'] == null
+        ? BusinessStatus.active
+        : BusinessStatus.fromId(json['status'] as String),
   );
 
   final String id;
@@ -82,12 +88,25 @@ final class RemoteBusiness {
   final AmountMode amountMode;
   final QuantityMode quantityMode;
 
+  /// Pendiente de activación, activo o suspendido (D-30).
+  final BusinessStatus status;
+
+  RemoteBusiness copyWith({BusinessStatus? status}) => RemoteBusiness(
+    id: id,
+    name: name,
+    role: role,
+    amountMode: amountMode,
+    quantityMode: quantityMode,
+    status: status ?? this.status,
+  );
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
     'role': role.id,
     'amountMode': amountMode.id,
     'quantityMode': quantityMode.id,
+    'status': status.id,
   };
 }
 

@@ -7,6 +7,7 @@ import '../../app/session_state.dart';
 import '../../data/remote/models.dart';
 import '../../domain/access/access.dart';
 import '../../l10n/error_messages.dart';
+import '../../domain/business/business_status.dart';
 import '../../l10n/strings.dart';
 import '../theme.dart';
 import 'auth_widgets.dart';
@@ -318,6 +319,29 @@ class _BusinessTile extends StatelessWidget {
                           : Strings.roleEmployee,
                       style: theme.textTheme.bodyMedium,
                     ),
+                    if (business.status != BusinessStatus.active)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Chip(
+                          key: ValueKey('business-status-${business.id}'),
+                          visualDensity: VisualDensity.compact,
+                          avatar: Icon(
+                            business.status == BusinessStatus.pending
+                                ? Icons.hourglass_top_rounded
+                                : Icons.pause_circle_outline,
+                            size: 16,
+                          ),
+                          label: Text(
+                            business.status == BusinessStatus.pending
+                                ? Strings.statusPending
+                                : Strings.statusSuspended,
+                          ),
+                          backgroundColor: AppColors.turquoise.withValues(
+                            alpha: 0.2,
+                          ),
+                          side: BorderSide.none,
+                        ),
+                      ),
                   ],
                 ),
               ),

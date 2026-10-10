@@ -82,6 +82,14 @@ enum SyncFailure {
 
   /// Ya no perteneces al negocio (RF-11): sus datos locales se borraron.
   removed,
+
+  /// El negocio espera que un super administrador lo active (RF-102): la cola
+  /// se conserva y se envía al activarse.
+  businessPending,
+
+  /// El negocio está suspendido (RF-98): el teléfono sigue con lo que tiene y
+  /// la cola se conserva hasta que se reactive.
+  businessSuspended,
 }
 
 final class SyncFailed extends SyncOutcome {
@@ -149,6 +157,19 @@ class SyncService {
       if (e.status == 401) {
         return const SyncFailed(SyncFailure.sessionExpired);
       }
+      // El negocio existe y es del usuario, pero no está activo: no es una baja.
+      if (e.status == 403 && e.code == businessPendingCode) {
+        return const SyncFailed(
+          SyncFailure.businessPending,
+          code: businessPendingCode,
+        );
+      }
+      if (e.status == 403 && e.code == businessSuspendedCode) {
+        return const SyncFailed(
+          SyncFailure.businessSuspended,
+          code: businessSuspendedCode,
+        );
+      }
       if (e.status == 403 && e.code == forbiddenCode) {
         return _confirmRemoval(businessId, e);
       }
@@ -168,6 +189,10 @@ class SyncService {
 
   /// Código con el que el servidor niega el acceso al negocio.
   static const forbiddenCode = 'forbidden';
+
+  /// Códigos con los que un negocio no activo rechaza la sincronización (D-30).
+  static const businessPendingCode = 'business_pending';
+  static const businessSuspendedCode = 'business_suspended';
 
   /// El servidor negó el acceso: si de verdad ya no pertenecemos al negocio
   /// (RF-11), se borran sus datos locales, y el último lote ya se envió antes

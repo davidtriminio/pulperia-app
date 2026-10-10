@@ -242,6 +242,21 @@ abstract final class Strings {
   static const newBusinessTitle = 'Nuevo negocio';
   static const createBusinessAction = 'Crear negocio';
   static const retry = 'Reintentar';
+  static const businessPendingTitle = 'Tu negocio está pendiente de activación';
+  static const businessPendingBody =
+      'Lo revisa quien administra la plataforma. Cuando lo active podrás registrar clientes y fiados.';
+  static const businessPendingQueue =
+      'Lo que registraste en este teléfono está guardado y se enviará solo cuando se active.';
+  static const businessStillPending =
+      'Todavía no está activo. Inténtalo más tarde.';
+  static const businessCheck = 'Comprobar ahora';
+  static const businessSuspended =
+      'Este negocio está suspendido. Sigues viendo lo que ya tienes y lo que registres se enviará cuando se reactive.';
+  static const businessSuspendedShort = 'Negocio suspendido';
+  static const accountSuspended =
+      'Tu cuenta está suspendida. Comunícate con quien administra la plataforma.';
+  static const statusPending = 'Pendiente de activación';
+  static const statusSuspended = 'Suspendido';
 
   static const menu = 'Menú';
   static const switchBusiness = 'Cambiar de negocio';
