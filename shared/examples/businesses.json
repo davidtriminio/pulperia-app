@@ -9,7 +9,8 @@
         "name": "Pulpería Ana",
         "role": "owner",
         "amountMode": "two_decimals",
-        "quantityMode": "fractional"
+        "quantityMode": "fractional",
+        "status": "active"
       }
     },
     {
@@ -20,7 +21,20 @@
         "name": "Abarrotes Beto",
         "role": "employee",
         "amountMode": "integer",
-        "quantityMode": "integer"
+        "quantityMode": "integer",
+        "status": "active"
+      }
+    },
+    {
+      "name": "negocio recién creado, pendiente de activación",
+      "schema": "BusinessSummary",
+      "example": {
+        "id": "0198a000-0000-7000-8000-000000000012",
+        "name": "Abarrotes Cata",
+        "role": "owner",
+        "amountMode": "integer",
+        "quantityMode": "integer",
+        "status": "pending"
       }
     }
   ]

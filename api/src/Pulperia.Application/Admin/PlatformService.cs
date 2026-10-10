@@ -103,6 +103,16 @@ public sealed class PlatformService(IPlatformStore store, PasswordResetService p
             performedByUserId, clean, clock.GetUtcNow().UtcDateTime, cancellationToken));
     }
 
+    /// <summary>
+    /// Activa un negocio pendiente (RF-103, D-30): desde entonces trabaja con normalidad. Rechazarlo
+    /// es suspenderlo con un motivo.
+    /// </summary>
+    public async Task<AccountResult<AdminBusiness>> ActivateBusinessAsync(
+        Guid businessId, Guid performedByUserId, CancellationToken cancellationToken = default) =>
+        Wrap(await store.ChangeBusinessStatusAsync(
+            businessId, BusinessStatusRules.Activate, AdminAction.ActivateBusiness,
+            performedByUserId, null, clock.GetUtcNow().UtcDateTime, cancellationToken));
+
     /// <summary>Reactiva un negocio suspendido (RF-98): todo vuelve a funcionar y la cola pendiente se aplica.</summary>
     public async Task<AccountResult<AdminBusiness>> ReactivateBusinessAsync(
         Guid businessId, Guid performedByUserId, CancellationToken cancellationToken = default) =>

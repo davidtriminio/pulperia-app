@@ -35,8 +35,14 @@ public sealed class ApiTestHost : IAsyncDisposable
     public PulperiaDbContext Db { get; }
 
     /// <param name="mapExtra">Rutas de prueba que se agregan antes de arrancar.</param>
+    /// <param name="activateNewBusinesses">
+    /// El negocio que crea un registro nace pendiente de activación (D-30). Para que las demás
+    /// pruebas trabajen con él, por omisión se activa al instante, como lo haría el super
+    /// administrador; las pruebas de activación lo desactivan.
+    /// </param>
     public static async Task<ApiTestHost> StartAsync(
-        PostgresFixture postgres, Action<WebApplication>? mapExtra = null, TimeProvider? clock = null)
+        PostgresFixture postgres, Action<WebApplication>? mapExtra = null, TimeProvider? clock = null,
+        bool activateNewBusinesses = true)
     {
         var admin = await postgres.CreateDatabaseAsync();
         var connectionString = admin.Database.GetConnectionString()!;
@@ -58,8 +64,32 @@ public sealed class ApiTestHost : IAsyncDisposable
         await app.StartAsync();
 
         var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.First();
-        var client = new HttpClient { BaseAddress = new Uri(address) };
+        var client = activateNewBusinesses
+            ? new HttpClient(new ActivatingHandler(connectionString)) { BaseAddress = new Uri(address) }
+            : new HttpClient { BaseAddress = new Uri(address) };
         return new ApiTestHost(app, client, PostgresFixture.NewContext(connectionString));
+    }
+
+    /// <summary>Activa el negocio que acaba de crear un registro, para pruebas que no tratan de la activación.</summary>
+    private sealed class ActivatingHandler(string connectionString) : DelegatingHandler(new HttpClientHandler())
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var body = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);
+            var response = await base.SendAsync(request, cancellationToken);
+            if (request.Method == HttpMethod.Post
+                && request.RequestUri?.AbsolutePath == "/api/auth/register"
+                && response.StatusCode == System.Net.HttpStatusCode.Created
+                && !body.Contains("invitationCode", StringComparison.Ordinal))
+            {
+                using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
+                var id = json.RootElement.GetProperty("businessId").GetGuid();
+                await using var db = PostgresFixture.NewContext(connectionString);
+                await db.Businesses.Where(b => b.Id == id)
+                    .ExecuteUpdateAsync(s => s.SetProperty(b => b.Status, Pulperia.Domain.Business.BusinessStatus.Active), cancellationToken);
+            }
+            return response;
+        }
     }
 
     public async Task<HttpResponseMessage> PostAsync(string path, object? body, string? accessToken = null, Guid? businessId = null)

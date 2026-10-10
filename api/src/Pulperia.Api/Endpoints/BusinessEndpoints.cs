@@ -22,6 +22,7 @@ internal static class BusinessEndpoints
         role = business.Role.Id(),
         amountMode = business.AmountMode.Id(),
         quantityMode = business.QuantityMode.Id(),
+        status = business.Status.Id(),
     };
 
     private static async Task<IResult> ListAsync(HttpContext context, AccountService accounts)

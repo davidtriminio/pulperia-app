@@ -11,6 +11,9 @@ public interface IManagementStore
 {
     Task<BusinessSettings?> GetSettingsAsync(Guid businessId, CancellationToken cancellationToken = default);
 
+    /// <summary>El estado del negocio (D-30); <c>Active</c> si no se encuentra.</summary>
+    Task<Pulperia.Domain.Business.BusinessStatus> GetStatusAsync(Guid businessId, CancellationToken cancellationToken = default);
+
     Task UpdateSettingsAsync(Guid businessId, BusinessSettings settings, CancellationToken cancellationToken = default);
 
     Task<string?> FindUserEmailAsync(Guid userId, CancellationToken cancellationToken = default);

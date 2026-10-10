@@ -25,6 +25,8 @@ public sealed class EfAccountStore(PulperiaDbContext db) : IAccountStore
         {
             Id = account.BusinessId, Name = account.BusinessName, AmountMode = account.AmountMode,
             QuantityMode = account.QuantityMode, CreatedAt = account.CreatedAt,
+            // El negocio del registro espera la activación del super administrador (RF-102, D-30).
+            Status = BusinessStatus.Pending,
         });
         db.Memberships.Add(new MembershipEntity
         {
@@ -90,6 +92,12 @@ public sealed class EfAccountStore(PulperiaDbContext db) : IAccountStore
         await transaction.CommitAsync(cancellationToken);
         return new InvitedAccountOutcome(InvitedAccountStatus.Created, invitation.BusinessId);
     }
+
+    public async Task<bool> OwnsActiveBusinessAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        await db.Memberships.AsNoTracking()
+            .Where(m => m.UserId == userId && m.Role == Role.Owner && m.Status == MembershipStatus.Active)
+            .Join(db.Businesses, m => m.BusinessId, b => b.Id, (m, b) => b.Status)
+            .AnyAsync(s => s == BusinessStatus.Active, cancellationToken);
 
     public async Task<BusinessStatus?> FindBusinessStatusAsync(
         Guid businessId, CancellationToken cancellationToken = default) =>
@@ -160,7 +168,7 @@ public sealed class EfAccountStore(PulperiaDbContext db) : IAccountStore
         db.Businesses.Add(new BusinessEntity
         {
             Id = business.BusinessId, Name = business.Name, AmountMode = business.AmountMode,
-            QuantityMode = business.QuantityMode, CreatedAt = business.CreatedAt,
+            QuantityMode = business.QuantityMode, CreatedAt = business.CreatedAt, Status = business.Status,
         });
         db.Memberships.Add(new MembershipEntity
         {
@@ -174,7 +182,7 @@ public sealed class EfAccountStore(PulperiaDbContext db) : IAccountStore
         await db.Memberships.AsNoTracking()
             .Where(m => m.UserId == userId && m.Status == MembershipStatus.Active)
             .Join(db.Businesses, m => m.BusinessId, b => b.Id,
-                (m, b) => new BusinessSummary(b.Id, b.Name, m.Role, b.AmountMode, b.QuantityMode))
+                (m, b) => new BusinessSummary(b.Id, b.Name, m.Role, b.AmountMode, b.QuantityMode, b.Status))
             .ToListAsync(cancellationToken);
 
     public async Task<Role?> FindActiveRoleAsync(

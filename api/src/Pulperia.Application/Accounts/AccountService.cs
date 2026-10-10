@@ -207,11 +207,15 @@ public sealed class AccountService(IAccountStore store, PasswordHasher hasher, T
             return AccountResult<BusinessSummary>.Fail(problem);
         }
 
+        // Quien ya es dueño de un negocio activo crea los demás activos; quien no, pendientes (RF-104, D-30).
+        var status = await store.OwnsActiveBusinessAsync(userId, cancellationToken)
+            ? BusinessStatus.Active
+            : BusinessStatus.Pending;
         var business = new NewBusiness(
-            Guid.CreateVersion7(), userId, name!.Trim(), amountMode, quantityMode, clock.GetUtcNow().UtcDateTime);
+            Guid.CreateVersion7(), userId, name!.Trim(), amountMode, quantityMode, clock.GetUtcNow().UtcDateTime, status);
         await store.AddBusinessAsync(business, cancellationToken);
         return AccountResult<BusinessSummary>.Ok(
-            new BusinessSummary(business.BusinessId, business.Name, Role.Owner, amountMode, quantityMode));
+            new BusinessSummary(business.BusinessId, business.Name, Role.Owner, amountMode, quantityMode, status));
     }
 
     /// <summary>Los negocios del usuario con su rol en cada uno, ordenados por nombre (RF-5, RF-6).</summary>
