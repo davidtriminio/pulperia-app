@@ -4,6 +4,7 @@ import '../data/remote/models.dart';
 import '../data/session/session_store.dart';
 import '../data/sync/sync_service.dart';
 import '../domain/business/amount_mode.dart';
+import '../domain/business/business_status.dart';
 import '../domain/business/quantity_mode.dart';
 import 'providers.dart';
 import 'session_state.dart';
@@ -100,13 +101,18 @@ class SessionController extends AsyncNotifier<SessionState> {
   /// guardados en el teléfono. Con red, además, pone al día el negocio activo
   /// (nombre, rol, modos) y lo quita si el usuario ya no pertenece a él.
   Future<List<RemoteBusiness>> loadBusinesses() async {
-    final service = ref.read(businessServiceProvider);
-    final List<RemoteBusiness> list;
     try {
-      list = await service.refresh();
+      return await refreshBusinesses();
     } on NetworkException {
-      return service.local();
+      return ref.read(businessServiceProvider).local();
     }
+  }
+
+  /// Como [loadBusinesses], pero exige conexión: sin ella lanza
+  /// [NetworkException]. Sirve para comprobar si el servidor ya activó o
+  /// reactivó el negocio (T199).
+  Future<List<RemoteBusiness>> refreshBusinesses() async {
+    final list = await ref.read(businessServiceProvider).refresh();
     await _reconcileActive(list);
     return list;
   }
@@ -196,6 +202,20 @@ class SessionController extends AsyncNotifier<SessionState> {
 
   Future<void> rejectInvitation(String invitationId) =>
       ref.read(managementServiceProvider).reject(invitationId);
+
+  /// Recuerda que el servidor dijo que el negocio activo está pendiente o
+  /// suspendido (T194, T199): la puerta de acceso muestra la pantalla de espera
+  /// o el aviso, y sigue así aunque se cierre la app hasta que se compruebe.
+  Future<void> markActiveStatus(BusinessStatus status) async {
+    final current = state.value;
+    final active = current is SignedIn ? current.active : null;
+    if (active == null || active.status == status) {
+      return;
+    }
+    final updated = active.copyWith(status: status);
+    await ref.read(sessionServiceProvider).saveActiveBusiness(updated);
+    state = AsyncData(_withActive(updated));
+  }
 
   /// Deja de trabajar con el negocio activo (por ejemplo, porque ya no
   /// pertenece a él): el usuario vuelve a elegir negocio.

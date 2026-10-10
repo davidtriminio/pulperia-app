@@ -102,7 +102,10 @@ class _BlockedLogoutDialogState extends ConsumerState<_BlockedLogoutDialog> {
     SyncFailure.network => Strings.errorOffline,
     SyncFailure.sessionExpired => Strings.errorSessionExpired,
     SyncFailure.removed => Strings.errorUnexpected,
-    SyncFailure.server || SyncFailure.refused =>
+    SyncFailure.server ||
+    SyncFailure.refused ||
+    SyncFailure.businessPending ||
+    SyncFailure.businessSuspended =>
       (failure.code == null ? null : errorMessageForCode(failure.code!)) ??
           Strings.errorUnexpected,
   };
