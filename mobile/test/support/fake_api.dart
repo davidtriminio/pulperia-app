@@ -3,6 +3,7 @@ import 'package:pulperia_mobile/data/remote/models.dart';
 import 'package:pulperia_mobile/data/session/session_store.dart';
 import 'package:pulperia_mobile/domain/access/access.dart';
 import 'package:pulperia_mobile/domain/business/amount_mode.dart';
+import 'package:pulperia_mobile/domain/business/business_status.dart';
 import 'package:pulperia_mobile/domain/business/quantity_mode.dart';
 import 'package:pulperia_mobile/domain/catalog/sale_unit.dart';
 
@@ -44,12 +45,14 @@ RemoteBusiness remoteBusiness(
   Role role = Role.owner,
   AmountMode amountMode = AmountMode.twoDecimals,
   QuantityMode quantityMode = QuantityMode.fractional,
+  BusinessStatus status = BusinessStatus.active,
 }) => RemoteBusiness(
   id: id,
   name: name,
   role: role,
   amountMode: amountMode,
   quantityMode: quantityMode,
+  status: status,
 );
 
 /// Un servidor falso: responde lo que el test configure y recuerda las

@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' show TableUpdateQuery;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/sync/sync_service.dart';
+import '../domain/business/business_status.dart';
 import '../data/local/app_database.dart';
 import 'providers.dart';
 import 'session_state.dart';
@@ -84,6 +85,19 @@ class SyncController extends Notifier<SyncStatus> {
       ref.read(localDataRevisionProvider.notifier).bump();
     }
     state = SyncStatus(last: outcome);
+    if (outcome is SyncFailed) {
+      // El negocio no está activo (D-30): se recuerda en la sesión, con la cola intacta.
+      final unavailable = switch (outcome.reason) {
+        SyncFailure.businessPending => BusinessStatus.pending,
+        SyncFailure.businessSuspended => BusinessStatus.suspended,
+        _ => null,
+      };
+      if (unavailable != null) {
+        await ref
+            .read(sessionControllerProvider.notifier)
+            .markActiveStatus(unavailable);
+      }
+    }
     if (outcome is SyncFailed && outcome.reason == SyncFailure.removed) {
       // Sus datos ya se borraron: se sale del negocio y se avisa.
       ref
