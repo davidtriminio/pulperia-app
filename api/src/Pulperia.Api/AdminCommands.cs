@@ -19,6 +19,7 @@ public static class AdminCommands
         Uso: dotnet Pulperia.Api.dll admin reset-password <correo>
              dotnet Pulperia.Api.dll admin grant-superadmin <correo>
              dotnet Pulperia.Api.dll admin revoke-superadmin <correo>
+             dotnet Pulperia.Api.dll admin migrate
         """;
 
     /// <param name="args">Lo que sigue a <c>admin</c>.</param>
@@ -28,6 +29,10 @@ public static class AdminCommands
         string[] args, TextWriter output, TextWriter errors, string performedBy,
         Action<HostApplicationBuilder>? configure = null)
     {
+        if (args is ["migrate"])
+        {
+            return await MigrateAsync(output, errors, configure);
+        }
         if (args is not [("reset-password" or "grant-superadmin" or "revoke-superadmin") and var command, var email]
             || !AccountRules.IsValidEmail(AccountRules.NormalizeEmail(email)))
         {
@@ -78,6 +83,50 @@ public static class AdminCommands
         await output.WriteLineAsync($"Contraseña restablecida para {normalized}. Se cerraron sus sesiones abiertas.");
         await output.WriteLineAsync($"Contraseña nueva (se muestra una sola vez): {result.Value}");
         return 0;
+    }
+
+    /// <summary>
+    /// Deja la base al día con las migraciones de la API (D-33). La API no migra sola: el despliegue
+    /// lo ejecuta una vez, antes de arrancarla. Nunca muestra la cadena de conexión.
+    /// </summary>
+    private static async Task<int> MigrateAsync(
+        TextWriter output, TextWriter errors, Action<HostApplicationBuilder>? configure)
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddDbContext<PulperiaDbContext>((sp, options) =>
+            options.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("Pulperia")));
+        configure?.Invoke(builder);
+        try
+        {
+            ApiHost.RequireConnectionString(builder.Configuration);
+        }
+        catch (InvalidOperationException ex)
+        {
+            await errors.WriteLineAsync(ex.Message);
+            return 1;
+        }
+
+        using var host = builder.Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<PulperiaDbContext>();
+        try
+        {
+            var pending = (await db.Database.GetPendingMigrationsAsync()).ToList();
+            if (pending.Count == 0)
+            {
+                await output.WriteLineAsync("La base de datos ya está al día.");
+                return 0;
+            }
+            await db.Database.MigrateAsync();
+            await output.WriteLineAsync($"Se aplicó {pending.Count} migración(es): {string.Join(", ", pending)}.");
+            return 0;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Solo el tipo del fallo: el mensaje de la base puede incluir el servidor o el usuario.
+            await errors.WriteLineAsync($"No se pudo migrar la base de datos ({ex.GetType().Name}). Revisa que sea alcanzable y que la cadena de conexión sea correcta.");
+            return 1;
+        }
     }
 
     private static async Task<int> SetSuperAdminAsync(
