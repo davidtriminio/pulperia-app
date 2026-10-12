@@ -41,7 +41,22 @@ public static class ApiHost
         configure?.Invoke(builder);
         RequireConnectionString(builder.Configuration);
 
+        // La web de Vercel (D-33) llama a la API desde el navegador: solo los orígenes configurados.
+        var origins = AllowedOrigins(builder.Configuration);
+        if (origins.Length > 0)
+        {
+            builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
+                .WithOrigins(origins)
+                .WithMethods("GET", "POST", "PATCH", "DELETE")
+                .WithHeaders("Authorization", "Content-Type", BusinessAccess.BusinessHeader)
+                .SetPreflightMaxAge(TimeSpan.FromHours(1))));
+        }
+
         var app = builder.Build();
+        if (origins.Length > 0)
+        {
+            app.UseCors();
+        }
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
@@ -55,6 +70,18 @@ public static class ApiHost
         app.MapQueryEndpoints();
         return app;
     }
+
+    /// <summary>
+    /// Los orígenes que pueden llamar a la API desde un navegador (<c>Cors:AllowedOrigins</c>, lista
+    /// separada por comas). Sin espacios ni barra final; un asterisco no cuenta: no se abre a todos.
+    /// </summary>
+    internal static string[] AllowedOrigins(IConfiguration configuration) =>
+        (configuration["Cors:AllowedOrigins"] ?? "")
+            .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Select(origin => origin.TrimEnd('/'))
+            .Where(origin => origin.Length > 0 && origin != "*")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
     /// <summary>Falla al arrancar, con el remedio, en vez de en la primera petición.</summary>
     internal static void RequireConnectionString(IConfiguration configuration)
