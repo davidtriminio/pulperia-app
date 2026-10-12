@@ -25,8 +25,8 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public async Task DisposeAsync() => await _container.DisposeAsync();
 
-    /// <summary>Crea una base de datos nueva, le aplica todas las migraciones y devuelve su contexto.</summary>
-    public async Task<PulperiaDbContext> CreateDatabaseAsync()
+    /// <summary>Crea una base de datos vacía, sin migrar, y devuelve su cadena de conexión.</summary>
+    public async Task<string> CreateEmptyDatabaseAsync()
     {
         var name = "test_" + Guid.NewGuid().ToString("N");
         await using (var admin = new NpgsqlConnection(_container.GetConnectionString()))
@@ -38,11 +38,17 @@ public sealed class PostgresFixture : IAsyncLifetime
 
         // Sin pool: cada prueba usa su propia base y, con pool, cada una dejaría conexiones
         // abiertas hasta agotar el límite del servidor.
-        var connectionString = new NpgsqlConnectionStringBuilder(_container.GetConnectionString())
+        return new NpgsqlConnectionStringBuilder(_container.GetConnectionString())
         {
             Database = name,
             Pooling = false,
         }.ConnectionString;
+    }
+
+    /// <summary>Crea una base de datos nueva, le aplica todas las migraciones y devuelve su contexto.</summary>
+    public async Task<PulperiaDbContext> CreateDatabaseAsync()
+    {
+        var connectionString = await CreateEmptyDatabaseAsync();
 
         var context = NewContext(connectionString);
         await context.Database.MigrateAsync();
