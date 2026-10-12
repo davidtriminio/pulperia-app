@@ -12,7 +12,7 @@ Estado: BORRADOR, pendiente de aprobación. Deriva de `plan.md` (aprobado) y cub
 - Los vectores de `shared/` se leen desde los tests de cada plataforma; ninguna plataforma redefine esos casos.
 
 ## Bloqueos externos
-- **T140**: necesita que decidas dónde se guardan las copias fuera del servidor.
+- Ninguno: el destino de las copias quedó decidido en D-34 (2026-10-12).
 
 ## Fase 0 — Andamiaje
 - [x] **T001** Crear la solución .NET en `api/` con proyectos Domain, Application, Infrastructure, Api y Tests. RF: —. *Hecho cuando:* `dotnet test api` ejecuta y pasa con un test de humo.
@@ -256,11 +256,13 @@ Añade RF-95 a RF-104, D-29 y D-30 (activación de negocios). Va después de la 
 - [ ] **T200** Panel web `/admin`: lista de negocios pendientes con el correo del dueño, y botones para activar o rechazar con motivo. RF: 103, 97. Dep: T198, T195, T196. *Hecho cuando:* el super administrador activa un pendiente desde el panel y lo rechaza con motivo, y ambas acciones aparecen en la auditoría.
 
 ## Fase 11 — Despliegue y respaldo
-- [ ] **T136** Docker Compose con API y PostgreSQL. RF: —. *Hecho cuando:* `docker compose up` deja la API respondiendo y migrada.
-- [ ] **T137** Entrega de la web estática desde el despliegue. RF: 59. *Hecho cuando:* la web carga y llega a la API.
+- [ ] **T206** CORS configurable en la API para la web de Vercel: solo los orígenes de `Cors:AllowedOrigins` (vacío = ninguno), con cabeceras y métodos de la API. RF: 59; D-33. Dep: T083. *Hecho cuando:* un origen configurado recibe las cabeceras de CORS y la respuesta a la petición previa (`OPTIONS`) sin autenticar, uno no configurado no las recibe, y sin configuración no se permite ninguno.
+- [ ] **T207** Comando del servidor `admin migrate`: aplica las migraciones pendientes con el contexto de la API y sale con 0 si quedó al día. RF: —; D-33. Dep: T051. *Hecho cuando:* sobre una base vacía crea todo el esquema, sobre una al día no cambia nada y sale con 0, y con una base inalcanzable sale con 1 sin mostrar la cadena de conexión.
+- [ ] **T136** Docker Compose para la máquina de Oracle Cloud: PostgreSQL, el servicio de migración de un solo uso (T207), la API y Caddy con HTTPS; solo Caddy publica puertos y los secretos van en un `.env` fuera del repositorio. RF: —; D-33. Dep: T207, T206. *Hecho cuando:* `docker compose up` deja la API respondiendo por HTTPS y migrada, y la base y la API no son alcanzables desde fuera del Compose.
+- [ ] **T137** Despliegue de la web en Vercel: configuración del proyecto (raíz `web/`, `pnpm build`, reescritura de rutas para la SPA y la URL `https` de la API como variable de entorno). RF: 59; D-33. Dep: T123, T206. *Hecho cuando:* la web publicada carga, inicia sesión contra la API desplegada y una operación hecha en ella aparece en el móvil tras sincronizar.
 - [ ] **T138** Servicio de copia diaria con rotación de 3. RNF-8. *Hecho cuando:* tras 4 ejecuciones quedan exactamente las 3 más recientes.
 - [ ] **T139** Script de restauración en una base vacía. RNF-8. *Hecho cuando:* una copia restaurada pasa una consulta de integridad sobre los datos.
-- [ ] **T140** Definir el destino de las copias fuera del servidor. RNF-8. Dep: tu decisión. *Hecho cuando:* queda documentado y el servicio de copia envía allí el archivo.
+- [ ] **T140** Destino de las copias: carpeta del servidor montada como volumen, con el comando de salida opcional y el procedimiento diario para sacarlas, documentados. RNF-8; D-34. Dep: T138. *Hecho cuando:* queda documentado dónde queda cada copia y cómo sacarla, y el servicio ejecuta el comando de salida (si existe) al terminar cada copia, sin borrar la copia local si el comando falla.
 - [ ] **T141** Documentar el comando de restablecimiento de contraseña. RF: 81. *Hecho cuando:* un tercero lo ejecuta siguiendo solo la documentación.
 
 ## Fase 12 — Validación
