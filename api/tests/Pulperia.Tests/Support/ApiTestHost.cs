@@ -42,7 +42,7 @@ public sealed class ApiTestHost : IAsyncDisposable
     /// </param>
     public static async Task<ApiTestHost> StartAsync(
         PostgresFixture postgres, Action<WebApplication>? mapExtra = null, TimeProvider? clock = null,
-        bool activateNewBusinesses = true)
+        bool activateNewBusinesses = true, IReadOnlyDictionary<string, string?>? configuration = null)
     {
         var admin = await postgres.CreateDatabaseAsync();
         var connectionString = admin.Database.GetConnectionString()!;
@@ -55,6 +55,10 @@ public sealed class ApiTestHost : IAsyncDisposable
                 builder.Configuration["ConnectionStrings:Pulperia"] = connectionString;
                 builder.Configuration["Auth:PasswordIterations"] = "1000";
                 builder.WebHost.UseUrls("http://127.0.0.1:0");
+                foreach (var (key, value) in configuration ?? new Dictionary<string, string?>())
+                {
+                    builder.Configuration[key] = value;
+                }
                 if (clock is not null)
                 {
                     builder.Services.AddSingleton(clock);
