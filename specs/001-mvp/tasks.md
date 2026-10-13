@@ -263,7 +263,7 @@ Añade RF-95 a RF-104, D-29 y D-30 (activación de negocios). Va después de la 
 - [x] **T138** Servicio de copia diaria con rotación de 3. RNF-8. *Hecho cuando:* tras 4 ejecuciones quedan exactamente las 3 más recientes.
 - [x] **T139** Script de restauración en una base vacía. RNF-8. *Hecho cuando:* una copia restaurada pasa una consulta de integridad sobre los datos.
 - [x] **T140** Destino de las copias: carpeta del servidor montada como volumen, con el comando de salida opcional y el procedimiento diario para sacarlas, documentados. RNF-8; D-34. Dep: T138. *Hecho cuando:* queda documentado dónde queda cada copia y cómo sacarla, y el servicio ejecuta el comando de salida (si existe) al terminar cada copia, sin borrar la copia local si el comando falla.
-- [ ] **T141** Documentar el comando de restablecimiento de contraseña. RF: 81. *Hecho cuando:* un tercero lo ejecuta siguiendo solo la documentación.
+- [x] **T141** Documentar el comando de restablecimiento de contraseña. RF: 81. *Hecho cuando:* un tercero lo ejecuta siguiendo solo la documentación.
 
 ## Fase 12 — Validación
 - [ ] **T142** Recorrido RF por RF: qué test cubre cada uno y su resultado. RF: 1–107. *Hecho cuando:* existe una tabla con los 107 RF y los 8 RNF, cada uno con test o demo y resultado.
