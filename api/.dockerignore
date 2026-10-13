@@ -1,0 +1,5 @@
+**/bin/
+**/obj/
+.art/
+.vs/
+tests/

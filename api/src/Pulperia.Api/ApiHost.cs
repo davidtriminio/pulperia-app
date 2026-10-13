@@ -62,6 +62,22 @@ public static class ApiHost
             app.MapOpenApi();
         }
 
+        // Para el despliegue y el monitoreo (D-33): la API y su base responden. Sin datos y fuera del
+        // contrato de /api.
+        app.MapGet("/health", async (PulperiaDbContext db, CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                return await db.Database.CanConnectAsync(cancellationToken)
+                    ? Results.Json(new { status = "ok" })
+                    : Results.Json(new { status = "unavailable" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+            catch (Exception)
+            {
+                return Results.Json(new { status = "unavailable" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+        });
+
         app.MapAuthEndpoints();
         app.MapBusinessEndpoints();
         app.MapManagementEndpoints();

@@ -1,0 +1,6 @@
+# HTTPS delante de la API (D-33). Caddy pide y renueva solo el certificado de Let's Encrypt para
+# el dominio de API_DOMAIN; la API y la base no se publican, solo se llega a ellas por aquí.
+{$API_DOMAIN} {
+	encode gzip
+	reverse_proxy api:8080
+}
