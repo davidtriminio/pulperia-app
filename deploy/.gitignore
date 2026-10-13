@@ -1,3 +1,4 @@
 # Secretos y datos del servidor: nunca al repositorio.
 .env
 backups/
+tests/.backups-test/

@@ -46,6 +46,30 @@ services:
     # Sin `ports`: solo Caddy llega a la API, dentro de la red interna.
     networks: [internal]
 
+  # Copia diaria de la base (D-20, D-34): deja las más recientes en ./backups, en esta misma
+  # máquina, y ejecuta BACKUP_AFTER_COMMAND si lo defines. Sácala del servidor cada día.
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/scripts/backup.sh"]
+    command: ["loop"]
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-pulperia}
+      BACKUP_DIR: /backups
+      BACKUP_AT: ${BACKUP_AT:-03:00}
+      BACKUP_KEEP: ${BACKUP_KEEP:-3}
+      BACKUP_AFTER_COMMAND: ${BACKUP_AFTER_COMMAND:-}
+    volumes:
+      - ${BACKUPS_DIR:-./backups}:/backups
+      - ./backup:/scripts:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
