@@ -41,6 +41,9 @@ public static class AdminCommands
         }
 
         var builder = Host.CreateApplicationBuilder();
+        // La salida es para una persona: sin el ruido de las consultas de EF Core. Se fija en la
+        // configuración porque el Default de appsettings.json mandaría sobre SetMinimumLevel.
+        builder.Configuration["Logging:LogLevel:Default"] = "Warning";
         builder.Services.AddDbContext<PulperiaDbContext>((sp, options) =>
             options.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("Pulperia")));
         builder.Services.AddSingleton(TimeProvider.System);
@@ -93,6 +96,9 @@ public static class AdminCommands
         TextWriter output, TextWriter errors, Action<HostApplicationBuilder>? configure)
     {
         var builder = Host.CreateApplicationBuilder();
+        // La salida es para una persona: sin el ruido de las consultas de EF Core. Se fija en la
+        // configuración porque el Default de appsettings.json mandaría sobre SetMinimumLevel.
+        builder.Configuration["Logging:LogLevel:Default"] = "Warning";
         builder.Services.AddDbContext<PulperiaDbContext>((sp, options) =>
             options.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("Pulperia")));
         configure?.Invoke(builder);

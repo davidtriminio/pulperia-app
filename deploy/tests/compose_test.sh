@@ -60,4 +60,25 @@ case "$OTHER" in
   *) pass "un origen no configurado no recibe CORS" ;;
 esac
 
+echo "Comandos de administración documentados (T141)"
+curl -ks -o /dev/null -X POST "$BASE/api/auth/register" -H "Content-Type: application/json" \
+  -d '{"email":"ana@correo.com","password":"contrasena1","businessName":"Pulperia Ana","amountMode":"integer","quantityMode":"integer"}'
+RESET="$("${COMPOSE[@]}" exec -T api dotnet Pulperia.Api.dll admin reset-password ana@correo.com 2>&1)"
+CODE=$?
+expect_equal "el comando documentado de restablecer contraseña sale con 0" "0" "$CODE"
+NEWPASS="$(printf '%s\n' "$RESET" | grep 'Contraseña nueva' | sed 's/.*: //' | tr -d '\r\n')"
+case "$RESET" in
+  *SELECT*|*"Executed DbCommand"*) fail "la salida no debería traer consultas de la base" ;;
+  *) pass "la salida es limpia: sin consultas de la base" ;;
+esac
+expect_equal "muestra una contraseña de 16 caracteres" "16" "${#NEWPASS}"
+LOGIN="$(curl -ks -o /dev/null -w '%{http_code}' -X POST "$BASE/api/auth/login" \
+  -H "Content-Type: application/json" -d "{\"email\":\"ana@correo.com\",\"password\":\"$NEWPASS\"}")"
+expect_equal "con la contraseña nueva se inicia sesión por HTTPS" "200" "$LOGIN"
+GRANT="$("${COMPOSE[@]}" exec -T api dotnet Pulperia.Api.dll admin grant-superadmin ana@correo.com 2>&1)"
+case "$GRANT" in
+  *"ahora es super administrador"*) pass "el comando documentado de marcar super administrador funciona" ;;
+  *) fail "marcar super administrador debería funcionar (salida: ${GRANT: -160})" ;;
+esac
+
 finish

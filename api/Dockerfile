@@ -16,6 +16,11 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app .
 
+# Npgsql busca esta biblioteca al conectar; sin ella imprime un aviso engañoso en cada comando.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+ && rm -rf /var/lib/apt/lists/*
+
 # Sin privilegios: la imagen de ASP.NET trae el usuario "app".
 USER app
 ENV ASPNETCORE_URLS=http://+:8080 \
