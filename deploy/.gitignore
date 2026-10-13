@@ -2,3 +2,4 @@
 .env
 backups/
 tests/.backups-test/
+tests/.backups-restore/
