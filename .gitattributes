@@ -1,0 +1,6 @@
+# Lo que se ejecuta en el servidor (Linux) siempre con saltos de línea LF, aunque se edite en
+# Windows: un `\r` al final de la línea rompe los scripts de shell y el Dockerfile.
+*.sh text eol=lf
+deploy/** text eol=lf
+api/Dockerfile text eol=lf
+api/.dockerignore text eol=lf

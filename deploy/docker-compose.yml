@@ -1,0 +1,72 @@
+# Despliegue en la máquina de Oracle Cloud (D-33, D-34). Todo lo que cambia entre máquinas va en
+# el archivo `.env` de esta carpeta (copia `.env.example`). Solo Caddy publica puertos.
+name: pulperia
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Falta POSTGRES_USER en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:-pulperia}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [internal]
+
+  # La API no migra sola: este servicio aplica las migraciones pendientes y termina; la API
+  # arranca solo si salió bien.
+  migrate:
+    build: ../api
+    image: pulperia-api:local
+    command: ["admin", "migrate"]
+    environment:
+      ConnectionStrings__Pulperia: Host=db;Port=5432;Database=${POSTGRES_DB:-pulperia};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    networks: [internal]
+
+  api:
+    image: pulperia-api:local
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Pulperia: Host=db;Port=5432;Database=${POSTGRES_DB:-pulperia};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    # Sin `ports`: solo Caddy llega a la API, dentro de la red interna.
+    networks: [internal]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?Falta API_DOMAIN en .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    networks: [internal]
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:

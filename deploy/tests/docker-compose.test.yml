@@ -1,0 +1,6 @@
+# Solo para las pruebas: otros puertos del anfitrión, para no chocar con nada que ya use el 80 o el 443.
+services:
+  caddy:
+    ports: !override
+      - "18080:80"
+      - "18443:443"
