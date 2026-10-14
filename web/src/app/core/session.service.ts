@@ -128,6 +128,17 @@ export class SessionService {
     return created;
   }
 
+  /// Tras iniciar sesión: carga los negocios y, si hay uno solo, lo activa. Devuelve la ruta a
+  /// la que seguir: la raíz, o la elección de negocio si hay varios o ninguno (RF-5).
+  async openAfterSignIn(): Promise<string> {
+    const list = await this.loadBusinesses();
+    if (list.length === 1) {
+      this.selectBusiness(list[0].id);
+      return '/';
+    }
+    return '/negocios';
+  }
+
   selectBusiness(id: string | null): void {
     this.activeBusinessId.set(id);
     this.persist();

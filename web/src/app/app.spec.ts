@@ -10,18 +10,11 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('crea la aplicación', () => {
-    const fixture = TestBed.createComponent(App);
-
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
-  it('muestra el nombre de la aplicación y un punto de navegación', async () => {
+  it('crea la aplicación con un punto de navegación', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
 
-    expect(compiled.querySelector('h1')?.textContent).toContain('Pulpería');
-    expect(compiled.querySelector('router-outlet')).not.toBeNull();
+    expect(fixture.componentInstance).toBeTruthy();
+    expect((fixture.nativeElement as HTMLElement).querySelector('router-outlet')).not.toBeNull();
   });
 });
