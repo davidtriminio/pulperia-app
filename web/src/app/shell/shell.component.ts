@@ -1,14 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { ConnectivityService } from '../core/connectivity.service';
 import { SessionService } from '../core/session.service';
 import { IconComponent } from '../ui/icon.component';
+import { BusinessBlockedComponent } from './business-blocked.component';
 
 /// Marco de las pantallas del negocio: barra superior con el negocio activo y el menú de cuenta,
 /// y aviso cuando no hay conexión (la web escribe directo en el servidor).
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, IconComponent],
+  imports: [RouterOutlet, IconComponent, BusinessBlockedComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<header class="sticky top-0 z-10 bg-brand text-white shadow">
       <div class="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
@@ -53,13 +54,39 @@ import { IconComponent } from '../ui/icon.component';
       }
     </header>
     <main class="mx-auto max-w-5xl px-4 py-6">
-      <router-outlet />
+      @if (blocked(); as status) {
+        <app-business-blocked
+          [status]="status"
+          [stillBlocked]="stillBlocked()"
+          (check)="check()"
+          (switchBusiness)="switchBusiness()"
+        />
+      } @else {
+        <router-outlet />
+      }
     </main>`,
 })
 export class ShellComponent {
   protected readonly session = inject(SessionService);
   protected readonly net = inject(ConnectivityService);
   private readonly router = inject(Router);
+
+  /// El negocio activo no se puede usar: pendiente de activación o suspendido (T194).
+  protected readonly blocked = computed(() => {
+    const status = this.session.activeBusiness()?.status;
+    return status === 'pending' || status === 'suspended' ? status : null;
+  });
+  protected readonly stillBlocked = signal(false);
+
+  protected async check(): Promise<void> {
+    this.stillBlocked.set(false);
+    try {
+      await this.session.loadBusinesses();
+    } catch {
+      // Sin respuesta del servidor el aviso sigue igual.
+    }
+    this.stillBlocked.set(this.blocked() !== null);
+  }
 
   protected async switchBusiness(): Promise<void> {
     this.session.selectBusiness(null);

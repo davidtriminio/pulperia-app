@@ -3,6 +3,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
+  BusinessStatus,
   BusinessSummary,
   CreateBusinessRequest,
   Registered,
@@ -29,6 +30,10 @@ export class SessionService {
   readonly email = signal<string | null>(null);
   readonly activeBusinessId = signal<string | null>(null);
   readonly businesses = signal<BusinessSummary[] | null>(null);
+
+  /// Aviso para la pantalla de entrada cuando la sesión se cerró por un motivo del servidor
+  /// (cuenta suspendida, T194).
+  readonly notice = signal<string | null>(null);
 
   readonly isSignedIn = computed(() => this.tokensState() !== null);
   readonly activeBusiness = computed(
@@ -137,6 +142,15 @@ export class SessionService {
       return '/';
     }
     return '/negocios';
+  }
+
+  /// El servidor rechazó una petición porque el negocio activo está pendiente o suspendido: la
+  /// interfaz pasa a mostrar el aviso sin esperar a volver a pedir la lista.
+  markBusinessStatus(status: BusinessStatus): void {
+    const id = this.activeBusinessId();
+    this.businesses.update((list) =>
+      list ? list.map((b) => (b.id === id ? { ...b, status } : b)) : list,
+    );
   }
 
   selectBusiness(id: string | null): void {
