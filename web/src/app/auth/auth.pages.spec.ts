@@ -211,6 +211,84 @@ describe('RegisterPage', () => {
   });
 });
 
+describe('RegisterPage con código de invitación (T205)', () => {
+  function openWithCode() {
+    const ctx = setup();
+    const fixture = TestBed.createComponent(RegisterPage);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    click(root, '[data-test=has-code]');
+    fixture.detectChanges();
+    return { ...ctx, fixture, root };
+  }
+
+  it('oculta el negocio y los modos, y explica que entrará como empleado', () => {
+    const { root } = openWithCode();
+
+    expect(root.querySelector('[data-test=business]')).toBeNull();
+    expect(root.querySelector('[data-test=amount-integer]')).toBeNull();
+    expect(root.querySelector('[data-test=code]')).not.toBeNull();
+    expect(root.textContent).toContain('Entrarás como empleado');
+  });
+
+  it('exige el código antes de llamar al servidor', () => {
+    const { http, root, fixture } = openWithCode();
+    type(root, '[data-test=email]', 'dana@correo.com');
+    type(root, '[data-test=password]', 'contrasena1');
+
+    click(root, '[data-test=submit]');
+    fixture.detectChanges();
+
+    expect(root.textContent).toContain('Escribe el código');
+    http.expectNone(`${api}/api/auth/register`);
+  });
+
+  it('se registra solo con el código, inicia sesión y entra como empleado', async () => {
+    const { http, navigate, root } = openWithCode();
+    type(root, '[data-test=email]', 'dana@correo.com');
+    type(root, '[data-test=password]', 'contrasena1');
+    type(root, '[data-test=code]', ' H4N8-TW3R ');
+
+    click(root, '[data-test=submit]');
+    const register = http.expectOne(`${api}/api/auth/register`);
+    expect(register.request.body).toEqual({
+      email: 'dana@correo.com',
+      password: 'contrasena1',
+      invitationCode: 'H4N8-TW3R',
+    });
+    register.flush({ userId: 'u2', businessId: 'b1' });
+    await tick();
+    http.expectOne(`${api}/api/auth/login`).flush(tokens);
+    await tick();
+    http.expectOne(`${api}/api/businesses`).flush([{ ...ana, role: 'employee' }]);
+    await tick();
+
+    expect(TestBed.inject(SessionService).activeBusinessId()).toBe('b1');
+    expect(navigate).toHaveBeenCalledWith('/');
+  });
+
+  it('muestra en español que el código no es válido', async () => {
+    const { http, root, fixture } = openWithCode();
+    type(root, '[data-test=email]', 'dana@correo.com');
+    type(root, '[data-test=password]', 'contrasena1');
+    type(root, '[data-test=code]', 'AAAA-BBBB');
+
+    click(root, '[data-test=submit]');
+    http
+      .expectOne(`${api}/api/auth/register`)
+      .flush(
+        { code: 'invalid_invitation_code', codes: ['invalid_invitation_code'] },
+        { status: 400, statusText: 'Bad Request' },
+      );
+    await tick();
+    fixture.detectChanges();
+
+    expect(root.querySelector('[role=alert]')?.textContent).toContain(
+      'El código no es válido o ya se usó.',
+    );
+  });
+});
+
 describe('BusinessChooserPage', () => {
   async function open(list: unknown[]) {
     const { http, navigate } = setup();

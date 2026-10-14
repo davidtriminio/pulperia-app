@@ -234,7 +234,7 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 - [ ] **T133** Resumen. RF: 63, 64, 65. *Hecho cuando:* coincide con el resultado del móvil para los mismos datos.
 - [ ] **T134** Equipo y ajustes del negocio. RF: 7–13, 67–71, 80. *Hecho cuando:* solo los dueños acceden y el empleado recibe rechazo.
 - [ ] **T185** Código de invitación en la web: invitar con o sin correo, ver y copiar el código, y canjear un código. RF: 92, 93, 94. Dep: T134, T183. *Hecho cuando:* el dueño copia el código de una invitación pendiente y quien lo canjea entra como empleado.
-- [ ] **T205** Registro con código en la web: la misma opción «Me invitaron con un código» en el registro. RF: 105, 106, 107; D-32. Dep: T203, T123. *Hecho cuando:* una persona nueva se registra con un código, inicia sesión y ve el negocio como empleado, sin negocio propio.
+- [x] **T205** Registro con código en la web: la misma opción «Me invitaron con un código» en el registro. RF: 105, 106, 107; D-32. Dep: T203, T123. *Hecho cuando:* una persona nueva se registra con un código, inicia sesión y ve el negocio como empleado, sin negocio propio.
 - [ ] **T135** Efecto de los cambios hechos en la web sobre los móviles. RF: 62. *Hecho cuando:* una prueba entre web simulada y móvil simulado muestra el cambio tras sincronizar.
 
 ## Fase 10b — Administración de la plataforma (super administrador)
