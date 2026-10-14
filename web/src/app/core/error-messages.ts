@@ -1,9 +1,12 @@
-import { ApiError, OfflineError, SessionExpiredError } from './api-error';
+import { ApiError, OfflineError, ServerUnreachableError, SessionExpiredError } from './api-error';
 
 /// El mensaje en español de un fallo al hablar con el servidor (RNF-5). Mismos textos que el móvil
 /// (`mobile/lib/l10n/error_messages.dart`).
 export function errorMessage(error: unknown): string {
   if (error instanceof OfflineError) return 'Sin conexión. Conéctate a internet para continuar.';
+  if (error instanceof ServerUnreachableError) {
+    return 'No pudimos comunicarnos con el servidor. Inténtalo de nuevo en unos minutos.';
+  }
   if (error instanceof SessionExpiredError) return 'Tu sesión terminó. Inicia sesión de nuevo.';
   if (error instanceof ApiError) {
     return (

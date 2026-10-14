@@ -2,7 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/comm
 import { inject } from '@angular/core';
 import { catchError, from, Observable, switchMap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ApiError, OfflineError, SessionExpiredError } from './api-error';
+import { ApiError, OfflineError, ServerUnreachableError, SessionExpiredError } from './api-error';
 import { ConnectivityService } from './connectivity.service';
 import { errorMessageForCode } from './error-messages';
 import { SessionService } from './session.service';
@@ -79,7 +79,13 @@ function reactToStatus(session: SessionService, error: unknown): void {
 
 function toError(error: unknown): unknown {
   if (!(error instanceof HttpErrorResponse)) return error;
-  if (error.status === 0) return new OfflineError();
+  if (error.status === 0) {
+    // Sin respuesta: solo es falta de conexión si el navegador también lo cree; si no, el
+    // servidor no se alcanza (caído, URL errónea o CORS).
+    return typeof navigator !== 'undefined' && !navigator.onLine
+      ? new OfflineError()
+      : new ServerUnreachableError();
+  }
   const body = error.error as { code?: string; codes?: string[] } | null;
   const code = typeof body?.code === 'string' ? body.code : 'unexpected';
   return new ApiError(error.status, code, body?.codes ?? [code]);

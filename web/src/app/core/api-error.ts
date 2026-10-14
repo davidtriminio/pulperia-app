@@ -26,3 +26,12 @@ export class SessionExpiredError extends Error {
     this.name = 'SessionExpiredError';
   }
 }
+
+/// El navegador tiene conexión pero la petición no llegó a una respuesta: el servidor está caído,
+/// la URL de la API es incorrecta o el origen de la web no está permitido por CORS.
+export class ServerUnreachableError extends Error {
+  constructor() {
+    super('server_unreachable');
+    this.name = 'ServerUnreachableError';
+  }
+}
