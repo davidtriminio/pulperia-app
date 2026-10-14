@@ -222,7 +222,7 @@ Las pantallas de clientes, fiados, abonos y catálogo se movieron a la Fase 3b.
 ## Fase 10 — Cliente web
 - [ ] **T122** Dominio web: validaciones de formulario con los vectores. RF: 15, 17, 32, 34, 35, 36, 74, 77, 83, 84. Dep: T006, T007, T009, T012, T013. *Hecho cuando:* pasan los vectores en `ng test`.
 - [x] **T123** Servicio de sesión, interceptor y detección de falta de conexión. RF: 3, 61. *Hecho cuando:* sin conexión toda escritura se bloquea con aviso en español.
-- [ ] **T124** Servicios de operaciones y de consultas. RF: 59, 60. *Hecho cuando:* tests contra respuestas de ejemplo del contrato.
+- [x] **T124** Servicios de operaciones y de consultas. RF: 59, 60. *Hecho cuando:* tests contra respuestas de ejemplo del contrato.
 - [ ] **T125** Registro, inicio de sesión y elección de negocio. RF: 1–6, 78, 79. *Hecho cuando:* flujo completo con errores en español.
 - [ ] **T126** Componente de avatar con la paleta compartida. RF: 14, 72. *Hecho cuando:* test con varias combinaciones.
 - [ ] **T127** Lista de clientes y crear/editar con aviso de homónimo. RF: 14–19, 73, 74, 77. *Hecho cuando:* mismas reglas que el móvil.
