@@ -2,7 +2,7 @@ import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../environments/environment';
-import { ApiError, OfflineError, SessionExpiredError } from './api-error';
+import { ApiError, OfflineError, ServerUnreachableError, SessionExpiredError } from './api-error';
 import { apiInterceptor } from './api.interceptor';
 import { ConnectivityService } from './connectivity.service';
 import { SessionService } from './session.service';
@@ -136,7 +136,14 @@ describe('sesión e interceptor', () => {
     let offline: unknown;
     http.get(`${api}/api/summary`).subscribe({ error: (e) => (offline = e) });
     httpTesting.expectOne(`${api}/api/summary`).error(new ProgressEvent('error'));
+    // Con el navegador en línea, un fallo sin respuesta es el servidor inalcanzable (CORS, caído).
+    expect(offline).toBeInstanceOf(ServerUnreachableError);
+
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    http.get(`${api}/api/summary`).subscribe({ error: (e) => (offline = e) });
+    httpTesting.expectOne(`${api}/api/summary`).error(new ProgressEvent('error'));
     expect(offline).toBeInstanceOf(OfflineError);
+    vi.restoreAllMocks();
 
     let rejected: unknown;
     http.get(`${api}/api/summary`).subscribe({ error: (e) => (rejected = e) });
