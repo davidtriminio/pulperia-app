@@ -18,8 +18,8 @@ import { AuthCardComponent } from './auth-card.component';
     subtitle="Entra para ver los fiados de tu negocio"
   >
     <form class="space-y-4" novalidate (submit)="$event.preventDefault(); submit()">
-      @if (error()) {
-        <app-error-banner [message]="error()!" />
+      @if (error() ?? session.notice()) {
+        <app-error-banner [message]="(error() ?? session.notice())!" />
       }
       <div>
         <label class="field-label" for="email">Correo electrónico</label>
@@ -71,7 +71,7 @@ import { AuthCardComponent } from './auth-card.component';
   </app-auth-card>`,
 })
 export class LoginPage {
-  private readonly session = inject(SessionService);
+  protected readonly session = inject(SessionService);
   private readonly router = inject(Router);
 
   protected readonly inputValue = inputValue;
@@ -90,6 +90,7 @@ export class LoginPage {
   protected async submit(): Promise<void> {
     if (this.busy()) return;
     this.error.set(null);
+    this.session.notice.set(null);
     const emailError = validateEmail(this.email());
     // Al entrar solo se exige que no esté vacía: el largo mínimo es cosa del registro.
     const passwordError: AccountError | null = this.password() === '' ? 'passwordRequired' : null;
