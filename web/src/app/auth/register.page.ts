@@ -28,7 +28,11 @@ import { AuthCardComponent } from './auth-card.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<app-auth-card
     title="Crea tu cuenta"
-    subtitle="Registra tu negocio para llevar sus fiados"
+    [subtitle]="
+      hasCode()
+        ? 'Crea tu cuenta para entrar al negocio que te invitó'
+        : 'Registra tu negocio para llevar sus fiados'
+    "
   >
     <form class="space-y-4" novalidate (submit)="$event.preventDefault(); submit()">
       @if (error()) {
@@ -75,38 +79,72 @@ import { AuthCardComponent } from './auth-card.component';
           <p class="text-sm font-semibold text-debt">{{ message(passwordError()!) }}</p>
         }
       </div>
-      <div>
-        <label class="field-label" for="business">Nombre del negocio</label>
+      <label class="flex cursor-pointer items-start gap-3 rounded-xl bg-field p-3">
         <input
-          id="business"
-          class="field"
-          maxlength="60"
-          data-test="business"
-          [value]="business()"
-          (input)="business.set(inputValue($event))"
+          type="checkbox"
+          class="mt-1 h-4 w-4 accent-teal-600"
+          data-test="has-code"
+          [checked]="hasCode()"
+          (change)="hasCode.set(!hasCode()); error.set(null)"
         />
-        @if (businessError()) {
-          <p class="mt-1 text-sm font-semibold text-debt">{{ message(businessError()!) }}</p>
-        }
-      </div>
-      <app-mode-picker
-        title="Montos"
-        hint="Ejemplo: L 25 o L 25.50"
-        prefix="amount-"
-        [options]="amountOptions"
-        [value]="amount()"
-        [error]="amountMissing() ? 'Elige cómo manejas los montos' : null"
-        (chosen)="amount.set($any($event)); amountMissing.set(false)"
-      />
-      <app-mode-picker
-        title="Cantidades"
-        hint="Ejemplo: 2 libras o 0.5 libras"
-        prefix="quantity-"
-        [options]="quantityOptions"
-        [value]="quantity()"
-        [error]="quantityMissing() ? 'Elige cómo manejas las cantidades' : null"
-        (chosen)="quantity.set($any($event)); quantityMissing.set(false)"
-      />
+        <span>
+          <span class="block text-sm font-semibold text-brand">Me invitaron con un código</span>
+          @if (hasCode()) {
+            <span class="block text-xs text-slate-600">
+              Entrarás como empleado del negocio que te invitó, sin crear uno propio.
+            </span>
+          }
+        </span>
+      </label>
+      @if (hasCode()) {
+        <div>
+          <label class="field-label" for="code">Código de invitación</label>
+          <input
+            id="code"
+            class="field uppercase tracking-widest"
+            autocomplete="off"
+            data-test="code"
+            [value]="code()"
+            (input)="code.set(inputValue($event))"
+          />
+          @if (codeError()) {
+            <p class="mt-1 text-sm font-semibold text-debt">{{ codeError() }}</p>
+          }
+        </div>
+      } @else {
+        <div>
+          <label class="field-label" for="business">Nombre del negocio</label>
+          <input
+            id="business"
+            class="field"
+            maxlength="60"
+            data-test="business"
+            [value]="business()"
+            (input)="business.set(inputValue($event))"
+          />
+          @if (businessError()) {
+            <p class="mt-1 text-sm font-semibold text-debt">{{ message(businessError()!) }}</p>
+          }
+        </div>
+        <app-mode-picker
+          title="Montos"
+          hint="Ejemplo: L 25 o L 25.50"
+          prefix="amount-"
+          [options]="amountOptions"
+          [value]="amount()"
+          [error]="amountMissing() ? 'Elige cómo manejas los montos' : null"
+          (chosen)="amount.set($any($event)); amountMissing.set(false)"
+        />
+        <app-mode-picker
+          title="Cantidades"
+          hint="Ejemplo: 2 libras o 0.5 libras"
+          prefix="quantity-"
+          [options]="quantityOptions"
+          [value]="quantity()"
+          [error]="quantityMissing() ? 'Elige cómo manejas las cantidades' : null"
+          (chosen)="quantity.set($any($event)); quantityMissing.set(false)"
+        />
+      }
       <button type="submit" class="btn-primary" data-test="submit" [disabled]="busy()">
         {{ busy() ? 'Creando…' : 'Crear cuenta' }}
       </button>
@@ -129,6 +167,9 @@ export class RegisterPage {
   protected readonly business = signal('');
   protected readonly amount = signal<AmountMode | null>(null);
   protected readonly quantity = signal<QuantityMode | null>(null);
+  protected readonly hasCode = signal(false);
+  protected readonly code = signal('');
+  protected readonly codeError = signal<string | null>(null);
   protected readonly showPassword = signal(false);
   protected readonly emailError = signal<AccountError | null>(null);
   protected readonly passwordError = signal<AccountError | null>(null);
@@ -147,6 +188,7 @@ export class RegisterPage {
     this.error.set(null);
     const emailError = validateEmail(this.email());
     const passwordError = validatePassword(this.password());
+    if (this.hasCode()) return this.submitWithCode(emailError, passwordError);
     const businessError = validateBusinessName(this.business());
     const amount = this.amount();
     const quantity = this.quantity();
@@ -169,6 +211,30 @@ export class RegisterPage {
         amountMode: amount,
         quantityMode: quantity,
       });
+      await this.session.login(email, this.password());
+      await this.router.navigateByUrl(await this.session.openAfterSignIn());
+    } catch (e) {
+      this.error.set(errorMessage(e));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /// Registro de quien viene con un código: sin negocio ni modos (RF-105).
+  private async submitWithCode(
+    emailError: AccountError | null,
+    passwordError: AccountError | null,
+  ): Promise<void> {
+    const code = this.code().trim();
+    this.emailError.set(emailError);
+    this.passwordError.set(passwordError);
+    this.codeError.set(code === '' ? 'Escribe el código' : null);
+    if (emailError || passwordError || code === '') return;
+
+    this.busy.set(true);
+    try {
+      const email = this.email().trim();
+      await this.session.register({ email, password: this.password(), invitationCode: code });
       await this.session.login(email, this.password());
       await this.router.navigateByUrl(await this.session.openAfterSignIn());
     } catch (e) {
